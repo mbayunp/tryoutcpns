@@ -1,0 +1,47 @@
+const express = require('express');
+const cors = require('cors');
+const corsConfig = require('./config/cors');
+const errorMiddleware = require('./middlewares/errorMiddleware');
+const response = require('./utils/response');
+
+// Import routes
+const authRoutes = require('./routes/authRoutes');
+const categoryRoutes = require('./routes/categoryRoutes');
+const questionRoutes = require('./routes/questionRoutes');
+const tryoutRoutes = require('./routes/tryoutRoutes');
+const resultRoutes = require('./routes/resultRoutes');
+
+const app = express();
+
+// Global Middlewares
+app.use(cors(corsConfig));
+app.use(express.json());
+app.use(express.urlencoded({ extended: true }));
+
+// Default Root Route
+app.get('/', (req, res) => {
+  return response.success(res, {
+    app: "CPNS Tryout API Service",
+    version: "1.0.0",
+    status: "healthy"
+  }, "Welcome to CPNS Tryout API Service");
+});
+
+// Register API Routes
+app.use('/api/auth', authRoutes);
+app.use('/api/categories', categoryRoutes);
+app.use('/api/questions', questionRoutes);
+app.use('/api/tryouts', tryoutRoutes);
+app.use('/api/results', resultRoutes);
+
+// Catch 404 Route Not Found
+app.use((req, res, next) => {
+  const error = new Error(`Endpoint not found - ${req.originalUrl}`);
+  error.statusCode = 404;
+  next(error);
+});
+
+// Global Error Handler Middleware
+app.use(errorMiddleware);
+
+module.exports = app;

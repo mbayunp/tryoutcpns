@@ -1,0 +1,147 @@
+const { sequelize, Tryout, Question, Category, Attempt, Answer } = require('../models');
+const { calculateTotalScore } = require('../utils/scoreCalculator');
+
+const getTryouts = async (isAdmin = false) => {
+  const whereClause = isAdmin ? {} : { status: 'active' };
+  return await Tryout.findAll({
+    where: whereClause,
+    order: [['created_at', 'DESC']]
+  });
+};
+
+const getTryoutById = async (id, isAdmin = false) => {
+  const tryout = await Tryout.findByPk(id);
+  if (!tryout) {
+    const error = new Error('Tryout not found');
+    error.statusCode = 404;
+    throw error;
+  }
+
+  // If loading questions, exclude correct_answer and option_weights for users to prevent cheating
+  const attributes = isAdmin 
+    ? ['id', 'question', 'option_a', 'option_b', 'option_c', 'option_d', 'option_e', 'correct_answer', 'option_weights']
+    : ['id', 'question', 'option_a', 'option_b', 'option_c', 'option_d', 'option_e'];
+
+  const questions = await Question.findAll({
+    where: { tryout_id: id },
+    attributes,
+    include: [
+      {
+        model: Category,
+        as: 'category',
+        attributes: ['id', 'name']
+      }
+    ]
+  });
+
+  return {
+    ...tryout.toJSON(),
+    questions
+  };
+};
+
+const startTryout = async (userId, tryoutId) => {
+  const tryout = await Tryout.findByPk(tryoutId);
+  if (!tryout || tryout.status !== 'active') {
+    const error = new Error('Tryout is not available or inactive');
+    error.statusCode = 400;
+    throw error;
+  }
+
+  // Check if there is an ongoing attempt
+  const existingAttempt = await Attempt.findOne({
+    where: {
+      user_id: userId,
+      tryout_id: tryoutId,
+      status: 'ongoing'
+    }
+  });
+
+  if (existingAttempt) {
+    return existingAttempt;
+  }
+
+  // Create new attempt
+  return await Attempt.create({
+    user_id: userId,
+    tryout_id: tryoutId,
+    score: 0,
+    started_at: new Date(),
+    status: 'ongoing'
+  });
+};
+
+const submitTryout = async (userId, attemptId, submittedAnswers = []) => {
+  const attempt = await Attempt.findOne({
+    where: {
+      id: attemptId,
+      user_id: userId,
+      status: 'ongoing'
+    }
+  });
+
+  if (!attempt) {
+    const error = new Error('No ongoing attempt found with this ID');
+    error.statusCode = 404;
+    throw error;
+  }
+
+  // Get all questions with categories for this tryout to calculate scores accurately
+  const questions = await Question.findAll({
+    where: { tryout_id: attempt.tryout_id },
+    include: [
+      {
+        model: Category,
+        as: 'category',
+        attributes: ['id', 'name']
+      }
+    ]
+  });
+
+  const { totalScore, answerDetails } = calculateTotalScore(questions, submittedAnswers);
+
+  // Use transaction to save answers and update attempt
+  const t = await sequelize.transaction();
+
+  try {
+    // Delete any previous answers for this attempt (safety check)
+    await Answer.destroy({ where: { attempt_id: attemptId }, transaction: t });
+
+    // Save all answers
+    const answersData = answerDetails.map(detail => ({
+      attempt_id: attemptId,
+      question_id: detail.question_id,
+      selected_answer: detail.selected_answer,
+      is_correct: detail.is_correct
+    }));
+
+    await Answer.bulkCreate(answersData, { transaction: t });
+
+    // Update attempt
+    attempt.score = totalScore;
+    attempt.status = 'completed';
+    attempt.finished_at = new Date();
+    await attempt.save({ transaction: t });
+
+    await t.commit();
+
+    return {
+      attempt_id: attempt.id,
+      tryout_id: attempt.tryout_id,
+      score: totalScore,
+      started_at: attempt.started_at,
+      finished_at: attempt.finished_at,
+      status: attempt.status
+    };
+  } catch (err) {
+    await t.rollback();
+    throw err;
+  }
+};
+
+module.exports = {
+  getTryouts,
+  getTryoutById,
+  startTryout,
+  submitTryout
+};
