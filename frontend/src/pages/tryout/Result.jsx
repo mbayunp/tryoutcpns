@@ -89,16 +89,15 @@ export default function Result() {
           </svg>
           <div className="flex flex-col items-center">
             <span className="text-4xl font-extrabold tracking-tight text-slate-900">{lastAttempt.score}</span>
-            <span className="text-[10px] text-slate-400 font-semibold uppercase tracking-widest mt-0.5">/ 550</span>
+            <span className="text-[10px] text-slate-400 font-semibold uppercase tracking-widest mt-0.5">/ 550 ({scorePercent}%)</span>
           </div>
         </div>
 
         {/* Status badge */}
-        <div className={`inline-flex items-center gap-1.5 px-4 py-1.5 rounded-full text-xs font-bold ring-1 ${
-          isPassed
+        <div className={`inline-flex items-center gap-1.5 px-4 py-1.5 rounded-full text-xs font-bold ring-1 ${isPassed
             ? 'bg-emerald-50 text-emerald-700 ring-emerald-200'
             : 'bg-red-50 text-red-700 ring-red-200'
-        }`}>
+          }`}>
           {isPassed ? <CheckCircle2 className="h-3.5 w-3.5" /> : <XCircle className="h-3.5 w-3.5" />}
           {isPassed ? 'LULUS PASSING GRADE' : 'BELUM MEMENUHI SYARAT'}
         </div>
@@ -117,9 +116,8 @@ export default function Result() {
                   <p className="text-[10px] font-bold text-slate-400 uppercase tracking-wider">{cat.key}</p>
                   <p className="text-xs font-semibold text-slate-600 mt-0.5">{cat.label}</p>
                 </div>
-                <span className={`text-[10px] font-bold px-2 py-0.5 rounded ring-1 ${
-                  passed ? 'bg-emerald-50 text-emerald-600 ring-emerald-100' : 'bg-red-50 text-red-600 ring-red-100'
-                }`}>
+                <span className={`text-[10px] font-bold px-2 py-0.5 rounded ring-1 ${passed ? 'bg-emerald-50 text-emerald-600 ring-emerald-100' : 'bg-red-50 text-red-600 ring-red-100'
+                  }`}>
                   {passed ? 'Lolos' : 'Gagal'}
                 </span>
               </div>
@@ -179,11 +177,10 @@ export default function Result() {
                 <summary className="flex justify-between items-center cursor-pointer px-4 py-3 list-none">
                   <div className="flex items-center gap-3">
                     <span className="text-xs font-bold text-slate-400 w-8">{String(idx + 1).padStart(2, '0')}</span>
-                    <span className={`text-[10px] font-bold px-1.5 py-0.5 rounded ring-1 ${
-                      q.category === 'TWK' ? 'bg-blue-50 text-blue-600 ring-blue-100' :
-                      q.category === 'TIU' ? 'bg-indigo-50 text-indigo-600 ring-indigo-100' :
-                      'bg-amber-50 text-amber-600 ring-amber-100'
-                    }`}>{q.category}</span>
+                    <span className={`text-[10px] font-bold px-1.5 py-0.5 rounded ring-1 ${q.category === 'TWK' ? 'bg-blue-50 text-blue-600 ring-blue-100' :
+                        q.category === 'TIU' ? 'bg-indigo-50 text-indigo-600 ring-indigo-100' :
+                          'bg-amber-50 text-amber-600 ring-amber-100'
+                      }`}>{q.category}</span>
                     <span className="text-xs font-medium text-slate-600 line-clamp-1 max-w-xs">{q.question.substring(0, 60)}...</span>
                   </div>
 
