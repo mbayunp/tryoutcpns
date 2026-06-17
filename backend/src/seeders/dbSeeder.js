@@ -65,25 +65,38 @@ const seed = async () => {
 
     console.log('Users seeded & passwords updated: admin@wildan.com, user@wildan.com.');
 
-    // 3. Seed Sample Tryout
-    console.log('Seeding Sample Tryout...');
+    // 3. Seed Sample Tryouts
+    console.log('Seeding Sample Tryouts...');
     const [sampleTryout] = await Tryout.findOrCreate({
       where: { title: 'Tryout Akbar CPNS 2026' },
       defaults: {
         title: 'Tryout Akbar CPNS 2026',
         description: 'Paket simulasi ujian CPNS SKD yang terdiri dari TWK, TIU, dan TKP.',
         duration: 100, // 100 minutes
-        total_questions: 3,
+        total_questions: 4,
         status: 'active'
+      }
+    });
+
+    const [premiumTryout] = await Tryout.findOrCreate({
+      where: { title: 'Tryout Premium Mandiri CAT 2026' },
+      defaults: {
+        title: 'Tryout Premium Mandiri CAT 2026',
+        description: 'Paket tryout premium eksklusif dengan soal paling update kisi-kisi BKN 2026.',
+        duration: 120, // 120 minutes
+        total_questions: 3,
+        status: 'inactive' // Locked package
       }
     });
 
     // 4. Seed Questions
     console.log('Seeding Questions...');
     
-    // Clean old sample questions if any
+    // Clean old questions
     await Question.destroy({ where: { tryout_id: sampleTryout.id } });
+    await Question.destroy({ where: { tryout_id: premiumTryout.id } });
 
+    // --- Tryout 1 (Active) Questions ---
     // Question 1: TWK
     await Question.create({
       tryout_id: sampleTryout.id,
@@ -146,12 +159,65 @@ const seed = async () => {
       option_weights: null
     });
 
+    // --- Tryout 2 (Premium Locked) Questions ---
+    // Question 1: TWK Premium
+    await Question.create({
+      tryout_id: premiumTryout.id,
+      category_id: twkCat.id,
+      question: 'Pancasila sebagai dasar negara Republik Indonesia secara resmi disahkan oleh PPKI pada tanggal...',
+      option_a: '17 Agustus 1945',
+      option_b: '18 Agustus 1945',
+      option_c: '1 Juni 1945',
+      option_d: '22 Juni 1945',
+      option_e: '17 Agustus 1950',
+      correct_answer: 'b',
+      option_weights: null
+    });
+
+    // Question 2: TIU Premium
+    await Question.create({
+      tryout_id: premiumTryout.id,
+      category_id: tiuCat.id,
+      question: 'Jika 3a + 4b = 17 dan 2a - b = 4, maka nilai dari a - b adalah...',
+      option_a: '1',
+      option_b: '2',
+      option_c: '3',
+      option_d: '-1',
+      option_e: '0',
+      correct_answer: 'a',
+      option_weights: null
+    });
+
+    // Question 3: TKP Premium
+    await Question.create({
+      tryout_id: premiumTryout.id,
+      category_id: tkpCat.id,
+      question: 'Rekan kerja Anda melakukan kesalahan input data yang cukup fatal namun ia takut melaporkannya kepada atasan. Tindakan Anda adalah...',
+      option_a: 'Membiarkannya saja karena itu bukan tanggung jawab saya.',
+      option_b: 'Melaporkannya langsung secara diam-diam kepada atasan agar kesalahan segera diatasi.',
+      option_c: 'Menasehati rekan tersebut untuk segera berterus terang dan menawarkan bantuan untuk memperbaikinya bersama.',
+      option_d: 'Mendikte dan memarahinya atas kelalaian yang ia lakukan.',
+      option_e: 'Menyebarkan kabar kesalahan tersebut kepada rekan kerja lainnya sebagai pembelajaran.',
+      correct_answer: 'c',
+      option_weights: {
+        a: 1,
+        b: 3,
+        c: 5,
+        d: 2,
+        e: 4
+      }
+    });
+
     // Update total_questions cache
-    const count = await Question.count({ where: { tryout_id: sampleTryout.id } });
-    sampleTryout.total_questions = count;
+    const count1 = await Question.count({ where: { tryout_id: sampleTryout.id } });
+    sampleTryout.total_questions = count1;
     await sampleTryout.save();
 
-    console.log('Sample Questions seeded successfully.');
+    const count2 = await Question.count({ where: { tryout_id: premiumTryout.id } });
+    premiumTryout.total_questions = count2;
+    await premiumTryout.save();
+
+    console.log('Sample and Premium Questions seeded successfully.');
     console.log('Seeding completed successfully!');
     process.exit(0);
   } catch (error) {

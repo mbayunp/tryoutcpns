@@ -168,9 +168,52 @@ const deleteQuestion = async (req, res, next) => {
   }
 };
 
+const bulkCreateQuestions = async (req, res, next) => {
+  try {
+    const { tryout_id, questions } = req.body;
+
+    if (!tryout_id) {
+      return response.error(res, 'Tryout ID is required', 400);
+    }
+
+    const tryout = await Tryout.findByPk(tryout_id);
+    if (!tryout) {
+      return response.error(res, 'Tryout package not found', 400);
+    }
+
+    if (!Array.isArray(questions) || questions.length === 0) {
+      return response.error(res, 'Questions list must be a non-empty array', 400);
+    }
+
+    const formattedQuestions = questions.map((q) => ({
+      tryout_id,
+      category_id: q.category_id,
+      question: q.question,
+      option_a: q.option_a,
+      option_b: q.option_b,
+      option_c: q.option_c,
+      option_d: q.option_d,
+      option_e: q.option_e,
+      correct_answer: q.correct_answer ? q.correct_answer.toLowerCase() : 'a',
+      option_weights: q.option_weights || null
+    }));
+
+    const newQuestions = await Question.bulkCreate(formattedQuestions);
+
+    // Update tryout's total_questions count
+    tryout.total_questions = await Question.count({ where: { tryout_id } });
+    await tryout.save();
+
+    return response.success(res, newQuestions, 'Bulk questions created successfully', 201);
+  } catch (err) {
+    next(err);
+  }
+};
+
 module.exports = {
   getAllQuestions,
   createQuestion,
   updateQuestion,
-  deleteQuestion
+  deleteQuestion,
+  bulkCreateQuestions
 };

@@ -2,9 +2,8 @@ const { sequelize, Tryout, Question, Category, Attempt, Answer } = require('../m
 const { calculateTotalScore } = require('../utils/scoreCalculator');
 
 const getTryouts = async (isAdmin = false) => {
-  const whereClause = isAdmin ? {} : { status: 'active' };
+  // Return all tryouts for everyone so users can see and purchase locked premium tryouts
   return await Tryout.findAll({
-    where: whereClause,
     order: [['created_at', 'DESC']]
   });
 };
@@ -42,8 +41,8 @@ const getTryoutById = async (id, isAdmin = false) => {
 
 const startTryout = async (userId, tryoutId) => {
   const tryout = await Tryout.findByPk(tryoutId);
-  if (!tryout || tryout.status !== 'active') {
-    const error = new Error('Tryout is not available or inactive');
+  if (!tryout) {
+    const error = new Error('Tryout is not available');
     error.statusCode = 400;
     throw error;
   }

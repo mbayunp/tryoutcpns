@@ -175,8 +175,8 @@ ON DUPLICATE KEY UPDATE `name`=VALUES(`name`);
 -- Hashed passwords represent 'admin123' and 'user123' respectively (using bcrypt)
 INSERT INTO `users` (`id`, `name`, `email`, `password`, `role`, `is_active`, `created_at`, `updated_at`) 
 VALUES 
-(1, 'Admin Wildan', 'admin@wildan.com', '$2a$10$wE47Pszr1/G3B7XG81m/I.l9.2N0Q4.Rqy3p8zFzK3b0o4mE2e3s.', 'admin', 1, NOW(), NOW()),
-(2, 'Candidate User', 'user@wildan.com', '$2a$10$wE47Pszr1/G3B7XG81m/I.l9.2N0Q4.Rqy3p8zFzK3b0o4mE2e3s.', 'user', 1, NOW(), NOW())
+(1, 'Admin Wildan', 'admin@wildan.com', '$2a$10$.Z..6PUwTQK0Fp3qC7CnHO.QX9rWSl2kkkRwg2kKN2aT0DJ53wuAa', 'admin', 1, NOW(), NOW()),
+(2, 'Candidate User', 'user@wildan.com', '$2a$10$pZSvQPdkM6XMNlGUaWWU6.zXtK9fFWSa5XsHt3UDKx/Q4TMWlTcGS', 'user', 1, NOW(), NOW())
 ON DUPLICATE KEY UPDATE `email`=VALUES(`email`);
 
 -- Seed Tryouts

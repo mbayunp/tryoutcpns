@@ -14,7 +14,7 @@ export default function Footer() {
                 <img src="/logo.jpg" alt="Logo CPNS TryOut" className="h-6 w-6 object-cover rounded-md" />
               </div>
               <span className="font-extrabold text-lg text-white tracking-tight">
-              Sentral<span className="text-blue-700"> CPNS</span>
+              WILDAN<span className="text-blue-700"> CASN</span>
               </span>
             </div>
             <p className="text-sm text-slate-500 leading-relaxed">
@@ -65,7 +65,7 @@ export default function Footer() {
         </div>
 
         <div className="mt-12 pt-6 border-t border-slate-800/50 text-center text-xs text-slate-600">
-          <p>© {new Date().getFullYear()} Sentral CPNS</p>
+          <p>© {new Date().getFullYear()} WILDAN CASN</p>
         </div>
       </div>
     </footer>

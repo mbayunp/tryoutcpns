@@ -28,7 +28,7 @@ export default function Header() {
               <img src="/logo.jpg" alt="Logo CPNS TryOut" className="h-7 w-7 object-cover rounded-lg" />
             </div>
             <span className="font-extrabold text-lg tracking-tight text-slate-900">
-              Sentral<span className="text-blue-700"> CPNS</span>
+              WILDAN<span className="text-blue-700"> CASN</span>
             </span>
           </Link>
 

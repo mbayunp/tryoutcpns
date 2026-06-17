@@ -12,7 +12,7 @@ export default function AuthLayout() {
               <img src="/logo.jpg" alt="Logo" className="h-7 w-7 object-cover rounded-lg" />
             </div>
             <span className="font-extrabold text-lg tracking-tight text-slate-900">
-              Sentral<span className="text-blue-700"> CPNS</span>
+              WILDAN<span className="text-blue-700"> CASN</span>
             </span>
           </Link>
           <Link to="/" className="font-label-lg text-sm font-semibold text-primary hover:underline transition-all">
@@ -30,7 +30,7 @@ export default function AuthLayout() {
       <footer className="w-full bg-slate-900 text-slate-400">
         <div className="max-w-[1440px] mx-auto px-6 md:px-10 py-12 flex flex-col md:flex-row justify-between items-center gap-6">
           <div className="font-extrabold text-lg tracking-tight text-white">
-            Sentral<span className="text-blue-500"> CPNS</span>
+            WILDAN<span className="text-blue-500"> CASN</span>
           </div>
           <div className="flex flex-wrap justify-center gap-6 text-sm">
             <a className="hover:text-white transition-colors duration-200" href="#contact">Hubungi Kami</a>
@@ -40,7 +40,7 @@ export default function AuthLayout() {
             <a className="hover:text-white transition-colors duration-200" href="#about">Tentang Kami</a>
           </div>
           <p className="text-xs opacity-80">
-            © 2026 Sentral CPNS. Persiapan CPNS Profesional.
+            © 2026 WILDAN CASN. Persiapan CPNS Profesional.
           </p>
         </div>
       </footer>

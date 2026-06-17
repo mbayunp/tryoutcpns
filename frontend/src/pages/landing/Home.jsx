@@ -90,7 +90,7 @@ export default function Home() {
                 <div className="relative rounded-2xl overflow-hidden border border-slate-200/60 shadow-2xl bg-white p-2 glow-blue">
                   <img
                     src={homeImg}
-                    alt="Dashboard CAT Sentral CPNS"
+                    alt="Dashboard CAT WILDAN CASN"
                     className="w-full object-cover rounded-xl"
                   />
                 </div>
@@ -144,7 +144,7 @@ export default function Home() {
         <div className="max-w-6xl mx-auto px-5 sm:px-8">
 
           <div className="max-w-2xl mb-16 space-y-4">
-            <p className="text-xs font-bold text-blue-600 uppercase tracking-widest">Kenapa Sentral CPNS</p>
+            <p className="text-xs font-bold text-blue-600 uppercase tracking-widest">Kenapa WILDAN CASN</p>
             <h2 className="text-3xl sm:text-4xl font-extrabold tracking-tight text-slate-900 leading-tight">
               Bukan sekadar bank soal. 
               <br />

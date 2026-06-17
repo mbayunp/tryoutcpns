@@ -56,10 +56,10 @@ export default function DashboardLayout() {
         <div className="px-5 flex items-center justify-between">
           <Link to="/" className="flex items-center gap-2.5 group">
             <div className="bg-white p-1 rounded-xl border border-slate-100 shadow-sm">
-              <img src="/logo.jpg" alt="Logo Sentral CPNS" className="h-6 w-6 object-cover rounded-md" />
+              <img src="/logo.jpg" alt="Logo WILDAN CASN" className="h-6 w-6 object-cover rounded-md" />
             </div>
             <span className="font-extrabold text-base text-slate-900 tracking-tight">
-              Sentral<span className="text-blue-700"> CPNS</span>
+              WILDAN<span className="text-[#0B1C30]"> CASN</span>
             </span>
           </Link>
           <button onClick={() => setMobileOpen(false)} className="md:hidden p-1 rounded-lg hover:bg-slate-100 text-slate-400">
@@ -70,7 +70,7 @@ export default function DashboardLayout() {
         {/* User card */}
         <div className="px-3">
           <div className="bg-slate-50 p-3 rounded-xl ring-1 ring-slate-100 flex items-center gap-3">
-            <div className="h-9 w-9 bg-slate-900 text-white rounded-xl flex items-center justify-center font-bold text-xs">
+            <div className="h-9 w-9 bg-[#0B1C30] text-white rounded-xl flex items-center justify-center font-bold text-xs shadow-sm">
               {user.avatar || 'CP'}
             </div>
             <div className="overflow-hidden">
@@ -94,8 +94,8 @@ export default function DashboardLayout() {
                 onClick={() => handleTabClick(item.id)}
                 className={`w-full flex items-center gap-2.5 px-3 py-2.5 rounded-xl text-[13px] font-semibold transition-all duration-200 ${
                   isActive
-                    ? 'bg-slate-900 text-white shadow-premium'
-                    : 'text-slate-500 hover:bg-slate-50 hover:text-slate-800'
+                    ? 'bg-[#0B1C30] text-white shadow-premium'
+                    : 'text-slate-500 hover:bg-slate-50 hover:text-[#0B1C30]'
                 }`}
               >
                 {item.icon}
@@ -112,8 +112,8 @@ export default function DashboardLayout() {
                 onClick={handleAdminClick}
                 className={`w-full flex items-center gap-2.5 px-3 py-2.5 rounded-xl text-[13px] font-semibold transition-all duration-200 ${
                   location.pathname === '/admin'
-                    ? 'bg-slate-900 text-white shadow-premium'
-                    : 'text-slate-500 hover:bg-slate-50 hover:text-slate-800'
+                    ? 'bg-[#0B1C30] text-white shadow-premium'
+                    : 'text-slate-500 hover:bg-slate-50 hover:text-[#0B1C30]'
                 }`}
               >
                 <ShieldAlert className="h-[18px] w-[18px]" />
@@ -138,7 +138,7 @@ export default function DashboardLayout() {
   );
 
   return (
-    <div className="min-h-screen bg-slate-50 flex flex-col md:flex-row">
+    <div className="min-h-screen bg-[#F4F6F9] flex flex-col md:flex-row">
       {/* Mobile overlay */}
       {mobileOpen && (
         <div
@@ -171,9 +171,9 @@ export default function DashboardLayout() {
           </button>
           <span className="font-extrabold text-sm text-slate-900 tracking-tight flex items-center gap-1.5">
             <img src="/logo.jpg" alt="Logo" className="h-5 w-5 object-cover rounded-md" />
-            <span>Sentral<span className="text-blue-700"> CPNS</span></span>
+            <span>WILDAN<span className="text-[#0B1C30]"> CASN</span></span>
           </span>
-          <div className="h-8 w-8 bg-slate-900 text-white rounded-xl flex items-center justify-center font-bold text-[10px]">
+          <div className="h-8 w-8 bg-[#0B1C30] text-white rounded-xl flex items-center justify-center font-bold text-[10px] shadow-sm">
             {user.avatar || 'CP'}
           </div>
         </header>

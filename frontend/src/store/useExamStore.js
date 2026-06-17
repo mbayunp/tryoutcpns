@@ -11,6 +11,44 @@ export const useExamStore = create(
       history: [],
       questions: [],
       activeTab: 'dashboard',
+      transactions: [
+        {
+          id: 'TRX-2026-001',
+          userName: 'Andi Pratama',
+          email: 'andi.pratama@gmail.com',
+          package: 'Tryout Premium Mandiri CAT 2026',
+          amount: 'Rp 199.000',
+          date: '18 Jun 2026, 14:30',
+          status: 'pending'
+        },
+        {
+          id: 'TRX-2026-002',
+          userName: 'Budi Santoso',
+          email: 'budi.s@yahoo.com',
+          package: 'Starter Pack',
+          amount: 'Rp 99.000',
+          date: '18 Jun 2026, 10:15',
+          status: 'success'
+        },
+        {
+          id: 'TRX-2026-003',
+          userName: 'Citra Kirana',
+          email: 'citra.k@gmail.com',
+          package: 'VIP Bootcamp',
+          amount: 'Rp 499.000',
+          date: '17 Jun 2026, 19:45',
+          status: 'failed'
+        },
+        {
+          id: 'TRX-2026-004',
+          userName: 'Dewi Lestari',
+          email: 'dewi.l@gmail.com',
+          package: 'Tryout Premium Mandiri CAT 2026',
+          amount: 'Rp 199.000',
+          date: '17 Jun 2026, 08:20',
+          status: 'pending'
+        }
+      ],
 
       // Actions
       login: async (email, password) => {
@@ -38,7 +76,7 @@ export const useExamStore = create(
 
       logout: () => {
         localStorage.removeItem('token');
-        set({ user: null, token: null, packages: [], history: [], questions: [] });
+        set({ user: null, token: null, packages: [], history: [], questions: [], transactions: [] });
       },
 
       setActiveTab: (tab) => set({ activeTab: tab }),
@@ -47,15 +85,20 @@ export const useExamStore = create(
         try {
           const res = await API.get('/tryouts');
           const data = res.data.data;
-          const mapped = data.map((pkg) => ({
-            id: pkg.id,
-            title: pkg.title,
-            description: pkg.description || 'Simulasi lengkap TWK, TIU, dan TKP sesuai standar CAT BKN terbaru. Dilengkapi pembahasan lengkap.',
-            duration: pkg.duration,
-            totalQuestions: pkg.total_questions,
-            status: pkg.status === 'active' ? 'Aktif' : 'Terkunci',
-            attempts: 0
-          }));
+          const mapped = data.map((pkg) => {
+            const isPurchased = (get().transactions || []).some(
+              (t) => t.package === pkg.title && t.status === 'success' && t.email === get().user?.email
+            );
+            return {
+              id: pkg.id,
+              title: pkg.title,
+              description: pkg.description || 'Simulasi lengkap TWK, TIU, dan TKP sesuai standar CAT BKN terbaru. Dilengkapi pembahasan lengkap.',
+              duration: pkg.duration,
+              totalQuestions: pkg.total_questions,
+              status: (pkg.status === 'active' || isPurchased) ? 'Aktif' : 'Terkunci',
+              attempts: 0
+            };
+          });
           set({ packages: mapped });
         } catch (error) {
           console.error('Failed to fetch packages:', error);
@@ -189,6 +232,39 @@ export const useExamStore = create(
         }
       },
 
+      bulkAddQuestions: async (questionsList) => {
+        try {
+          const formattedQuestions = questionsList.map((newQuestion) => ({
+            category_id: newQuestion.category === 'TWK' ? 1 : newQuestion.category === 'TIU' ? 2 : 3,
+            question: newQuestion.question,
+            option_a: newQuestion.options.find(o => o.key === 'A')?.text || '',
+            option_b: newQuestion.options.find(o => o.key === 'B')?.text || '',
+            option_c: newQuestion.options.find(o => o.key === 'C')?.text || '',
+            option_d: newQuestion.options.find(o => o.key === 'D')?.text || '',
+            option_e: newQuestion.options.find(o => o.key === 'E')?.text || '',
+            correct_answer: newQuestion.correctAnswer ? newQuestion.correctAnswer.toLowerCase() : 'a',
+            option_weights: newQuestion.scores ? {
+              a: newQuestion.scores.A,
+              b: newQuestion.scores.B,
+              c: newQuestion.scores.C,
+              d: newQuestion.scores.D,
+              e: newQuestion.scores.E
+            } : null
+          }));
+
+          await API.post('/questions/bulk', {
+            tryout_id: 1, // Defaulting to Tryout 1
+            questions: formattedQuestions
+          });
+
+          // Refresh question list once at the end
+          await get().fetchQuestions(1);
+        } catch (error) {
+          console.error('Failed to bulk add questions:', error);
+          throw error;
+        }
+      },
+
       deleteQuestion: async (id) => {
         try {
           await API.delete(`/questions/${id}`);
@@ -228,11 +304,78 @@ export const useExamStore = create(
           console.error('Failed to update question:', error);
           throw error;
         }
+      },
+
+      createPackage: async (pkgData) => {
+        try {
+          const formatted = {
+            title: pkgData.title,
+            description: pkgData.description,
+            duration: parseInt(pkgData.duration),
+            status: pkgData.status === 'Aktif' ? 'active' : 'inactive'
+          };
+          await API.post('/tryouts', formatted);
+          await get().fetchPackages();
+        } catch (error) {
+          console.error('Failed to create package:', error);
+          throw error;
+        }
+      },
+
+      updatePackage: async (updatedPkg) => {
+        try {
+          const formatted = {
+            title: updatedPkg.title,
+            description: updatedPkg.description,
+            duration: parseInt(updatedPkg.duration),
+            status: updatedPkg.status === 'Aktif' ? 'active' : 'inactive'
+          };
+          await API.put(`/tryouts/${updatedPkg.id}`, formatted);
+          await get().fetchPackages();
+        } catch (error) {
+          console.error('Failed to update package:', error);
+          throw error;
+        }
+      },
+
+      deletePackage: async (id) => {
+        try {
+          await API.delete(`/tryouts/${id}`);
+          await get().fetchPackages();
+        } catch (error) {
+          console.error('Failed to delete package:', error);
+          throw error;
+        }
+      },
+
+      createPendingTransaction: (packageName, amount) => {
+        const user = get().user;
+        if (!user) return;
+        const newTrx = {
+          id: `TRX-${Date.now().toString().slice(-6)}`,
+          userName: user.name,
+          email: user.email,
+          package: packageName,
+          amount: amount,
+          date: new Date().toLocaleString('id-ID', { day: 'numeric', month: 'short', year: 'numeric', hour: '2-digit', minute: '2-digit' }).replace(/\./g, ':'),
+          status: 'pending'
+        };
+        set((state) => ({ transactions: [newTrx, ...(state.transactions || [])] }));
+        get().fetchPackages();
+      },
+
+      updateTransactionStatus: (id, status) => {
+        set((state) => ({
+          transactions: (state.transactions || []).map((t) =>
+            t.id === id ? { ...t, status } : t
+          )
+        }));
+        get().fetchPackages();
       }
     }),
     {
       name: 'cpns-tryout-storage',
-      partialize: (state) => ({ user: state.user, token: state.token }), // only persist auth
+      partialize: (state) => ({ user: state.user, token: state.token, transactions: state.transactions }),
     }
   )
 );
