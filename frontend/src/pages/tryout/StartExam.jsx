@@ -1,7 +1,7 @@
 import React, { useState, useEffect, useRef, useCallback } from 'react';
 import { useNavigate, useLocation } from 'react-router-dom';
 import { useExamStore } from '../../store/useExamStore';
-import { Clock, Award, ChevronLeft, ChevronRight, AlertCircle, Flag, Send } from 'lucide-react';
+import { Clock, Award, ChevronLeft, ChevronRight, AlertCircle, Send } from 'lucide-react';
 
 const formatTimer = (seconds) => {
   const hrs = Math.floor(seconds / 3600);
@@ -16,70 +16,71 @@ export default function StartExam() {
 
   const {
     packages,
-    questions,
-    addAttempt,
-    incrementPackageAttempts
+    fetchQuestions,
+    startExamAttempt,
+    submitExamAttempt
   } = useExamStore();
 
   const pkgId = location.state?.packageId || 1;
-  const currentPkg = packages.find(p => p.id === pkgId) || packages[0];
+  const currentPkg = packages.find(p => p.id === pkgId) || { title: 'Simulasi CPNS', duration: 100 };
 
+  const [loading, setLoading] = useState(true);
+  const [examQuestions, setExamQuestions] = useState([]);
+  const [attemptId, setAttemptId] = useState(null);
   const [answers, setAnswers] = useState({});
-  const [raguRagu, setRaguRagu] = useState({});
   const [currentQuestionIndex, setCurrentQuestionIndex] = useState(0);
   const [examTimeLeft, setExamTimeLeft] = useState(currentPkg.duration * 60);
-  const [isTimerRunning, setIsTimerRunning] = useState(true);
+  const [isTimerRunning, setIsTimerRunning] = useState(false);
   const [showSubmitModal, setShowSubmitModal] = useState(false);
   const [showNav, setShowNav] = useState(true);
 
   const timerRef = useRef(null);
 
-  const handleFinishExam = useCallback(() => {
+  useEffect(() => {
+    const initExam = async () => {
+      try {
+        const questionsList = await fetchQuestions(pkgId);
+        setExamQuestions(questionsList);
+        
+        const attempt = await startExamAttempt(pkgId);
+        setAttemptId(attempt.id);
+        
+        if (attempt.started_at) {
+          const startedTime = new Date(attempt.started_at).getTime();
+          const currentTime = new Date().getTime();
+          const elapsedSeconds = Math.floor((currentTime - startedTime) / 1000);
+          const totalDurationSeconds = currentPkg.duration * 60;
+          const remaining = Math.max(0, totalDurationSeconds - elapsedSeconds);
+          setExamTimeLeft(remaining);
+        } else {
+          setExamTimeLeft(currentPkg.duration * 60);
+        }
+
+        setIsTimerRunning(true);
+        setLoading(false);
+      } catch (err) {
+        alert('Gagal memulai ujian: ' + err.message);
+        navigate('/dashboard');
+      }
+    };
+    initExam();
+  }, [pkgId, fetchQuestions, startExamAttempt, currentPkg.duration, navigate]);
+
+  const handleFinishExam = useCallback(async () => {
     setIsTimerRunning(false);
     if (timerRef.current) clearInterval(timerRef.current);
 
-    let twkCorrect = 0;
-    let tiuCorrect = 0;
-    let tkpRawSum = 0;
-
-    questions.forEach((q) => {
-      const userAnswer = answers[q.id];
-      if (q.category === 'TWK') {
-        if (userAnswer === q.correctAnswer) twkCorrect += 1;
-      } else if (q.category === 'TIU') {
-        if (userAnswer === q.correctAnswer) tiuCorrect += 1;
-      } else if (q.category === 'TKP') {
-        const optionScore = q.scores?.[userAnswer] || 0;
-        tkpRawSum += optionScore;
-      }
-    });
-
-    const computedTWK = twkCorrect * 15;
-    const computedTIU = tiuCorrect * 17.5;
-    const computedTKP = tkpRawSum * 4.5;
-
-    const finalScore = Math.round(computedTWK + computedTIU + computedTKP);
-    const passed = (computedTWK >= 65) && (computedTIU >= 80) && (computedTKP >= 166);
-    const resultStatus = passed ? 'LULUS' : 'TIDAK LULUS';
-
-    const newAttempt = {
-      date: new Date().toLocaleDateString('id-ID', { day: 'numeric', month: 'long', year: 'numeric' }),
-      title: currentPkg.title,
-      score: finalScore,
-      result: resultStatus,
-      twk: computedTWK,
-      tiu: computedTIU,
-      tkp: computedTKP,
-      correctCount: twkCorrect + tiuCorrect
-    };
-
-    addAttempt(newAttempt);
-    incrementPackageAttempts(currentPkg.id);
-    sessionStorage.setItem('last-exam-answers', JSON.stringify(answers));
-
-    setShowSubmitModal(false);
-    navigate('/result');
-  }, [answers, currentPkg, questions, addAttempt, incrementPackageAttempts, navigate]);
+    try {
+      const result = await submitExamAttempt(attemptId, answers);
+      sessionStorage.setItem('last-exam-answers', JSON.stringify(answers));
+      
+      setShowSubmitModal(false);
+      navigate('/result', { state: { attemptId: result.attempt_id } });
+    } catch (err) {
+      alert('Gagal mengirim jawaban: ' + err.message);
+      setIsTimerRunning(true);
+    }
+  }, [answers, attemptId, submitExamAttempt, navigate]);
 
   const handleAutoSubmit = useCallback(() => {
     alert('Waktu Ujian Simulasi Anda Telah Habis! Sistem akan mengumpulkan lembar jawaban Anda secara otomatis.');
@@ -119,23 +120,7 @@ export default function StartExam() {
     }));
   };
 
-  const handleToggleRaguRagu = (questionId) => {
-    setRaguRagu(prev => ({
-      ...prev,
-      [questionId]: !prev[questionId]
-    }));
-  };
-
-  const currentQuestion = questions[currentQuestionIndex];
-
-  const answeredCount = Object.keys(answers).length;
-  const unansweredCount = questions.length - answeredCount;
-  const raguRaguCount = Object.values(raguRagu).filter(Boolean).length;
-
-  // Timer urgency
-  const timerUrgency = examTimeLeft < 300 ? 'critical' : examTimeLeft < 900 ? 'warning' : 'normal';
-
-  if (!currentQuestion) {
+  if (loading || examQuestions.length === 0) {
     return (
       <div className="min-h-screen flex items-center justify-center bg-slate-50">
         <div className="text-center space-y-3">
@@ -146,43 +131,52 @@ export default function StartExam() {
     );
   }
 
+  const currentQuestion = examQuestions[currentQuestionIndex];
+  const answeredCount = Object.keys(answers).length;
+  const unansweredCount = examQuestions.length - answeredCount;
+
+  // Timer urgency
+  const timerUrgency = examTimeLeft < 300 ? 'critical' : examTimeLeft < 900 ? 'warning' : 'normal';
+
   return (
     <div className="min-h-screen flex flex-col bg-slate-50 select-none">
       {/* ─── ZEN HEADER — Minimal Chrome ─── */}
       <header className="bg-white border-b border-slate-200/60 py-3 px-4 sm:px-6 flex items-center justify-between sticky top-0 z-30 backdrop-blur-xl bg-white/90">
         <div className="flex items-center gap-3">
           <div className="bg-slate-900 text-white p-1.5 rounded-lg">
-            <Award className="h-4 w-4" />
+            <Award className="h-5 w-5" />
           </div>
           <div>
-            <h1 className="text-xs sm:text-sm font-bold tracking-tight text-slate-800">
+            <h1 className="text-sm sm:text-base font-bold tracking-tight text-slate-800">
               Simulasi CAT CPNS
             </h1>
-            <p className="text-[10px] text-slate-400 font-medium">
+            <p className="text-xs text-slate-500 font-medium">
               {currentPkg.title}
             </p>
           </div>
         </div>
 
-        <div className="flex items-center gap-3">
-          {/* Timer Pill */}
-          <div className={`flex items-center gap-1.5 px-3.5 py-1.5 rounded-full text-xs font-bold transition-all duration-500 ${
+        <div className="flex items-center gap-4">
+          {/* Timer Box (Diperbesar & Diberi Kotak) */}
+          <div className={`flex items-center justify-center gap-2 px-4 py-2 sm:px-6 sm:py-2.5 rounded-xl border-2 transition-all duration-500 shadow-sm ${
             timerUrgency === 'critical'
-              ? 'bg-red-50 text-red-600 ring-1 ring-red-200 animate-pulse'
+              ? 'bg-red-50 text-red-600 border-red-300 animate-pulse'
               : timerUrgency === 'warning'
-              ? 'bg-amber-50 text-amber-600 ring-1 ring-amber-200'
-              : 'bg-slate-100 text-slate-600 ring-1 ring-slate-200/60'
+              ? 'bg-amber-50 text-amber-600 border-amber-300'
+              : 'bg-white text-slate-800 border-slate-200'
           }`}>
-            <Clock className="h-3.5 w-3.5" />
-            <span className="tabular-nums font-extrabold">{formatTimer(examTimeLeft)}</span>
+            <Clock className="h-4 w-4 sm:h-5 sm:w-5" />
+            <span className="text-base sm:text-xl tabular-nums font-extrabold tracking-wider">
+              {formatTimer(examTimeLeft)}
+            </span>
           </div>
 
           {/* Toggle nav on mobile */}
           <button
             onClick={() => setShowNav(!showNav)}
-            className="lg:hidden p-2 rounded-lg hover:bg-slate-100 transition-colors text-slate-500"
+            className="lg:hidden p-2 rounded-lg hover:bg-slate-100 transition-colors text-slate-500 border border-slate-200"
           >
-            <span className="text-xs font-bold">{answeredCount}/{questions.length}</span>
+            <span className="text-xs font-bold">{answeredCount}/{examQuestions.length}</span>
           </button>
         </div>
       </header>
@@ -192,38 +186,22 @@ export default function StartExam() {
         {/* Question Panel */}
         <div className="lg:col-span-8 space-y-5">
           {/* Question header */}
-          <div className="flex items-center justify-between">
-            <div className="flex items-center gap-3">
-              <span className="text-2xl font-extrabold tracking-tight text-slate-900">{currentQuestionIndex + 1}</span>
-              <div>
-                <span className="text-[10px] font-bold uppercase tracking-widest text-slate-400">dari {questions.length} soal</span>
-                <div className="flex items-center gap-1.5 mt-0.5">
-                  <span className={`inline-flex items-center px-2 py-0.5 rounded text-[10px] font-bold ring-1 ${
-                    currentQuestion.category === 'TWK' ? 'bg-blue-50 text-blue-700 ring-blue-100' :
-                    currentQuestion.category === 'TIU' ? 'bg-indigo-50 text-indigo-700 ring-indigo-100' :
-                    'bg-amber-50 text-amber-700 ring-amber-100'
-                  }`}>
-                    {currentQuestion.category}
-                  </span>
-                </div>
-              </div>
-            </div>
-
-            {/* Progress */}
-            <div className="hidden sm:flex items-center gap-2">
-              <div className="w-32 h-1.5 bg-slate-200 rounded-full overflow-hidden">
-                <div
-                  className="h-full bg-slate-900 rounded-full transition-all duration-500 ease-out"
-                  style={{ width: `${((currentQuestionIndex + 1) / questions.length) * 100}%` }}
-                />
-              </div>
-              <span className="text-[10px] text-slate-400 font-semibold">{Math.round(((currentQuestionIndex + 1) / questions.length) * 100)}%</span>
-            </div>
+          <div className="flex items-center gap-3">
+            <span className="text-2xl font-extrabold tracking-tight text-slate-900">
+              Soal No {currentQuestionIndex + 1}
+            </span>
+            <span className={`inline-flex items-center px-2.5 py-1 rounded-md text-xs font-bold ring-1 ${
+              currentQuestion.category === 'TWK' ? 'bg-blue-50 text-blue-700 ring-blue-200' :
+              currentQuestion.category === 'TIU' ? 'bg-indigo-50 text-indigo-700 ring-indigo-200' :
+              'bg-amber-50 text-amber-700 ring-amber-200'
+            }`}>
+              {currentQuestion.category}
+            </span>
           </div>
 
           {/* Question Body */}
           <div className="bg-white rounded-2xl ring-1 ring-slate-200/60 shadow-premium p-5 sm:p-7">
-            <p className="text-sm font-semibold text-slate-800 leading-[1.8]">
+            <p className="text-sm sm:text-base font-semibold text-slate-800 leading-[1.8]">
               {currentQuestion.question}
             </p>
           </div>
@@ -267,7 +245,7 @@ export default function StartExam() {
                 disabled={currentQuestionIndex === 0}
                 className={`px-4 py-2.5 rounded-xl text-xs font-semibold flex items-center gap-1 transition-all duration-200 active:scale-[0.97] ${
                   currentQuestionIndex === 0
-                    ? 'text-slate-300 cursor-not-allowed'
+                    ? 'text-slate-300 cursor-not-allowed text-slate-400'
                     : 'text-slate-600 ring-1 ring-slate-200/60 hover:ring-slate-300 hover:bg-white bg-white'
                 }`}
               >
@@ -276,11 +254,11 @@ export default function StartExam() {
               </button>
 
               <button
-                onClick={() => setCurrentQuestionIndex(prev => Math.min(questions.length - 1, prev + 1))}
-                disabled={currentQuestionIndex === questions.length - 1}
+                onClick={() => setCurrentQuestionIndex(prev => Math.min(examQuestions.length - 1, prev + 1))}
+                disabled={currentQuestionIndex === examQuestions.length - 1}
                 className={`px-4 py-2.5 rounded-xl text-xs font-semibold flex items-center gap-1 transition-all duration-200 active:scale-[0.97] ${
-                  currentQuestionIndex === questions.length - 1
-                    ? 'text-slate-300 cursor-not-allowed'
+                  currentQuestionIndex === examQuestions.length - 1
+                    ? 'text-slate-300 cursor-not-allowed hidden'
                     : 'bg-slate-900 text-white hover:bg-slate-800 shadow-premium'
                 }`}
               >
@@ -290,44 +268,31 @@ export default function StartExam() {
             </div>
 
             <div className="flex items-center gap-2">
-              {/* Ragu-Ragu */}
-              <button
-                onClick={() => handleToggleRaguRagu(currentQuestion.id)}
-                className={`px-3.5 py-2.5 rounded-xl text-xs font-semibold flex items-center gap-1.5 transition-all duration-200 active:scale-[0.97] ${
-                  raguRagu[currentQuestion.id]
-                    ? 'bg-amber-500 text-white shadow-premium'
-                    : 'ring-1 ring-slate-200/60 text-slate-500 hover:ring-amber-300 hover:text-amber-600 bg-white'
-                }`}
-              >
-                <Flag className="h-3.5 w-3.5" />
-                <span>Ragu</span>
-              </button>
-
-              {/* Submit */}
-              <button
-                onClick={() => setShowSubmitModal(true)}
-                className="px-4 py-2.5 rounded-xl text-xs font-semibold flex items-center gap-1.5 bg-red-600 hover:bg-red-700 text-white shadow-premium transition-all duration-200 active:scale-[0.97]"
-              >
-                <Send className="h-3.5 w-3.5" />
-                <span>Selesai</span>
-              </button>
+              {currentQuestionIndex === examQuestions.length - 1 && (
+                <button
+                  onClick={() => setShowSubmitModal(true)}
+                  className="px-5 py-2.5 rounded-xl text-xs font-semibold flex items-center gap-2 bg-red-600 hover:bg-red-700 text-white shadow-premium transition-all duration-200 active:scale-[0.97]"
+                >
+                  <Send className="h-4 w-4" />
+                  <span>Selesai Ujian</span>
+                </button>
+              )}
             </div>
           </div>
         </div>
 
         {/* ─── NAVIGATION SIDEBAR ─── */}
         <div className={`lg:col-span-4 ${showNav ? 'block' : 'hidden lg:block'}`}>
-          <div className="bg-white rounded-2xl ring-1 ring-slate-200/60 shadow-premium p-5 sticky top-20 space-y-5">
+          <div className="bg-white rounded-2xl ring-1 ring-slate-200/60 shadow-premium p-5 sticky top-24 space-y-5">
             <div className="flex items-center justify-between">
               <h3 className="text-xs font-bold text-slate-800 tracking-tight">Navigasi Soal</h3>
-              <span className="text-[10px] text-slate-400 font-semibold">{answeredCount}/{questions.length} terjawab</span>
+              <span className="text-[10px] text-slate-400 font-semibold">{answeredCount}/{examQuestions.length} terjawab</span>
             </div>
 
             {/* Grid */}
             <div className="grid grid-cols-6 gap-1.5">
-              {questions.map((q, idx) => {
+              {examQuestions.map((q, idx) => {
                 const isAnswered = !!answers[q.id];
-                const isRagu = !!raguRagu[q.id];
                 const isActive = currentQuestionIndex === idx;
 
                 return (
@@ -337,9 +302,7 @@ export default function StartExam() {
                     className={`h-9 rounded-lg text-[11px] font-bold flex items-center justify-center transition-all duration-150 ${
                       isActive ? 'ring-2 ring-slate-900 scale-110 z-10' : ''
                     } ${
-                      isRagu
-                        ? 'bg-amber-500 text-white'
-                        : isAnswered
+                      isAnswered
                         ? 'bg-emerald-500 text-white'
                         : 'bg-slate-50 text-slate-500 ring-1 ring-slate-200/60 hover:bg-slate-100'
                     }`}
@@ -351,10 +314,9 @@ export default function StartExam() {
             </div>
 
             {/* Legend */}
-            <div className="grid grid-cols-3 gap-2 pt-4 border-t border-slate-100">
+            <div className="grid grid-cols-2 gap-2 pt-4 border-t border-slate-100">
               {[
                 { color: 'bg-emerald-500', label: 'Terjawab', count: answeredCount },
-                { color: 'bg-amber-500', label: 'Ragu', count: raguRaguCount },
                 { color: 'bg-slate-200', label: 'Kosong', count: unansweredCount }
               ].map((item) => (
                 <div key={item.label} className="text-center p-2.5 rounded-xl bg-slate-50 ring-1 ring-slate-100">
@@ -390,17 +352,13 @@ export default function StartExam() {
               </p>
             </div>
 
-            {/* Stats */}
-            <div className="grid grid-cols-3 gap-2 p-3 bg-slate-50 rounded-xl ring-1 ring-slate-100">
+            {/* Stats Modal */}
+            <div className="grid grid-cols-2 gap-2 p-3 bg-slate-50 rounded-xl ring-1 ring-slate-100">
               <div className="text-center">
                 <span className="block text-base font-extrabold text-emerald-600">{answeredCount}</span>
                 <span className="text-[10px] font-medium text-slate-400">Terjawab</span>
               </div>
-              <div className="text-center border-x border-slate-200/60">
-                <span className="block text-base font-extrabold text-amber-500">{raguRaguCount}</span>
-                <span className="text-[10px] font-medium text-slate-400">Ragu</span>
-              </div>
-              <div className="text-center">
+              <div className="text-center border-l border-slate-200/60">
                 <span className="block text-base font-extrabold text-red-500">{unansweredCount}</span>
                 <span className="text-[10px] font-medium text-slate-400">Kosong</span>
               </div>

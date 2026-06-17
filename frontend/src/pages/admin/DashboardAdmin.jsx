@@ -1,4 +1,4 @@
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import { useExamStore } from '../../store/useExamStore';
 import { Trash, Edit, Plus, X } from 'lucide-react';
 import Card from '../../components/common/Card';
@@ -6,7 +6,11 @@ import Button from '../../components/common/Button';
 import Badge from '../../components/common/Badge';
 
 export default function DashboardAdmin() {
-  const { questions, addQuestion, deleteQuestion, updateQuestion } = useExamStore();
+  const { questions, addQuestion, deleteQuestion, updateQuestion, fetchQuestions } = useExamStore();
+
+  useEffect(() => {
+    fetchQuestions(1);
+  }, [fetchQuestions]);
 
   const [isEditing, setIsEditing] = useState(false);
   const [editingId, setEditingId] = useState(null);

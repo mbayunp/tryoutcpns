@@ -35,6 +35,7 @@ const register = async (userData) => {
 };
 
 const login = async (email, password) => {
+  console.log('Login attempt debug - Email:', email, 'Password:', password ? `[exists, length: ${password.length}]` : '[missing]');
   const user = await User.findOne({ where: { email } });
   if (!user || !user.is_active) {
     const error = new Error('Invalid email or password');

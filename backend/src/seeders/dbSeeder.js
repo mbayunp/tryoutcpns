@@ -35,29 +35,35 @@ const seed = async () => {
     const adminPassword = await bcrypt.hash('admin123', salt);
     const userPassword = await bcrypt.hash('user123', salt);
 
-    const [adminUser] = await User.findOrCreate({
-      where: { email: 'admin@wildan.com' },
-      defaults: {
+    let adminUser = await User.findOne({ where: { email: 'admin@wildan.com' } });
+    if (adminUser) {
+      adminUser.password = adminPassword;
+      await adminUser.save();
+    } else {
+      adminUser = await User.create({
         name: 'Admin Wildan',
         email: 'admin@wildan.com',
         password: adminPassword,
         role: 'admin',
         is_active: true
-      }
-    });
+      });
+    }
 
-    const [regularUser] = await User.findOrCreate({
-      where: { email: 'user@wildan.com' },
-      defaults: {
+    let regularUser = await User.findOne({ where: { email: 'user@wildan.com' } });
+    if (regularUser) {
+      regularUser.password = userPassword;
+      await regularUser.save();
+    } else {
+      regularUser = await User.create({
         name: 'Candidate User',
         email: 'user@wildan.com',
         password: userPassword,
         role: 'user',
         is_active: true
-      }
-    });
+      });
+    }
 
-    console.log('Users seeded: admin@wildan.com, user@wildan.com.');
+    console.log('Users seeded & passwords updated: admin@wildan.com, user@wildan.com.');
 
     // 3. Seed Sample Tryout
     console.log('Seeding Sample Tryout...');
@@ -124,6 +130,20 @@ const seed = async () => {
         d: 4,
         e: 2
       }
+    });
+
+    // Question 4: TWK
+    await Question.create({
+      tryout_id: sampleTryout.id,
+      category_id: twkCat.id,
+      question: 'Siapakah ketua Panitia Sembilan yang merumuskan Piagam Jakarta pada tanggal 22 Juni 1945?',
+      option_a: 'Drs. Moh. Hatta',
+      option_b: 'Ir. Soekarno',
+      option_c: 'Mr. A.A. Maramis',
+      option_d: 'Mr. Muhammad Yamin',
+      option_e: 'K.H. Wachid Hasyim',
+      correct_answer: 'b',
+      option_weights: null
     });
 
     // Update total_questions cache

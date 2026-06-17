@@ -2,7 +2,6 @@ import React, { useState, useEffect } from 'react';
 import { Outlet, useNavigate, useLocation, Link } from 'react-router-dom';
 import { useExamStore } from '../../store/useExamStore';
 import {
-  Award,
   LayoutDashboard,
   FileText,
   History,
@@ -55,12 +54,12 @@ export default function DashboardLayout() {
       <div className="space-y-6">
         {/* Brand */}
         <div className="px-5 flex items-center justify-between">
-          <Link to="/" className="flex items-center gap-2">
-            <div className="bg-slate-900 text-white p-1.5 rounded-lg">
-              <Award className="h-4 w-4" />
+          <Link to="/" className="flex items-center gap-2.5 group">
+            <div className="bg-white p-1 rounded-xl border border-slate-100 shadow-sm">
+              <img src="/logo.jpg" alt="Logo Sentral CPNS" className="h-6 w-6 object-cover rounded-md" />
             </div>
             <span className="font-extrabold text-base text-slate-900 tracking-tight">
-              CPNS<span className="text-blue-600">TryOut</span>
+              Sentral<span className="text-blue-700"> CPNS</span>
             </span>
           </Link>
           <button onClick={() => setMobileOpen(false)} className="md:hidden p-1 rounded-lg hover:bg-slate-100 text-slate-400">
@@ -170,8 +169,9 @@ export default function DashboardLayout() {
           >
             <Menu className="h-5 w-5" />
           </button>
-          <span className="font-extrabold text-sm text-slate-900 tracking-tight">
-            CPNS<span className="text-blue-600">TryOut</span>
+          <span className="font-extrabold text-sm text-slate-900 tracking-tight flex items-center gap-1.5">
+            <img src="/logo.jpg" alt="Logo" className="h-5 w-5 object-cover rounded-md" />
+            <span>Sentral<span className="text-blue-700"> CPNS</span></span>
           </span>
           <div className="h-8 w-8 bg-slate-900 text-white rounded-xl flex items-center justify-center font-bold text-[10px]">
             {user.avatar || 'CP'}
