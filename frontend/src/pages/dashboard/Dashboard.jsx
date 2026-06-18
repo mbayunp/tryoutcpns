@@ -18,6 +18,7 @@ import Card from '../../components/common/Card';
 import Badge from '../../components/common/Badge';
 import Button from '../../components/common/Button';
 import HistoryTab from './HistoryTab';
+import RankingTab from './RankingTab';
 
 export default function Dashboard() {
   const navigate = useNavigate();
@@ -305,14 +306,23 @@ export default function Dashboard() {
         <HistoryTab />
       )}
 
+      {/* ═══ RANKING TABLE TAB (Terpisah) ═══ */}
+      {activeTab === 'ranking' && (
+        <RankingTab />
+      )}
+
       {/* ═══ PROFILE TAB ═══ */}
       {activeTab === 'profil' && (
         <div className="grid grid-cols-1 lg:grid-cols-3 gap-6 items-start">
           {/* Left Avatar Card */}
           <Card className="p-6 border border-slate-200/60 shadow-premium bg-white flex flex-col items-center text-center space-y-4">
             <div className="relative">
-              <div className="h-24 w-24 bg-gradient-to-br from-[#0B1C30] to-[#1E3E66] text-white rounded-2xl flex items-center justify-center font-extrabold text-3xl shadow-lg">
-                {user?.avatar || user?.name?.split(' ').map(n => n[0]).join('').slice(0, 2).toUpperCase() || 'CP'}
+              <div className="h-24 w-24 bg-gradient-to-br from-[#0B1C30] to-[#1E3E66] text-white rounded-2xl flex items-center justify-center font-extrabold text-3xl shadow-lg overflow-hidden">
+                {user?.avatar && (user.avatar.startsWith('http') || user.avatar.startsWith('/')) ? (
+                  <img src={user.avatar} alt="Avatar" className="h-full w-full object-cover" />
+                ) : (
+                  user?.avatar || user?.name?.split(' ').map(n => n[0]).join('').slice(0, 2).toUpperCase() || 'CP'
+                )}
               </div>
               <span className="absolute bottom-0 right-0 h-5 w-5 bg-emerald-500 rounded-full border-2 border-white" title="Active"></span>
             </div>

@@ -37,17 +37,37 @@ const getTryoutById = async (id, userId, isAdmin = false) => {
     ? ['id', 'question', 'option_a', 'option_b', 'option_c', 'option_d', 'option_e', 'correct_answer', 'option_weights']
     : ['id', 'question', 'option_a', 'option_b', 'option_c', 'option_d', 'option_e'];
 
-  const questions = await Question.findAll({
-    where: { tryout_id: id },
+  let questions = await Question.findAll({
     attributes,
     include: [
       {
         model: Category,
         as: 'category',
         attributes: ['id', 'name']
+      },
+      {
+        model: Tryout,
+        as: 'tryoutsMany',
+        where: { id },
+        attributes: [],
+        through: { attributes: [] }
       }
     ]
   });
+
+  if (questions.length === 0) {
+    questions = await Question.findAll({
+      where: { tryout_id: id },
+      attributes,
+      include: [
+        {
+          model: Category,
+          as: 'category',
+          attributes: ['id', 'name']
+        }
+      ]
+    });
+  }
 
   return {
     ...tryout.toJSON(),
@@ -119,16 +139,35 @@ const submitTryout = async (userId, attemptId, submittedAnswers = []) => {
   }
 
   // Get all questions with categories for this tryout to calculate scores accurately
-  const questions = await Question.findAll({
-    where: { tryout_id: attempt.tryout_id },
+  let questions = await Question.findAll({
     include: [
       {
         model: Category,
         as: 'category',
         attributes: ['id', 'name']
+      },
+      {
+        model: Tryout,
+        as: 'tryoutsMany',
+        where: { id: attempt.tryout_id },
+        attributes: [],
+        through: { attributes: [] }
       }
     ]
   });
+
+  if (questions.length === 0) {
+    questions = await Question.findAll({
+      where: { tryout_id: attempt.tryout_id },
+      include: [
+        {
+          model: Category,
+          as: 'category',
+          attributes: ['id', 'name']
+        }
+      ]
+    });
+  }
 
   const { totalScore, answerDetails } = calculateTotalScore(questions, submittedAnswers);
 
@@ -136,18 +175,30 @@ const submitTryout = async (userId, attemptId, submittedAnswers = []) => {
   const t = await sequelize.transaction();
 
   try {
-    // Delete any previous answers for this attempt (safety check)
-    await Answer.destroy({ where: { attempt_id: attemptId }, transaction: t });
+    const { AttemptAnswer } = require('../models');
 
-    // Save all answers
+    // Delete any previous answers for this attempt (safety check) from both tables
+    await Answer.destroy({ where: { attempt_id: attemptId }, transaction: t });
+    await AttemptAnswer.destroy({ where: { attempt_id: attemptId }, transaction: t });
+
+    // Save all answers in Answer model
     const answersData = answerDetails.map(detail => ({
       attempt_id: attemptId,
       question_id: detail.question_id,
       selected_answer: detail.selected_answer,
       is_correct: detail.is_correct
     }));
-
     await Answer.bulkCreate(answersData, { transaction: t });
+
+    // Save all answers in AttemptAnswer model
+    const attemptAnswersData = answerDetails.map(detail => ({
+      attempt_id: attemptId,
+      question_id: detail.question_id,
+      selected_option: detail.selected_answer,
+      is_correct: detail.is_correct,
+      score: detail.is_correct ? 5 : 0
+    }));
+    await AttemptAnswer.bulkCreate(attemptAnswersData, { transaction: t });
 
     // Update attempt
     attempt.score = totalScore;

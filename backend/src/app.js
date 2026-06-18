@@ -12,6 +12,7 @@ const tryoutRoutes = require('./routes/tryoutRoutes');
 const resultRoutes = require('./routes/resultRoutes');
 const transactionRoutes = require('./routes/transactionRoutes');
 const attemptRoutes = require('./routes/attemptRoutes');
+const announcementRoutes = require('./routes/announcementRoutes');
 
 const app = express();
 
@@ -38,6 +39,7 @@ app.use('/api/packages', tryoutRoutes);
 app.use('/api/results', resultRoutes);
 app.use('/api/transactions', transactionRoutes);
 app.use('/api/attempts', attemptRoutes);
+app.use('/api/announcements', announcementRoutes);
 
 // Catch 404 Route Not Found
 app.use((req, res, next) => {

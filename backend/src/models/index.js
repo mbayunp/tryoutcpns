@@ -13,6 +13,7 @@ const Package = require('./package');
 const Transaction = require('./transaction');
 const Payment = require('./payment');
 const Video = require('./video');
+const Announcement = require('./announcement');
 
 // Associations
 // 1. User <-> Attempt
@@ -77,7 +78,8 @@ const db = {
   Payment,
   Video,
   PackageQuestion,
-  AttemptAnswer
+  AttemptAnswer,
+  Announcement
 };
 
 module.exports = db;

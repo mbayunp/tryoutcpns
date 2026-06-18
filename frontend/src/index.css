@@ -4,6 +4,7 @@
 
 html {
   scroll-behavior: smooth;
+  scroll-padding-top: 80px; /* Offset untuk header yang fixed */
 }
 
 /* ========================================

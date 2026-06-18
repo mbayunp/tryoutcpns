@@ -120,12 +120,30 @@ export default function StartExam() {
     }));
   };
 
-  if (loading || examQuestions.length === 0) {
+  if (loading) {
     return (
       <div className="min-h-screen flex items-center justify-center bg-slate-50">
         <div className="text-center space-y-3">
           <div className="h-8 w-8 border-2 border-slate-300 border-t-slate-900 rounded-full animate-spin mx-auto" />
           <p className="text-sm font-semibold text-slate-500">Memuat Soal Ujian...</p>
+        </div>
+      </div>
+    );
+  }
+
+  if (examQuestions.length === 0) {
+    return (
+      <div className="min-h-screen flex items-center justify-center bg-slate-50">
+        <div className="text-center space-y-4 max-w-sm px-6">
+          <AlertCircle className="h-12 w-12 text-amber-500 mx-auto" />
+          <h3 className="text-lg font-bold text-slate-800">Soal Belum Tersedia</h3>
+          <p className="text-sm text-slate-500">Paket tryout ini belum memiliki soal. Silakan hubungi admin atau pilih paket lainnya.</p>
+          <button
+            onClick={() => navigate('/dashboard')}
+            className="w-full bg-[#0B1C30] hover:bg-[#102A43] text-white py-3 rounded-xl font-bold transition-all text-xs border-0 cursor-pointer"
+          >
+            Kembali ke Dashboard
+          </button>
         </div>
       </div>
     );

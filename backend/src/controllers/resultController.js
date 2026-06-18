@@ -20,7 +20,20 @@ const getHistory = async (req, res, next) => {
   }
 };
 
+const getRanking = async (req, res, next) => {
+  try {
+    const { tryout_id } = req.query;
+    // Default to tryout package 1 if not specified
+    const targetTryoutId = tryout_id ? parseInt(tryout_id) : 1;
+    const ranking = await resultService.getRanking(targetTryoutId);
+    return response.success(res, ranking, 'Ranking retrieved successfully');
+  } catch (err) {
+    next(err);
+  }
+};
+
 module.exports = {
   getResult,
-  getHistory
+  getHistory,
+  getRanking
 };

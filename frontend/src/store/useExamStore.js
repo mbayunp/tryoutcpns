@@ -12,6 +12,9 @@ export const useExamStore = create(
       questions: [],
       activeTab: 'dashboard',
       transactions: [],
+      rankings: [],
+      announcement: null,
+      announcements: [],
 
       // Actions
       login: async (email, password) => {
@@ -23,13 +26,27 @@ export const useExamStore = create(
           
           const userWithAvatar = {
             ...user,
-            avatar: `https://api.dicebear.com/7.x/adventurer/svg?seed=${user.name}`
+            avatar: '/images/icon.png'
           };
           
           set({ user: userWithAvatar, token });
           return userWithAvatar;
         } catch (error) {
           const message = error.response?.data?.message || 'Login gagal. Silakan periksa kembali email dan password Anda.';
+          throw new Error(message);
+        }
+      },
+
+      register: async (name, email, password) => {
+        try {
+          // 1. Post to register endpoint
+          await API.post('/auth/register', { name, email, password });
+          
+          // 2. Automatically log in the user upon successful registration
+          const user = await get().login(email, password);
+          return user;
+        } catch (error) {
+          const message = error.response?.data?.message || 'Registrasi gagal. Silakan periksa kembali data Anda.';
           throw new Error(message);
         }
       },
@@ -96,6 +113,66 @@ export const useExamStore = create(
           set({ history: mapped });
         } catch (error) {
           console.error('Failed to fetch history:', error);
+        }
+      },
+
+      fetchRankings: async (tryoutId) => {
+        try {
+          const res = await API.get(`/results/ranking?tryout_id=${tryoutId || 1}`);
+          set({ rankings: res.data.data || [] });
+        } catch (error) {
+          console.error('Failed to fetch rankings:', error);
+        }
+      },
+
+      fetchActiveAnnouncement: async () => {
+        try {
+          const res = await API.get('/announcements/active');
+          set({ announcement: res.data.data });
+        } catch (error) {
+          console.error('Failed to fetch active announcement:', error);
+        }
+      },
+
+      fetchAnnouncements: async () => {
+        try {
+          const res = await API.get('/announcements');
+          set({ announcements: res.data.data || [] });
+        } catch (error) {
+          console.error('Failed to fetch announcements:', error);
+        }
+      },
+
+      createAnnouncement: async (announcementData) => {
+        try {
+          await API.post('/announcements', announcementData);
+          await get().fetchAnnouncements();
+          await get().fetchActiveAnnouncement();
+        } catch (error) {
+          console.error('Failed to create announcement:', error);
+          throw error;
+        }
+      },
+
+      updateAnnouncement: async (id, announcementData) => {
+        try {
+          await API.put(`/announcements/${id}`, announcementData);
+          await get().fetchAnnouncements();
+          await get().fetchActiveAnnouncement();
+        } catch (error) {
+          console.error('Failed to update announcement:', error);
+          throw error;
+        }
+      },
+
+      deleteAnnouncement: async (id) => {
+        try {
+          await API.delete(`/announcements/${id}`);
+          await get().fetchAnnouncements();
+          await get().fetchActiveAnnouncement();
+        } catch (error) {
+          console.error('Failed to delete announcement:', error);
+          throw error;
         }
       },
 

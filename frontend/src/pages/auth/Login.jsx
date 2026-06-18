@@ -193,7 +193,7 @@ export default function Login() {
 
           <p className="text-center text-sm font-medium text-slate-500">
             Belum punya akun?{' '}
-            <button type="button" onClick={handleFillDemoUser} className="text-blue-600 font-bold hover:underline hover:text-blue-800 transition-colors">
+            <button type="button" onClick={() => navigate('/register')} className="text-blue-600 font-bold hover:underline hover:text-blue-800 transition-colors border-0 bg-transparent cursor-pointer">
               Daftar gratis
             </button>
           </p>

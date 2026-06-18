@@ -6,6 +6,7 @@ const authMiddleware = require('../middlewares/authMiddleware');
 router.use(authMiddleware);
 
 router.get('/', resultController.getHistory);
+router.get('/ranking', resultController.getRanking);
 router.get('/:id', resultController.getResult);
 
 module.exports = router;

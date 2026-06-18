@@ -162,33 +162,117 @@ const getQuestionsForPackage = async (req, res, next) => {
 
 const saveAttemptResult = async (req, res, next) => {
   try {
-    const { attempt_id, package_id, score, twk, tiu, tkp, result, answers } = req.body;
-    const { Attempt, AttemptAnswer } = require('../models');
+    const { attempt_id, package_id, answers } = req.body;
+    const { Attempt, AttemptAnswer, Answer, Question, Category, Tryout } = require('../models');
+    const { calculateTotalScore } = require('../utils/scoreCalculator');
     
     let attempt;
     if (attempt_id) {
       attempt = await Attempt.findByPk(attempt_id);
     }
     
+    const tryoutId = attempt ? attempt.tryout_id : (package_id || 1);
+    
+    // Securely retrieve questions and correct answers from database
+    let dbQuestions = await Question.findAll({
+      include: [
+        {
+          model: Category,
+          as: 'category',
+          attributes: ['id', 'name']
+        },
+        {
+          model: Tryout,
+          as: 'tryoutsMany',
+          where: { id: tryoutId },
+          attributes: [],
+          through: { attributes: [] }
+        }
+      ]
+    });
+    
+    if (dbQuestions.length === 0) {
+      dbQuestions = await Question.findAll({
+        where: { tryout_id: tryoutId },
+        include: [
+          {
+            model: Category,
+            as: 'category',
+            attributes: ['id', 'name']
+          }
+        ]
+      });
+    }
+    
+    // Format submitted answers
+    const submittedAnswers = (answers || []).map(ans => ({
+      question_id: ans.question_id,
+      selected_answer: ans.selected_option || ans.selected_answer
+    }));
+    
+    // Calculate total score using the utility function
+    const { totalScore, answerDetails } = calculateTotalScore(dbQuestions, submittedAnswers);
+    
+    // Calculate category breakdown (scaled scores as in resultService)
+    let twkCorrect = 0;
+    let tiuCorrect = 0;
+    let tkpRawSum = 0;
+    
+    answerDetails.forEach(detail => {
+      const q = dbQuestions.find(dbQ => dbQ.id === detail.question_id);
+      if (!q) return;
+      
+      const cat = q.category ? q.category.name.toUpperCase() : '';
+      const selected = detail.selected_answer ? detail.selected_answer.toLowerCase().trim() : null;
+      
+      if (!selected) return;
+      
+      if (cat === 'TWK') {
+        const correct = q.correct_answer ? q.correct_answer.toLowerCase().trim() : '';
+        if (selected === correct) twkCorrect += 1;
+      } else if (cat === 'TIU') {
+        const correct = q.correct_answer ? q.correct_answer.toLowerCase().trim() : '';
+        if (selected === correct) tiuCorrect += 1;
+      } else if (cat === 'TKP') {
+        if (q.option_weights) {
+          const weights = typeof q.option_weights === 'string'
+            ? JSON.parse(q.option_weights)
+            : q.option_weights;
+          tkpRawSum += weights[selected] || 0;
+        } else {
+          const correct = q.correct_answer ? q.correct_answer.toLowerCase().trim() : '';
+          if (selected === correct) tkpRawSum += 5;
+        }
+      }
+    });
+    
+    const computedTWK = twkCorrect * 15;
+    const computedTIU = tiuCorrect * 17.5;
+    const computedTKP = tkpRawSum * 4.5;
+    const finalScore = Math.round(computedTWK + computedTIU + computedTKP);
+    
+    const passed = (computedTWK >= 65) && (computedTIU >= 80) && (computedTKP >= 166);
+    const resultStatus = passed ? 'LULUS' : 'TIDAK LULUS';
+    
     if (!attempt) {
       attempt = await Attempt.create({
         user_id: req.user.id,
-        tryout_id: package_id || 1,
-        package_id: package_id || 1,
-        score: score || 0,
-        twk: twk || 0,
-        tiu: tiu || 0,
-        tkp: tkp || 0,
-        result: result || 'TIDAK LULUS',
+        tryout_id: tryoutId,
+        package_id: tryoutId,
+        score: finalScore,
+        twk: computedTWK,
+        tiu: computedTIU,
+        tkp: computedTKP,
+        result: resultStatus,
         status: 'completed',
         finished_at: new Date()
       });
     } else {
-      attempt.score = score !== undefined ? score : attempt.score;
-      attempt.twk = twk !== undefined ? twk : attempt.twk;
-      attempt.tiu = tiu !== undefined ? tiu : attempt.tiu;
-      attempt.tkp = tkp !== undefined ? tkp : attempt.tkp;
-      attempt.result = result || attempt.result;
+      attempt.score = finalScore;
+      attempt.twk = computedTWK;
+      attempt.tiu = computedTIU;
+      attempt.tkp = computedTKP;
+      attempt.result = resultStatus;
       attempt.status = 'completed';
       attempt.finished_at = new Date();
       if (package_id) {
@@ -197,20 +281,33 @@ const saveAttemptResult = async (req, res, next) => {
       await attempt.save();
     }
     
-    if (answers && answers.length > 0) {
+    // Save answers details in BOTH tables
+    if (answerDetails && answerDetails.length > 0) {
+      await Answer.destroy({
+        where: { attempt_id: attempt.id }
+      });
       await AttemptAnswer.destroy({
         where: { attempt_id: attempt.id }
       });
       
-      const answersData = answers.map(ans => ({
+      // Save to Answer model (answers table)
+      const answersDataForAnswer = answerDetails.map(detail => ({
         attempt_id: attempt.id,
-        question_id: ans.question_id,
-        selected_option: ans.selected_option || ans.selected_answer,
-        is_correct: ans.is_correct,
-        score: ans.score || 0
+        question_id: detail.question_id,
+        selected_answer: detail.selected_answer,
+        is_correct: detail.is_correct
       }));
+      await Answer.bulkCreate(answersDataForAnswer);
       
-      await AttemptAnswer.bulkCreate(answersData);
+      // Save to AttemptAnswer model (attempt_answers table)
+      const answersDataForAttemptAnswer = answerDetails.map(detail => ({
+        attempt_id: attempt.id,
+        question_id: detail.question_id,
+        selected_option: detail.selected_answer,
+        is_correct: detail.is_correct,
+        score: detail.score || 0
+      }));
+      await AttemptAnswer.bulkCreate(answersDataForAttemptAnswer);
     }
     
     return response.success(res, {

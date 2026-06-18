@@ -191,7 +191,54 @@ const getHistory = async (userId) => {
   return results;
 };
 
+const getRanking = async (tryoutId) => {
+  const { Attempt, User } = require('../models');
+
+  const attempts = await Attempt.findAll({
+    where: {
+      tryout_id: tryoutId,
+      status: 'completed'
+    },
+    include: [
+      {
+        model: User,
+        as: 'user',
+        attributes: ['id', 'name', 'email']
+      }
+    ],
+    order: [['score', 'DESC'], ['finished_at', 'ASC']]
+  });
+
+  const bestAttemptsMap = {};
+  attempts.forEach(attempt => {
+    const userId = attempt.user_id;
+    if (!bestAttemptsMap[userId] || bestAttemptsMap[userId].score < attempt.score) {
+      bestAttemptsMap[userId] = attempt;
+    }
+  });
+
+  const rankingList = Object.values(bestAttemptsMap);
+
+  // Sort initially by total score DESC
+  rankingList.sort((a, b) => b.score - a.score);
+
+  return rankingList.map((attempt) => {
+    return {
+      userId: attempt.user_id,
+      userName: attempt.user ? attempt.user.name : 'Unknown User',
+      email: attempt.user ? attempt.user.email : 'unknown@user.com',
+      score: attempt.score,
+      twk: attempt.twk || 0,
+      tiu: attempt.tiu || 0,
+      tkp: attempt.tkp || 0,
+      result: attempt.result,
+      finishedAt: attempt.finished_at
+    };
+  });
+};
+
 module.exports = {
   getResult,
-  getHistory
+  getHistory,
+  getRanking
 };
