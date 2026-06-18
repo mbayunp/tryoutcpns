@@ -18,4 +18,8 @@ router.post('/', adminMiddleware, tryoutValidation, tryoutController.createTryou
 router.put('/:id', adminMiddleware, tryoutValidation, tryoutController.updateTryout);
 router.delete('/:id', adminMiddleware, tryoutController.deleteTryout);
 
+// Package Questions Mapping
+router.post('/:id/questions', adminMiddleware, tryoutController.assignQuestionsToPackage);
+router.get('/:id/questions', tryoutController.getQuestionsForPackage);
+
 module.exports = router;

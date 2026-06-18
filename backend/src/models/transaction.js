@@ -3,20 +3,19 @@ const sequelize = require('../config/database');
 
 const Transaction = sequelize.define('Transaction', {
   id: {
-    type: DataTypes.INTEGER,
+    type: DataTypes.STRING(50),
     primaryKey: true,
-    autoIncrement: true,
   },
   user_id: {
     type: DataTypes.INTEGER,
     allowNull: false,
   },
-  package_id: {
+  tryout_id: {
     type: DataTypes.INTEGER,
     allowNull: false,
   },
   amount: {
-    type: DataTypes.DECIMAL(10, 2),
+    type: DataTypes.STRING(50),
     allowNull: false,
   },
   status: {
@@ -32,3 +31,4 @@ const Transaction = sequelize.define('Transaction', {
 });
 
 module.exports = Transaction;
+

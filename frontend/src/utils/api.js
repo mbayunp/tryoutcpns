@@ -1,8 +1,9 @@
 import axios from 'axios';
 import { useExamStore } from '../store/useExamStore';
+import { API_BASE_URL } from '../config';
 
 const API = axios.create({
-  baseURL: 'http://localhost:5000/api',
+  baseURL: `${API_BASE_URL}/api`,
 });
 
 // Request interceptor to attach JWT token

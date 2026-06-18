@@ -12,9 +12,13 @@ import Badge from '../../components/common/Badge';
 import { useExamStore } from '../../store/useExamStore';
 
 export default function AdminPembayaran() {
-    const { transactions, updateTransactionStatus } = useExamStore();
+    const { transactions, updateTransactionStatus, fetchTransactions } = useExamStore();
     const [searchTerm, setSearchTerm] = useState('');
     const [filterStatus, setFilterStatus] = useState('all');
+
+    React.useEffect(() => {
+        fetchTransactions();
+    }, [fetchTransactions]);
 
     // Fungsi untuk mengaktifkan paket (Approve)
     const handleApprove = (id) => {

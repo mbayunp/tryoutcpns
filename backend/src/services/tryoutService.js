@@ -8,12 +8,28 @@ const getTryouts = async (isAdmin = false) => {
   });
 };
 
-const getTryoutById = async (id, isAdmin = false) => {
+const getTryoutById = async (id, userId, isAdmin = false) => {
   const tryout = await Tryout.findByPk(id);
   if (!tryout) {
     const error = new Error('Tryout not found');
     error.statusCode = 404;
     throw error;
+  }
+
+  if (!isAdmin && tryout.status === 'inactive') {
+    const { Transaction } = require('../models');
+    const purchase = await Transaction.findOne({
+      where: {
+        user_id: userId,
+        tryout_id: id,
+        status: 'success'
+      }
+    });
+    if (!purchase) {
+      const error = new Error('Tryout ini terkunci. Silakan lakukan pembayaran terlebih dahulu.');
+      error.statusCode = 403;
+      throw error;
+    }
   }
 
   // If loading questions, exclude correct_answer and option_weights for users to prevent cheating
@@ -45,6 +61,23 @@ const startTryout = async (userId, tryoutId) => {
     const error = new Error('Tryout is not available');
     error.statusCode = 400;
     throw error;
+  }
+
+  // Check if tryout is locked (inactive)
+  if (tryout.status === 'inactive') {
+    const { Transaction } = require('../models');
+    const purchase = await Transaction.findOne({
+      where: {
+        user_id: userId,
+        tryout_id: tryoutId,
+        status: 'success'
+      }
+    });
+    if (!purchase) {
+      const error = new Error('Tryout ini terkunci. Silakan lakukan pembayaran terlebih dahulu.');
+      error.statusCode = 403;
+      throw error;
+    }
   }
 
   // Check if there is an ongoing attempt

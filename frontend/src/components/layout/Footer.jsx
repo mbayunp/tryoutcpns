@@ -1,7 +1,11 @@
 import React from 'react';
+import { Link, useLocation } from 'react-router-dom';
 import { Mail, Phone, MapPin } from 'lucide-react';
 
 export default function Footer() {
+  const location = useLocation();
+  const isHomePage = location.pathname === '/';
+
   return (
     <footer className="bg-slate-950 text-slate-400 pt-16 pb-10">
       <div className="max-w-6xl mx-auto px-4 sm:px-6 lg:px-8">
@@ -26,10 +30,10 @@ export default function Footer() {
           <div className="space-y-4">
             <h4 className="text-white font-semibold text-sm tracking-tight">Navigasi</h4>
             <ul className="space-y-2.5 text-sm">
-              <li><a href="#beranda" className="hover:text-white transition-colors duration-200">Beranda</a></li>
-              <li><a href="#tentang" className="hover:text-white transition-colors duration-200">Tentang</a></li>
-              <li><a href="#paket" className="hover:text-white transition-colors duration-200">Paket</a></li>
-              <li><a href="#faq" className="hover:text-white transition-colors duration-200">FAQ</a></li>
+              <li><a href={isHomePage ? '#beranda' : '/#beranda'} className="hover:text-white transition-colors duration-200">Beranda</a></li>
+              <li><a href={isHomePage ? '#features' : '/#features'} className="hover:text-white transition-colors duration-200">Fitur</a></li>
+              <li><a href={isHomePage ? '#programs' : '/#programs'} className="hover:text-white transition-colors duration-200">Paket</a></li>
+              <li><a href={isHomePage ? '#faq' : '/#faq'} className="hover:text-white transition-colors duration-200">FAQ</a></li>
             </ul>
           </div>
 
@@ -37,10 +41,10 @@ export default function Footer() {
           <div className="space-y-4">
             <h4 className="text-white font-semibold text-sm tracking-tight">Legal</h4>
             <ul className="space-y-2.5 text-sm">
-              <li><a href="#privacy" className="hover:text-white transition-colors duration-200">Privasi</a></li>
-              <li><a href="#terms" className="hover:text-white transition-colors duration-200">Ketentuan</a></li>
-              <li><a href="#refund" className="hover:text-white transition-colors duration-200">Refund</a></li>
-              <li><a href="#help" className="hover:text-white transition-colors duration-200">Bantuan</a></li>
+              <li><Link to="/privacy-policy" className="hover:text-white transition-colors duration-200">Privasi</Link></li>
+              <li><Link to="/terms" className="hover:text-white transition-colors duration-200">Ketentuan</Link></li>
+              <li><Link to="/refund-policy" className="hover:text-white transition-colors duration-200">Refund</Link></li>
+              <li><Link to="/help" className="hover:text-white transition-colors duration-200">Bantuan</Link></li>
             </ul>
           </div>
 

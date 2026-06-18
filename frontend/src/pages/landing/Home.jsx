@@ -1,6 +1,6 @@
 import React, { useState } from 'react';
 import { useNavigate } from 'react-router-dom';
-import { ArrowRight, Check, Play, Star, ChevronDown, Sparkles, Trophy, Users, BookOpen } from 'lucide-react';
+import { ArrowRight, Check, Play, Star, ChevronDown, Sparkles, Trophy, Users, BookOpen, ShieldCheck, Heart } from 'lucide-react';
 import homeImg from '../../components/images/home.png';
 
 export default function Home() {
@@ -13,38 +13,38 @@ export default function Home() {
     <div className="min-h-screen bg-slate-50/50 text-slate-900 font-sans selection:bg-blue-500/10 selection:text-blue-700">
 
       {/* ━━━ HERO SECTION ━━━ */}
-      <section id="beranda" className="relative overflow-hidden bg-white border-b border-slate-200/50 bg-grid-pattern">
+      <section id="beranda" className="relative overflow-hidden bg-white border-b border-slate-100 bg-grid-pattern pt-24 pb-16 sm:pt-32 sm:pb-24 lg:pt-40 lg:pb-32">
         
         {/* Glow Blobs background */}
-        <div className="absolute top-[-10%] left-[-10%] w-[500px] h-[500px] rounded-full bg-blue-400/10 blur-[120px] pointer-events-none animate-blob"></div>
-        <div className="absolute bottom-[-10%] right-[-10%] w-[500px] h-[500px] rounded-full bg-indigo-400/10 blur-[120px] pointer-events-none animate-blob animation-delay-2000"></div>
+        <div className="absolute top-[-10%] left-[-10%] w-[300px] sm:w-[500px] h-[300px] sm:h-[500px] rounded-full bg-blue-400/10 blur-[80px] sm:blur-[120px] pointer-events-none animate-blob"></div>
+        <div className="absolute bottom-[-10%] right-[-10%] w-[300px] sm:w-[500px] h-[300px] sm:h-[500px] rounded-full bg-indigo-400/10 blur-[80px] sm:blur-[120px] pointer-events-none animate-blob animation-delay-2000"></div>
 
-        <div className="relative max-w-6xl mx-auto px-5 sm:px-8 pt-32 pb-24 lg:pt-40 lg:pb-32">
-          <div className="grid lg:grid-cols-12 gap-16 lg:gap-8 items-center">
+        <div className="relative max-w-6xl mx-auto px-4 sm:px-6 lg:px-8">
+          <div className="grid lg:grid-cols-12 gap-12 lg:gap-8 items-center">
 
             {/* Left — Copy */}
-            <div className="lg:col-span-6 space-y-8 animate-fadeInUp">
+            <div className="lg:col-span-6 space-y-6 sm:space-y-8 text-center lg:text-left animate-fadeInUp">
               <div className="inline-flex items-center gap-2 text-[10px] sm:text-xs font-bold tracking-widest text-blue-600 bg-blue-50/80 border border-blue-100/50 backdrop-blur-md rounded-full px-4 py-1.5 uppercase shadow-sm">
                 <Sparkles className="h-3.5 w-3.5 text-blue-500 animate-pulse" />
                 <span>Pendaftaran CPNS 2026 Dibuka</span>
               </div>
 
-              <h1 className="text-4xl sm:text-5xl lg:text-[3.5rem] font-extrabold leading-[1.1] tracking-tight text-slate-900">
+              <h1 className="text-3xl sm:text-4xl lg:text-[3.5rem] font-extrabold leading-[1.15] lg:leading-[1.1] tracking-tight text-slate-900">
                 Simulator Ujian CPNS 
                 <br />
                 <span className="text-gradient-blue">100% Persis</span>
                 <br />
-                Sistem BKN Asli
+                Sistem CAT BKN Asli
               </h1>
 
-              <p className="text-base sm:text-lg text-slate-500 leading-relaxed max-w-md font-medium">
+              <p className="text-sm sm:text-base lg:text-lg text-slate-500 leading-relaxed max-w-md mx-auto lg:mx-0 font-medium">
                 Kuasai materi TWK, TIU, dan TKP dengan sistem CAT yang identik, pembahasan video oleh mentor ASN, dan perangkingan nasional real-time.
               </p>
 
-              <div className="flex flex-wrap items-center gap-4 pt-2">
+              <div className="flex flex-col sm:flex-row items-center justify-center lg:justify-start gap-4 pt-2">
                 <button
                   onClick={() => navigate('/login')}
-                  className="group inline-flex items-center gap-2.5 bg-slate-900 hover:bg-blue-600 text-white text-sm font-bold px-8 py-4 rounded-xl transition-all duration-300 active:scale-[0.98] shadow-lg hover:shadow-blue-500/20"
+                  className="group w-full sm:w-auto inline-flex items-center justify-center gap-2.5 bg-slate-900 hover:bg-blue-600 text-white text-xs sm:text-sm font-bold px-8 py-4 rounded-xl transition-all duration-300 active:scale-[0.98] shadow-lg hover:shadow-blue-500/20"
                 >
                   Mulai Ujian Gratis
                   <ArrowRight className="h-4 w-4 transition-transform group-hover:translate-x-1" />
@@ -52,7 +52,7 @@ export default function Home() {
                 
                 <a
                   href="#features"
-                  className="group inline-flex items-center gap-3 text-sm font-bold text-slate-600 hover:text-slate-900 transition-colors py-3"
+                  className="group w-full sm:w-auto inline-flex items-center justify-center gap-3 text-xs sm:text-sm font-bold text-slate-600 hover:text-slate-900 transition-colors py-3"
                 >
                   <span className="w-10 h-10 rounded-full border border-slate-200/80 bg-white flex items-center justify-center shadow-sm group-hover:border-blue-500/30 group-hover:bg-blue-50/50 transition-all duration-200">
                     <Play className="h-3.5 w-3.5 text-slate-600 group-hover:text-blue-600 fill-current" />
@@ -62,7 +62,7 @@ export default function Home() {
               </div>
 
               {/* Social Proof */}
-              <div className="flex items-center gap-3.5 pt-4 border-t border-slate-100 max-w-sm">
+              <div className="flex flex-col sm:flex-row items-center justify-center lg:justify-start gap-3.5 pt-6 border-t border-slate-100 max-w-sm mx-auto lg:mx-0">
                 <div className="flex -space-x-2.5">
                   {['bg-blue-600', 'bg-amber-500', 'bg-emerald-500', 'bg-rose-500'].map((bg, i) => (
                     <div key={i} className={`w-8 h-8 rounded-full ${bg} ring-2 ring-white flex items-center justify-center text-[10px] font-extrabold text-white shadow-sm`}>
@@ -70,9 +70,9 @@ export default function Home() {
                     </div>
                   ))}
                 </div>
-                <div>
-                  <p className="text-sm font-bold text-slate-700">4.9★ <span className="text-xs text-slate-400 font-medium">dari 12,800+ Peserta</span></p>
-                  <p className="text-[11px] text-emerald-600 font-bold flex items-center gap-1">
+                <div className="text-center sm:text-left">
+                  <p className="text-xs sm:text-sm font-bold text-slate-700">4.9★ <span className="text-[11px] sm:text-xs text-slate-400 font-medium">dari 12,800+ Peserta</span></p>
+                  <p className="text-[10px] sm:text-[11px] text-emerald-600 font-bold flex items-center justify-center sm:justify-start gap-1">
                     <span className="w-1.5 h-1.5 rounded-full bg-emerald-500 animate-pulse"></span>
                     <span>Telah Lolos SKD CPNS</span>
                   </p>
@@ -81,8 +81,8 @@ export default function Home() {
             </div>
 
             {/* Right — Image & Floating Cards */}
-            <div className="lg:col-span-6 relative flex justify-center animate-scaleUp">
-              <div className="relative w-full max-w-[500px]">
+            <div className="lg:col-span-6 relative flex justify-center animate-scaleUp mt-6 lg:mt-0">
+              <div className="relative w-full max-w-[450px] lg:max-w-[500px]">
                 {/* Background decorative ring */}
                 <div className="absolute inset-0 bg-gradient-to-tr from-blue-500/5 to-indigo-500/10 rounded-3xl -rotate-2 scale-105 pointer-events-none border border-slate-100"></div>
                 
@@ -127,32 +127,39 @@ export default function Home() {
 
       {/* ━━━ TRUSTED BY / LOGO BAR ━━━ */}
       <section className="bg-slate-900 border-y border-slate-800">
-        <div className="max-w-6xl mx-auto px-5 sm:px-8 py-7">
-          <div className="flex flex-wrap items-center justify-center gap-x-12 gap-y-4 text-xs font-bold text-slate-400 tracking-widest uppercase">
-            <span className="flex items-center gap-2"><Check className="h-4 w-4 text-blue-400" /> Sesuai Kisi-Kisi BKN Terbaru</span>
-            <span className="hidden sm:inline text-slate-700">•</span>
-            <span className="flex items-center gap-2"><Check className="h-4 w-4 text-blue-400" /> Kurikulum Simulasi SKD 2026</span>
-            <span className="hidden sm:inline text-slate-700">•</span>
-            <span className="flex items-center gap-2"><Check className="h-4 w-4 text-blue-400" /> Modul Soal Terintegrasi</span>
+        <div className="max-w-6xl mx-auto px-4 sm:px-6 lg:px-8 py-5">
+          <div className="grid grid-cols-1 sm:grid-cols-3 gap-4 text-center text-[10px] sm:text-xs font-bold text-slate-400 tracking-widest uppercase">
+            <div className="flex items-center justify-center gap-2">
+              <Check className="h-4 w-4 text-blue-400 flex-shrink-0" /> 
+              <span>Sesuai Kisi-Kisi BKN Terbaru</span>
+            </div>
+            <div className="flex items-center justify-center gap-2 border-y sm:border-y-0 sm:border-x border-slate-800 py-2 sm:py-0">
+              <Check className="h-4 w-4 text-blue-400 flex-shrink-0" /> 
+              <span>Kurikulum Simulasi SKD 2026</span>
+            </div>
+            <div className="flex items-center justify-center gap-2">
+              <Check className="h-4 w-4 text-blue-400 flex-shrink-0" /> 
+              <span>Modul Soal Terintegrasi</span>
+            </div>
           </div>
         </div>
       </section>
 
       {/* ━━━ FEATURES SECTION ━━━ */}
-      <section className="py-24 lg:py-32" id="features">
-        <div className="max-w-6xl mx-auto px-5 sm:px-8">
+      <section className="py-16 sm:py-24 lg:py-32" id="features">
+        <div className="max-w-6xl mx-auto px-4 sm:px-6 lg:px-8">
 
-          <div className="max-w-2xl mb-16 space-y-4">
+          <div className="max-w-2xl mb-12 sm:mb-16 space-y-3 sm:space-y-4 text-center lg:text-left">
             <p className="text-xs font-bold text-blue-600 uppercase tracking-widest">Kenapa WILDAN CASN</p>
-            <h2 className="text-3xl sm:text-4xl font-extrabold tracking-tight text-slate-900 leading-tight">
+            <h2 className="text-2xl sm:text-3xl lg:text-4xl font-extrabold tracking-tight text-slate-900 leading-tight">
               Bukan sekadar bank soal. 
               <br />
               <span className="text-gradient">Ini simulator ujian yang sebenarnya.</span>
             </h2>
-            <p className="text-slate-500 font-medium">Kami membangun sistem yang menduplikasi setiap aspek teknis ujian CAT sesungguhnya agar Anda terbiasa dengan tekanan waktu di lapangan.</p>
+            <p className="text-sm sm:text-base text-slate-500 font-medium">Kami membangun sistem yang menduplikasi setiap aspek teknis ujian CAT sesungguhnya agar Anda terbiasa dengan tekanan waktu di lapangan.</p>
           </div>
 
-          <div className="grid md:grid-cols-3 gap-8">
+          <div className="grid grid-cols-1 md:grid-cols-3 gap-6 sm:gap-8">
             {[
               {
                 icon: <Trophy className="h-6 w-6 text-blue-600" />,
@@ -170,12 +177,12 @@ export default function Home() {
                 desc: 'Setiap soal dilengkapi pembahasan terperinci. Pelajari trik pengerjaan cepat ala mentor ASN untuk memaksimalkan perolehan poin Anda.'
               }
             ].map((item, i) => (
-              <div key={i} className="bg-white p-8 sm:p-10 rounded-2xl border border-slate-200/50 shadow-premium hover:shadow-premium-lg hover:-translate-y-1.5 transition-all duration-300 flex flex-col items-start gap-5 group">
+              <div key={i} className="bg-white p-6 sm:p-8 lg:p-10 rounded-2xl border border-slate-200/50 shadow-premium hover:shadow-premium-hover hover:-translate-y-1.5 transition-all duration-300 flex flex-col items-center lg:items-start text-center lg:text-left gap-4 sm:gap-5 group">
                 <div className="h-12 w-12 rounded-xl bg-slate-50 flex items-center justify-center group-hover:bg-blue-50 transition-colors duration-200 shadow-sm border border-slate-100">
                   {item.icon}
                 </div>
-                <h3 className="text-lg font-extrabold text-slate-900">{item.title}</h3>
-                <p className="text-sm text-slate-500 leading-relaxed font-medium">{item.desc}</p>
+                <h3 className="text-base sm:text-lg font-extrabold text-slate-900">{item.title}</h3>
+                <p className="text-xs sm:text-sm text-slate-500 leading-relaxed font-medium">{item.desc}</p>
               </div>
             ))}
           </div>
@@ -183,43 +190,43 @@ export default function Home() {
       </section>
 
       {/* ━━━ HOW IT WORKS ━━━ */}
-      <section className="py-24 lg:py-32 bg-slate-100/40 border-y border-slate-200/50 bg-grid-pattern-dense">
-        <div className="max-w-6xl mx-auto px-5 sm:px-8">
-          <div className="grid lg:grid-cols-2 gap-16 lg:gap-24 items-center">
+      <section className="py-16 sm:py-24 lg:py-32 bg-slate-100/40 border-y border-slate-200/50 bg-grid-pattern-dense">
+        <div className="max-w-6xl mx-auto px-4 sm:px-6 lg:px-8">
+          <div className="grid lg:grid-cols-2 gap-12 lg:gap-24 items-center">
 
-            <div className="space-y-6">
+            <div className="space-y-4 sm:space-y-6 text-center lg:text-left">
               <p className="text-xs font-bold text-blue-600 uppercase tracking-widest">Cara Kerja</p>
-              <h2 className="text-3xl sm:text-4xl font-extrabold text-slate-900 tracking-tight leading-tight">
+              <h2 className="text-2xl sm:text-3xl lg:text-4xl font-extrabold text-slate-900 tracking-tight leading-tight">
                 Empat langkah praktis
                 <br />
                 <span className="text-gradient-blue">menuju kelulusan ASN.</span>
               </h2>
-              <p className="text-slate-500 font-medium max-w-md leading-relaxed">
+              <p className="text-sm sm:text-base text-slate-500 font-medium max-w-md mx-auto lg:mx-0 leading-relaxed">
                 Kami merancang perjalanan persiapan belajar Anda secara runtut dan terarah agar Anda dapat mengidentifikasi kelemahan materi dengan cepat.
               </p>
               <button
                 onClick={() => navigate('/login')}
-                className="inline-flex items-center gap-2 text-sm font-bold text-blue-600 hover:text-blue-800 transition-colors group"
+                className="inline-flex items-center gap-2 text-xs sm:text-sm font-bold text-blue-600 hover:text-blue-800 transition-colors group"
               >
                 <span>Mulai langkah pertama</span>
                 <ArrowRight className="h-4 w-4 transition-transform group-hover:translate-x-1" />
               </button>
             </div>
 
-            <div className="space-y-4">
+            <div className="space-y-4 mt-6 lg:mt-0">
               {[
                 { step: '1', title: 'Registrasi Akun Mudah', desc: 'Buat akun dalam hitungan detik menggunakan alamat email Anda secara gratis tanpa ribet.' },
                 { step: '2', title: 'Pilih Paket Tryout', desc: 'Mulai dengan uji coba gratis, atau buka akses ke puluhan materi premium kisi-kisi terupdate.' },
                 { step: '3', title: 'Kerjakan Simulasi CAT', desc: 'Rasakan simulasi ujian SKD (TWK, TIU, TKP) dengan pengatur waktu persis aslinya.' },
                 { step: '4', title: 'Analisis Hasil Detail', desc: 'Dapatkan grafik skor kelulusan, ringkasan per sub-kategori materi, dan penjelasan pembahasan.' }
               ].map((item, i) => (
-                <div key={i} className="bg-white/80 backdrop-blur-md rounded-2xl border border-slate-200/50 p-6 flex gap-5 hover:border-slate-300 transition-colors shadow-sm">
+                <div key={i} className="bg-white/80 backdrop-blur-md rounded-2xl border border-slate-200/50 p-5 sm:p-6 flex gap-4 sm:gap-5 hover:border-slate-300 transition-colors shadow-sm">
                   <div className="w-10 h-10 rounded-xl bg-slate-900 text-white flex items-center justify-center text-sm font-bold flex-shrink-0 shadow-sm">
                     {item.step}
                   </div>
                   <div>
-                    <h3 className="font-extrabold text-[15px] text-slate-800 mb-1">{item.title}</h3>
-                    <p className="text-xs sm:text-sm text-slate-500 leading-relaxed font-medium">{item.desc}</p>
+                    <h3 className="font-extrabold text-sm sm:text-[15px] text-slate-800 mb-1 text-left">{item.title}</h3>
+                    <p className="text-left text-xs sm:text-sm text-slate-500 leading-relaxed font-medium">{item.desc}</p>
                   </div>
                 </div>
               ))}
@@ -229,18 +236,18 @@ export default function Home() {
       </section>
 
       {/* ━━━ PRICING SECTION ━━━ */}
-      <section className="py-24 lg:py-32 bg-white" id="programs">
-        <div className="max-w-6xl mx-auto px-5 sm:px-8">
+      <section className="py-16 sm:py-24 lg:py-32 bg-white" id="programs">
+        <div className="max-w-6xl mx-auto px-4 sm:px-6 lg:px-8">
 
-          <div className="text-center mb-20 max-w-xl mx-auto space-y-4">
+          <div className="text-center mb-12 sm:mb-20 max-w-xl mx-auto space-y-3 sm:space-y-4">
             <p className="text-xs font-bold text-blue-600 uppercase tracking-widest">Harga Paket</p>
-            <h2 className="text-3xl sm:text-4xl font-extrabold text-slate-900 tracking-tight">
+            <h2 className="text-2xl sm:text-3xl lg:text-4xl font-extrabold text-slate-900 tracking-tight">
               Investasi masa depan sekali bayar.
             </h2>
-            <p className="text-slate-500 font-medium">Beli sekali untuk akses selamanya. Tanpa biaya bulanan atau biaya tersembunyi.</p>
+            <p className="text-sm sm:text-base text-slate-500 font-medium">Beli sekali untuk akses selamanya. Tanpa biaya bulanan atau biaya tersembunyi.</p>
           </div>
 
-          <div className="grid md:grid-cols-3 gap-8 items-stretch">
+          <div className="grid grid-cols-1 lg:grid-cols-3 gap-8 items-stretch">
             {[
               {
                 name: 'Starter Pack',
@@ -266,15 +273,15 @@ export default function Home() {
             ].map((plan, i) => (
               <div
                 key={i}
-                className={`rounded-3xl p-8 flex flex-col justify-between transition-all duration-300 ${
+                className={`rounded-3xl p-6 sm:p-8 flex flex-col justify-between transition-all duration-300 ${
                   plan.highlighted
-                    ? 'bg-slate-900 text-white ring-2 ring-blue-600 shadow-2xl relative scale-105 z-10'
+                    ? 'bg-slate-900 text-white ring-2 ring-blue-600 shadow-2xl relative lg:scale-105 lg:-translate-y-2 z-10'
                     : 'bg-white ring-1 ring-slate-200/80 hover:ring-slate-300 hover:shadow-premium'
                 }`}
               >
-                <div>
+                <div className="relative">
                   {plan.highlighted && (
-                    <div className="absolute -top-3.5 left-8 bg-blue-600 text-white text-[9px] font-bold uppercase tracking-widest px-3.5 py-1 rounded-full shadow-sm animate-pulse">
+                    <div className="absolute -top-10 lg:-top-12 left-0 bg-blue-600 text-white text-[9px] font-bold uppercase tracking-widest px-3.5 py-1 rounded-full shadow-sm">
                       Pilihan Utama
                     </div>
                   )}
@@ -289,15 +296,15 @@ export default function Home() {
                     <span className="text-xs text-slate-400 font-medium">/sekali</span>
                   </div>
 
-                  <p className={`text-xs sm:text-sm mb-8 font-medium leading-relaxed ${plan.highlighted ? 'text-slate-400' : 'text-slate-500'}`}>
+                  <p className={`text-xs sm:text-sm mb-6 font-medium leading-relaxed ${plan.highlighted ? 'text-slate-400' : 'text-slate-500'}`}>
                     {plan.desc}
                   </p>
 
-                  <div className="w-full h-px bg-slate-100 my-6" />
+                  <div className={`w-full h-px my-6 ${plan.highlighted ? 'bg-slate-800' : 'bg-slate-100'}`} />
 
                   <ul className="space-y-4 mb-8">
                     {plan.features.map((f, fi) => (
-                      <li key={fi} className="flex items-start gap-3 text-xs sm:text-sm">
+                      <li key={fi} className="flex items-start gap-3 text-xs sm:text-sm text-left">
                         <Check className={`h-4.5 w-4.5 mt-0.5 flex-shrink-0 ${plan.highlighted ? 'text-blue-400' : 'text-emerald-500'}`} />
                         <span className={plan.highlighted ? 'text-slate-300' : 'text-slate-600'}>{f}</span>
                       </li>
@@ -322,30 +329,35 @@ export default function Home() {
       </section>
 
       {/* ━━━ TESTIMONIAL SECTION ━━━ */}
-      <section id="testimonials" className="py-24 lg:py-32 bg-slate-900 text-white border-y border-slate-800 bg-grid-pattern relative">
+      <section id="testimonials" className="py-16 sm:py-24 lg:py-32 bg-slate-900 text-white border-y border-slate-800 bg-grid-pattern relative">
         <div className="absolute inset-0 bg-gradient-to-t from-slate-950 to-transparent pointer-events-none" />
-        <div className="relative max-w-3xl mx-auto px-5 sm:px-8 text-center space-y-8">
+        <div className="relative max-w-3xl mx-auto px-4 sm:px-6 lg:px-8 text-center space-y-6 sm:space-y-8">
           <div className="flex justify-center gap-1">
             {Array(5).fill(null).map((_, i) => (
-              <Star key={i} className="h-5 w-5 text-amber-400 fill-amber-400" />
+              <Star key={i} className="h-4 w-4 sm:h-5 sm:w-5 text-amber-400 fill-amber-400" />
             ))}
           </div>
-          <blockquote className="text-xl sm:text-2xl font-bold leading-normal tracking-tight text-slate-100 max-w-2xl mx-auto">
+          <blockquote className="text-base sm:text-lg lg:text-2xl font-bold leading-normal tracking-tight text-slate-100 max-w-2xl mx-auto">
             "Sistem simulasinya luar biasa membantu. Saya merasa sangat familiar dengan durasi, sisa waktu, dan navigasi lembar jawaban CAT saat ujian SKD asli berlangsung. Syukur, saya berhasil lolos passing grade Kemenkeu!"
           </blockquote>
-          <div>
-            <p className="font-extrabold text-sm text-white">Andi Pratama</p>
-            <p className="text-xs text-blue-400 font-bold uppercase tracking-widest mt-1">CPNS 2025 — Kementerian Keuangan RI</p>
+          <div className="flex flex-col items-center gap-2">
+            <div className="w-10 h-10 rounded-full bg-blue-600/20 text-blue-400 flex items-center justify-center font-extrabold border border-blue-500/30 text-xs">
+              AP
+            </div>
+            <div>
+              <p className="font-extrabold text-xs sm:text-sm text-white">Andi Pratama</p>
+              <p className="text-[10px] sm:text-xs text-blue-400 font-bold uppercase tracking-widest mt-1">CPNS 2025 — Kementerian Keuangan RI</p>
+            </div>
           </div>
         </div>
       </section>
 
       {/* ━━━ FAQ SECTION ━━━ */}
-      <section className="py-24 lg:py-32" id="faq">
-        <div className="max-w-2xl mx-auto px-5 sm:px-8">
-          <div className="text-center mb-16 space-y-3">
+      <section className="py-16 sm:py-24 lg:py-32" id="faq">
+        <div className="max-w-2xl mx-auto px-4 sm:px-6 lg:px-8">
+          <div className="text-center mb-10 sm:mb-16 space-y-3">
             <p className="text-xs font-bold text-blue-600 uppercase tracking-widest">FAQ</p>
-            <h2 className="text-3xl font-extrabold text-slate-900 tracking-tight">Pertanyaan yang Sering Diajukan</h2>
+            <h2 className="text-2xl sm:text-3xl font-extrabold text-slate-900 tracking-tight">Pertanyaan yang Sering Diajukan</h2>
           </div>
 
           <div className="divide-y divide-slate-200/60 border-t border-b border-slate-200/60">
@@ -367,12 +379,12 @@ export default function Home() {
                 a: 'Ya. Kami memperbarui bank soal secara berkala menyesuaikan field report (FR) terbaru dari para peserta ujian SKD CPNS periode sebelumnya dan kisi-kisi resmi yang diterbitkan oleh BKN.'
               }
             ].map((item, i) => (
-              <div key={i} className="py-5">
+              <div key={i} className="py-4 sm:py-5">
                 <button
                   onClick={() => toggleFaq(i)}
                   className="w-full flex items-center justify-between text-left group"
                 >
-                  <span className="text-[14px] sm:text-[15px] font-extrabold text-slate-800 group-hover:text-blue-600 transition-colors pr-6">{item.q}</span>
+                  <span className="text-xs sm:text-sm font-extrabold text-slate-800 group-hover:text-blue-600 transition-colors pr-6">{item.q}</span>
                   <ChevronDown className={`h-4.5 w-4.5 text-slate-400 flex-shrink-0 transition-transform duration-200 ${openFaq === i ? 'rotate-180 text-blue-600' : ''}`} />
                 </button>
                 {openFaq === i && (
@@ -385,26 +397,26 @@ export default function Home() {
       </section>
 
       {/* ━━━ FINAL CTA SECTION ━━━ */}
-      <section className="py-24 lg:py-28 bg-slate-900 text-white relative overflow-hidden bg-grid-pattern">
+      <section className="py-16 sm:py-24 lg:py-28 bg-slate-900 text-white relative overflow-hidden bg-grid-pattern">
         
         {/* Glow decoration */}
         <div className="absolute inset-0 bg-gradient-to-tr from-blue-900/40 to-transparent pointer-events-none" />
 
-        <div className="relative max-w-3xl mx-auto px-5 sm:px-8 text-center space-y-8">
-          <h2 className="text-3xl sm:text-4xl font-extrabold text-white tracking-tight leading-tight">
+        <div className="relative max-w-3xl mx-auto px-4 sm:px-6 lg:px-8 text-center space-y-6 sm:space-y-8">
+          <h2 className="text-2xl sm:text-3xl lg:text-4xl font-extrabold text-white tracking-tight leading-tight">
             Persiapkan karir masa depan Anda
             <br />
             <span className="text-blue-400">sekarang juga.</span>
           </h2>
           
-          <p className="text-slate-400 font-medium max-w-md mx-auto leading-relaxed text-sm sm:text-base">
+          <p className="text-slate-400 font-medium max-w-md mx-auto leading-relaxed text-xs sm:text-sm">
             Mulai latihan secara gratis tanpa ikatan. Tingkatkan ke materi premium saat Anda sudah siap untuk serius lulus.
           </p>
 
-          <div className="flex flex-wrap items-center justify-center gap-4 pt-4">
+          <div className="flex flex-col sm:flex-row items-center justify-center gap-4 pt-4">
             <button
               onClick={() => navigate('/login')}
-              className="group inline-flex items-center gap-2.5 bg-white hover:bg-blue-600 text-slate-900 hover:text-white text-xs sm:text-sm font-bold px-8 py-4 rounded-xl transition-all duration-300 active:scale-[0.98] shadow-lg hover:shadow-blue-500/20"
+              className="group w-full sm:w-auto inline-flex items-center justify-center gap-2.5 bg-white hover:bg-blue-600 text-slate-900 hover:text-white text-xs sm:text-sm font-bold px-8 py-4 rounded-xl transition-all duration-300 active:scale-[0.98] shadow-lg hover:shadow-blue-500/20"
             >
               Daftar Ujian Gratis
               <ArrowRight className="h-4 w-4 transition-transform group-hover:translate-x-1" />

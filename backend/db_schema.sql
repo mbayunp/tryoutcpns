@@ -115,19 +115,19 @@ CREATE TABLE IF NOT EXISTS `packages` (
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
 
 -- --------------------------------------------------------
--- 8. Table: transactions (Placeholder)
+-- 8. Table: transactions
 -- --------------------------------------------------------
 CREATE TABLE IF NOT EXISTS `transactions` (
-  `id` INT AUTO_INCREMENT PRIMARY KEY,
+  `id` VARCHAR(50) PRIMARY KEY,
   `user_id` INT NOT NULL,
-  `package_id` INT NOT NULL,
-  `amount` DECIMAL(10, 2) NOT NULL,
+  `tryout_id` INT NOT NULL,
+  `amount` VARCHAR(50) NOT NULL,
   `status` ENUM('pending', 'success', 'failed') DEFAULT 'pending',
   `payment_method` VARCHAR(255) DEFAULT NULL,
   `created_at` DATETIME NOT NULL DEFAULT CURRENT_TIMESTAMP,
   `updated_at` DATETIME NOT NULL DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP,
   FOREIGN KEY (`user_id`) REFERENCES `users` (`id`) ON DELETE CASCADE,
-  FOREIGN KEY (`package_id`) REFERENCES `packages` (`id`) ON DELETE CASCADE
+  FOREIGN KEY (`tryout_id`) REFERENCES `tryouts` (`id`) ON DELETE CASCADE
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
 
 -- --------------------------------------------------------

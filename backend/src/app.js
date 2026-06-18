@@ -10,6 +10,8 @@ const categoryRoutes = require('./routes/categoryRoutes');
 const questionRoutes = require('./routes/questionRoutes');
 const tryoutRoutes = require('./routes/tryoutRoutes');
 const resultRoutes = require('./routes/resultRoutes');
+const transactionRoutes = require('./routes/transactionRoutes');
+const attemptRoutes = require('./routes/attemptRoutes');
 
 const app = express();
 
@@ -32,7 +34,10 @@ app.use('/api/auth', authRoutes);
 app.use('/api/categories', categoryRoutes);
 app.use('/api/questions', questionRoutes);
 app.use('/api/tryouts', tryoutRoutes);
+app.use('/api/packages', tryoutRoutes);
 app.use('/api/results', resultRoutes);
+app.use('/api/transactions', transactionRoutes);
+app.use('/api/attempts', attemptRoutes);
 
 // Catch 404 Route Not Found
 app.use((req, res, next) => {

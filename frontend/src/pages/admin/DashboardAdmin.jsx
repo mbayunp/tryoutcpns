@@ -19,7 +19,9 @@ export default function DashboardAdmin() {
     createPackage,
     updatePackage,
     deletePackage,
-    fetchPackages
+    fetchPackages,
+    assignQuestionsToPackage,
+    getQuestionsForPackage
   } = useExamStore();
 
   // State untuk Tab Navigasi Admin
@@ -37,6 +39,45 @@ export default function DashboardAdmin() {
   const [pkgDuration, setPkgDuration] = useState(100);
   const [pkgPrice, setPkgPrice] = useState('Rp 199.000');
   const [pkgStatus, setPkgStatus] = useState('Aktif');
+
+  // Modal for many-to-many question assignment
+  const [showQuestionModal, setShowQuestionModal] = useState(false);
+  const [selectedPkg, setSelectedPkg] = useState(null);
+  const [selectedQuestionIds, setSelectedQuestionIds] = useState([]);
+
+  const handleManageQuestionsClick = async (pkg) => {
+    setSelectedPkg(pkg);
+    try {
+      const res = await getQuestionsForPackage(pkg.id);
+      const mappedIds = res.map(q => q.id);
+      setSelectedQuestionIds(mappedIds);
+      setShowQuestionModal(true);
+    } catch (err) {
+      console.error(err);
+      setSelectedQuestionIds([]);
+      setShowQuestionModal(true);
+    }
+  };
+
+  const handleToggleQuestionSelection = (qId) => {
+    setSelectedQuestionIds(prev => 
+      prev.includes(qId) ? prev.filter(id => id !== qId) : [...prev, qId]
+    );
+  };
+
+  const handleSaveQuestionsAssignment = async () => {
+    if (!selectedPkg) return;
+    try {
+      await assignQuestionsToPackage(selectedPkg.id, selectedQuestionIds);
+      alert('Mapping soal ke paket berhasil disimpan!');
+      setShowQuestionModal(false);
+      setSelectedPkg(null);
+      setSelectedQuestionIds([]);
+      fetchPackages();
+    } catch (err) {
+      alert('Gagal memetakan soal ke paket.');
+    }
+  };
 
   const resetPkgForm = () => {
     setIsEditingPkg(false);
@@ -980,17 +1021,25 @@ export default function DashboardAdmin() {
                         </Badge>
                       </td>
                       <td className="px-5 py-3 text-center">
-                        <div className="flex justify-center gap-1">
+                        <div className="flex justify-center items-center gap-1.5">
+                          <button
+                            onClick={() => handleManageQuestionsClick(pkg)}
+                            className="px-2.5 py-1.5 bg-emerald-50 text-emerald-700 hover:bg-emerald-100 border border-emerald-200/60 rounded-xl text-xs font-bold transition-all flex items-center gap-1"
+                            title="Pilih Soal"
+                          >
+                            <FileText className="h-3.5 w-3.5" />
+                            <span>Pilih Soal</span>
+                          </button>
                           <button
                             onClick={() => handleEditPkgClick(pkg)}
-                            className="p-1.5 text-blue-600 hover:bg-blue-50 rounded-lg transition-colors"
+                            className="p-1.5 text-blue-600 hover:bg-blue-50 border border-slate-200/40 rounded-xl transition-colors"
                             title="Edit"
                           >
                             <Edit className="h-3.5 w-3.5" />
                           </button>
                           <button
                             onClick={() => handlePkgDelete(pkg.id)}
-                            className="p-1.5 text-red-500 hover:bg-red-50 rounded-lg transition-colors"
+                            className="p-1.5 text-red-500 hover:bg-red-50 border border-slate-200/40 rounded-xl transition-colors"
                             title="Hapus"
                           >
                             <Trash className="h-3.5 w-3.5" />
@@ -1003,6 +1052,94 @@ export default function DashboardAdmin() {
               </table>
             </div>
           </Card>
+        </div>
+      )}
+
+      {/* ─── MODAL PILIH SOAL (MANY-TO-MANY MAPPING) ─── */}
+      {showQuestionModal && (
+        <div className="fixed inset-0 z-50 flex items-center justify-center px-4 animate-fadeIn">
+          <div
+            className="fixed inset-0 bg-slate-950/60 backdrop-blur-sm"
+            onClick={() => { setShowQuestionModal(false); setSelectedPkg(null); }}
+          />
+
+          <div className="relative z-10 bg-white rounded-3xl border border-slate-200/80 shadow-premium-lg max-w-2xl w-full p-6 sm:p-8 space-y-6 animate-scaleUp flex flex-col max-h-[85vh]">
+            <div className="flex items-start justify-between border-b border-slate-100 pb-4">
+              <div>
+                <h3 className="text-lg font-bold text-slate-900">Pilih Soal untuk Paket</h3>
+                <p className="text-xs text-slate-400 mt-1 font-semibold">
+                  Paket: <span className="text-blue-600 font-bold">{selectedPkg?.title}</span>
+                </p>
+              </div>
+              <button
+                onClick={() => { setShowQuestionModal(false); setSelectedPkg(null); }}
+                className="p-2 rounded-xl hover:bg-slate-100 text-slate-400 hover:text-slate-600 transition-colors"
+              >
+                <X className="h-5 w-5" />
+              </button>
+            </div>
+
+            {/* List of questions with checkbox */}
+            <div className="flex-1 overflow-y-auto pr-1 space-y-3 min-h-[200px] max-h-[50vh]">
+              {questions.length === 0 ? (
+                <p className="text-center text-sm text-slate-400 py-12">Belum ada soal terdaftar di Bank Soal.</p>
+              ) : (
+                questions.map((q) => {
+                  const isChecked = selectedQuestionIds.includes(q.id);
+                  return (
+                    <div
+                      key={q.id}
+                      onClick={() => handleToggleQuestionSelection(q.id)}
+                      className={`flex items-start gap-4 p-4 rounded-2xl border cursor-pointer transition-all duration-200 ${
+                        isChecked
+                          ? 'border-blue-500 bg-blue-50/10 ring-1 ring-blue-500'
+                          : 'border-slate-200 hover:border-slate-300 bg-white'
+                      }`}
+                    >
+                      <input
+                        type="checkbox"
+                        checked={isChecked}
+                        onChange={() => {}} // Click handled by parent div
+                        className="h-4.5 w-4.5 rounded border-slate-300 text-blue-600 focus:ring-blue-500 mt-0.5 cursor-pointer"
+                      />
+                      <div className="flex-grow space-y-1.5">
+                        <div className="flex items-center gap-2">
+                          <span className="text-[10px] font-bold text-slate-400">ID: {q.id}</span>
+                          <Badge variant={q.category === 'TWK' ? 'primary' : q.category === 'TIU' ? 'secondary' : 'warning'}>
+                            {q.category}
+                          </Badge>
+                        </div>
+                        <p className="text-xs font-semibold text-slate-700 leading-relaxed">
+                          {q.question}
+                        </p>
+                      </div>
+                    </div>
+                  );
+                })
+              )}
+            </div>
+
+            <div className="flex items-center justify-between border-t border-slate-100 pt-4">
+              <span className="text-xs text-slate-400 font-bold">
+                {selectedQuestionIds.length} soal terpilih
+              </span>
+              <div className="flex gap-3">
+                <Button
+                  variant="outline"
+                  onClick={() => { setShowQuestionModal(false); setSelectedPkg(null); }}
+                >
+                  Batal
+                </Button>
+                <Button
+                  variant="primary"
+                  onClick={handleSaveQuestionsAssignment}
+                  className="bg-blue-600 hover:bg-blue-700"
+                >
+                  Simpan Mapping
+                </Button>
+              </div>
+            </div>
+          </div>
         </div>
       )}
 

@@ -11,44 +11,7 @@ export const useExamStore = create(
       history: [],
       questions: [],
       activeTab: 'dashboard',
-      transactions: [
-        {
-          id: 'TRX-2026-001',
-          userName: 'Andi Pratama',
-          email: 'andi.pratama@gmail.com',
-          package: 'Tryout Premium Mandiri CAT 2026',
-          amount: 'Rp 199.000',
-          date: '18 Jun 2026, 14:30',
-          status: 'pending'
-        },
-        {
-          id: 'TRX-2026-002',
-          userName: 'Budi Santoso',
-          email: 'budi.s@yahoo.com',
-          package: 'Starter Pack',
-          amount: 'Rp 99.000',
-          date: '18 Jun 2026, 10:15',
-          status: 'success'
-        },
-        {
-          id: 'TRX-2026-003',
-          userName: 'Citra Kirana',
-          email: 'citra.k@gmail.com',
-          package: 'VIP Bootcamp',
-          amount: 'Rp 499.000',
-          date: '17 Jun 2026, 19:45',
-          status: 'failed'
-        },
-        {
-          id: 'TRX-2026-004',
-          userName: 'Dewi Lestari',
-          email: 'dewi.l@gmail.com',
-          package: 'Tryout Premium Mandiri CAT 2026',
-          amount: 'Rp 199.000',
-          date: '17 Jun 2026, 08:20',
-          status: 'pending'
-        }
-      ],
+      transactions: [],
 
       // Actions
       login: async (email, password) => {
@@ -58,14 +21,11 @@ export const useExamStore = create(
           
           localStorage.setItem('token', token);
           
-          // Generate an avatar initials
-          const nameParts = user.name.split(' ');
-          const avatar = nameParts.length > 1 
-            ? (nameParts[0][0] + nameParts[1][0]).toUpperCase()
-            : user.name.substring(0, 2).toUpperCase();
-
-          const userWithAvatar = { ...user, avatar };
-
+          const userWithAvatar = {
+            ...user,
+            avatar: `https://api.dicebear.com/7.x/adventurer/svg?seed=${user.name}`
+          };
+          
           set({ user: userWithAvatar, token });
           return userWithAvatar;
         } catch (error) {
@@ -81,8 +41,20 @@ export const useExamStore = create(
 
       setActiveTab: (tab) => set({ activeTab: tab }),
 
+      fetchTransactions: async () => {
+        try {
+          const res = await API.get('/transactions');
+          set({ transactions: res.data.data || [] });
+        } catch (error) {
+          console.error('Failed to fetch transactions:', error);
+        }
+      },
+
       fetchPackages: async () => {
         try {
+          // Fetch transactions first to get purchase status
+          await get().fetchTransactions();
+          
           const res = await API.get('/tryouts');
           const data = res.data.data;
           const mapped = data.map((pkg) => {
@@ -184,16 +156,77 @@ export const useExamStore = create(
         }
       },
 
+      assignQuestionsToPackage: async (packageId, questionIds) => {
+        try {
+          await API.post(`/packages/${packageId}/questions`, { question_ids: questionIds });
+        } catch (error) {
+          console.error('Failed to assign questions to package:', error);
+          throw error;
+        }
+      },
+
+      getQuestionsForPackage: async (packageId) => {
+        try {
+          const res = await API.get(`/packages/${packageId}/questions`);
+          return res.data.data;
+        } catch (error) {
+          console.error('Failed to get questions for package:', error);
+          throw error;
+        }
+      },
+
       submitExamAttempt: async (attemptId, answersMap) => {
         try {
-          const formattedAnswers = Object.keys(answersMap).map((qId) => ({
-            question_id: parseInt(qId),
-            selected_answer: answersMap[qId].toLowerCase()
-          }));
-          const res = await API.post('/tryouts/submit', {
-            attempt_id: attemptId,
-            answers: formattedAnswers
+          const questions = get().questions;
+          let twk = 0;
+          let tiu = 0;
+          let tkp = 0;
+          
+          const answersList = questions.map((q) => {
+            const selected = (answersMap[q.id] || '').toLowerCase().trim();
+            const category = q.category ? q.category.toUpperCase() : 'TWK';
+            
+            let isCorrect = false;
+            let score = 0;
+            
+            if (category === 'TKP') {
+              if (q.scores) {
+                score = q.scores[selected.toUpperCase()] || 0;
+              } else {
+                score = selected === (q.correctAnswer || '').toLowerCase() ? 5 : 0;
+              }
+              isCorrect = score === 5;
+              tkp += score;
+            } else {
+              isCorrect = selected === (q.correctAnswer || '').toLowerCase();
+              score = isCorrect ? 5 : 0;
+              if (category === 'TWK') twk += score;
+              if (category === 'TIU') tiu += score;
+            }
+            
+            return {
+              question_id: q.id,
+              selected_option: selected || null,
+              is_correct: isCorrect,
+              score: score
+            };
           });
+          
+          const totalScore = twk + tiu + tkp;
+          const result = totalScore >= 10 ? 'LULUS' : 'TIDAK LULUS';
+          
+          const payload = {
+            attempt_id: attemptId,
+            package_id: 1, // Default to Tryout Akbar
+            score: totalScore,
+            twk,
+            tiu,
+            tkp,
+            result,
+            answers: answersList
+          };
+          
+          const res = await API.post('/attempts', payload);
           return res.data.data;
         } catch (error) {
           console.error('Failed to submit exam attempt:', error);
@@ -348,29 +381,26 @@ export const useExamStore = create(
         }
       },
 
-      createPendingTransaction: (packageName, amount) => {
-        const user = get().user;
-        if (!user) return;
-        const newTrx = {
-          id: `TRX-${Date.now().toString().slice(-6)}`,
-          userName: user.name,
-          email: user.email,
-          package: packageName,
-          amount: amount,
-          date: new Date().toLocaleString('id-ID', { day: 'numeric', month: 'short', year: 'numeric', hour: '2-digit', minute: '2-digit' }).replace(/\./g, ':'),
-          status: 'pending'
-        };
-        set((state) => ({ transactions: [newTrx, ...(state.transactions || [])] }));
-        get().fetchPackages();
+      createPendingTransaction: async (tryoutId, amount) => {
+        try {
+          await API.post('/transactions', {
+            tryout_id: tryoutId,
+            amount: amount
+          });
+          await get().fetchPackages();
+        } catch (error) {
+          console.error('Failed to create transaction:', error);
+        }
       },
 
-      updateTransactionStatus: (id, status) => {
-        set((state) => ({
-          transactions: (state.transactions || []).map((t) =>
-            t.id === id ? { ...t, status } : t
-          )
-        }));
-        get().fetchPackages();
+      updateTransactionStatus: async (id, status) => {
+        try {
+          await API.put(`/transactions/${id}/status`, { status });
+          await get().fetchTransactions();
+          await get().fetchPackages();
+        } catch (error) {
+          console.error('Failed to update transaction status:', error);
+        }
       }
     }),
     {

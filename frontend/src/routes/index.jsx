@@ -10,12 +10,22 @@ import StartExam from '../pages/tryout/StartExam';
 import Result from '../pages/tryout/Result';
 import DashboardAdmin from '../pages/admin/DashboardAdmin';
 
+// Public Pages
+import PrivacyPolicy from '../pages/public/PrivacyPolicy';
+import TermsConditions from '../pages/public/TermsConditions';
+import RefundPolicy from '../pages/public/RefundPolicy';
+import HelpCenter from '../pages/public/HelpCenter';
+
 export default function AppRoutes() {
   return (
     <Routes>
       {/* Public Layout */}
       <Route element={<PublicLayout />}>
         <Route path="/" element={<Home />} />
+        <Route path="/privacy-policy" element={<PrivacyPolicy />} />
+        <Route path="/terms" element={<TermsConditions />} />
+        <Route path="/refund-policy" element={<RefundPolicy />} />
+        <Route path="/help" element={<HelpCenter />} />
       </Route>
 
       {/* Auth Layout */}

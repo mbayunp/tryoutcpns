@@ -47,7 +47,7 @@ export default function Dashboard() {
     const message = `Halo Admin WILDAN CASN, saya ingin konfirmasi pembayaran.%0A%0A*Detail Pesanan:*%0ANama: ${user?.name || 'User'}%0AEmail: ${user?.email || 'email'}%0APaket: ${selectedLockedPackage?.title}%0A%0ASaya telah melakukan scan QRIS. Berikut saya lampirkan bukti transfernya:`;
 
     // Catat di tabel admin bahwa user ini sedang menunggu konfirmasi
-    createPendingTransaction(selectedLockedPackage.title, 'Rp 199.000');
+    createPendingTransaction(selectedLockedPackage.id, 'Rp 199.000');
 
     // Buka tab WhatsApp baru
     window.open(`https://wa.me/${adminPhone}?text=${message}`, '_blank');
