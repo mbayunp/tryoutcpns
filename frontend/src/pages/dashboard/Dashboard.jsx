@@ -11,7 +11,6 @@ import {
   PlusCircle,
   Award,
   X,
-  Info,
   MessageCircle, // <-- Ditambahkan
   CheckCircle2   // <-- Ditambahkan
 } from 'lucide-react';
@@ -276,7 +275,7 @@ export default function Dashboard() {
                   <Button
                     variant={pkg.status === 'Terkunci' ? 'outline' : 'primary'}
                     className={`w-full py-3 shadow-sm ${pkg.status === 'Terkunci'
-                      ? (hasPendingTrx ? 'bg-amber-55/70 border-amber-200 text-amber-700 cursor-not-allowed shadow-none' : 'border-slate-200 text-slate-500')
+                      ? (hasPendingTrx ? 'bg-amber-50/70 border-amber-200 text-amber-700 cursor-not-allowed shadow-none' : 'border-slate-200 text-slate-500')
                       : 'bg-[#0B1C30] hover:bg-[#102A43] text-white border-0'
                       }`}
                     onClick={() => {

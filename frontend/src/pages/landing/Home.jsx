@@ -1,7 +1,6 @@
 import React, { useState } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { ArrowRight, Check, Play, Star, ChevronDown, Sparkles, Trophy, Users, BookOpen } from 'lucide-react';
-import Button from '../../components/common/Button';
 import homeImg from '../../components/images/home.png';
 
 export default function Home() {

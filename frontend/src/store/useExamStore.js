@@ -76,7 +76,7 @@ export const useExamStore = create(
 
       logout: () => {
         localStorage.removeItem('token');
-        set({ user: null, token: null, packages: [], history: [], questions: [], transactions: [] });
+        set({ user: null, token: null, packages: [], history: [], questions: [] });
       },
 
       setActiveTab: (tab) => set({ activeTab: tab }),
