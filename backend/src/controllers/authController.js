@@ -29,8 +29,41 @@ const profile = async (req, res, next) => {
   }
 };
 
+const forgotPassword = async (req, res, next) => {
+  try {
+    const { email } = req.body;
+    await authService.forgotPassword(email);
+    return response.success(res, null, 'Tautan atur ulang kata sandi telah dikirim ke email Anda', 200);
+  } catch (err) {
+    next(err);
+  }
+};
+
+const resetPassword = async (req, res, next) => {
+  try {
+    const { token, newPassword } = req.body;
+    await authService.resetPassword(token, newPassword);
+    return response.success(res, null, 'Kata sandi berhasil diatur ulang', 200);
+  } catch (err) {
+    next(err);
+  }
+};
+
+const googleLogin = async (req, res, next) => {
+  try {
+    const { idToken } = req.body;
+    const data = await authService.googleLogin(idToken);
+    return response.success(res, data, 'Login Google berhasil', 200);
+  } catch (err) {
+    next(err);
+  }
+};
+
 module.exports = {
   register,
   login,
-  profile
+  profile,
+  forgotPassword,
+  resetPassword,
+  googleLogin
 };

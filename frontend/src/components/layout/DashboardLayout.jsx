@@ -13,35 +13,101 @@ import {
   X,
   ChevronLeft,
   ChevronRight,
-  Search,
-  Bell
+  Bell,
+  Megaphone,
+  Clock,
+  ExternalLink
 } from 'lucide-react';
 
 export default function DashboardLayout() {
   const navigate = useNavigate();
   const location = useLocation();
-  const { user, logout, activeTab, setActiveTab } = useExamStore();
+  const { user, logout, activeTab, setActiveTab, notifications, fetchNotifications } = useExamStore();
   const [mobileOpen, setMobileOpen] = useState(false);
   const [isSidebarCollapsed, setIsSidebarCollapsed] = useState(false);
-  const searchInputRef = useRef(null);
+
+  // Notification dropdown states
+  const [showNotifications, setShowNotifications] = useState(false);
+  const [readNotifications, setReadNotifications] = useState(() => {
+    try {
+      return JSON.parse(localStorage.getItem('read_notifications') || '[]');
+    } catch {
+      return [];
+    }
+  });
+  
+  const dropdownRef = useRef(null);
+
+  // Fetch notifications on mount
+  useEffect(() => {
+    if (user) {
+      fetchNotifications();
+    }
+  }, [user, fetchNotifications]);
+
+  // Click outside to close notifications dropdown
+  useEffect(() => {
+    const handleClickOutside = (event) => {
+      if (dropdownRef.current && !dropdownRef.current.contains(event.target)) {
+        setShowNotifications(false);
+      }
+    };
+    document.addEventListener('mousedown', handleClickOutside);
+    return () => document.removeEventListener('mousedown', handleClickOutside);
+  }, []);
+
+  const unreadNotifications = (notifications || []).filter(
+    (n) => !readNotifications.includes(n.id)
+  );
+  const unreadCount = unreadNotifications.length;
+
+  const handleToggleNotifications = () => {
+    setShowNotifications(!showNotifications);
+  };
+
+  const handleMarkAllAsRead = () => {
+    const allIds = (notifications || []).map(n => n.id);
+    localStorage.setItem('read_notifications', JSON.stringify(allIds));
+    setReadNotifications(allIds);
+  };
+
+  const handleNotificationClick = (notification) => {
+    if (!readNotifications.includes(notification.id)) {
+      const newRead = [...readNotifications, notification.id];
+      localStorage.setItem('read_notifications', JSON.stringify(newRead));
+      setReadNotifications(newRead);
+    }
+    if (notification.link) {
+      window.open(notification.link, '_blank', 'noopener,noreferrer');
+    }
+  };
+
+  const formatRelativeTime = (dateString) => {
+    try {
+      const date = new Date(dateString);
+      const now = new Date();
+      const diffMs = now - date;
+      const diffMins = Math.floor(diffMs / 60000);
+      const diffHours = Math.floor(diffMs / 3600000);
+      const diffDays = Math.floor(diffMs / 86400000);
+
+      if (diffMins < 1) return 'Baru saja';
+      if (diffMins < 60) return `${diffMins} menit lalu`;
+      if (diffHours < 24) return `${diffHours} jam lalu`;
+      if (diffDays === 1) return 'Kemarin';
+      if (diffDays < 7) return `${diffDays} hari lalu`;
+      
+      return date.toLocaleDateString('id-ID', { day: 'numeric', month: 'short', year: 'numeric' });
+    } catch {
+      return '';
+    }
+  };
 
   useEffect(() => {
     if (!user) {
       navigate('/login');
     }
   }, [user, navigate]);
-
-  // Command+K or Control+K focus search listener
-  useEffect(() => {
-    const handleKeyDown = (e) => {
-      if ((e.metaKey || e.ctrlKey) && e.key === 'k') {
-        e.preventDefault();
-        searchInputRef.current?.focus();
-      }
-    };
-    window.addEventListener('keydown', handleKeyDown);
-    return () => window.removeEventListener('keydown', handleKeyDown);
-  }, []);
 
   if (!user) return null;
 
@@ -221,7 +287,7 @@ export default function DashboardLayout() {
       {/* Main Content Area */}
       <div className="flex-1 flex flex-col min-w-0">
         {/* Unified Header / Topbar */}
-        <header className="bg-white border-b border-slate-200/60 px-4 sm:px-6 py-3.5 flex items-center justify-between sticky top-0 z-25 shadow-[0_2px_8px_rgba(0,0,0,0.015)]">
+        <header className="bg-white border-b border-slate-200/60 px-4 sm:px-6 py-3.5 flex items-center justify-between sticky top-0 z-40 shadow-[0_2px_8px_rgba(0,0,0,0.015)]">
           {/* Left: Menu trigger on Mobile, Search bar on Desktop */}
           <div className="flex items-center gap-3">
             <button
@@ -235,28 +301,105 @@ export default function DashboardLayout() {
               <span>WILDAN<span className="text-[#0B1C30]"> CASN</span></span>
             </span>
 
-            {/* Global Search Bar (Desktop) */}
-            <div className="hidden md:flex items-center w-80 relative">
-              <Search className="absolute left-3.5 h-4 w-4 text-slate-400" />
-              <input
-                ref={searchInputRef}
-                type="text"
-                placeholder="Cari soal, paket... (Cmd+K)"
-                className="w-full pl-10 pr-4 py-2 text-xs bg-slate-100 hover:bg-slate-200/40 focus:bg-white border border-transparent focus:border-blue-500 rounded-xl text-slate-800 placeholder-slate-400 focus:outline-none transition-all duration-200"
-              />
-            </div>
           </div>
 
           {/* Right: Notification bell & User details */}
           <div className="flex items-center gap-3.5">
             {/* Notification Bell */}
-            <button className="relative p-2 text-slate-400 hover:text-slate-650 hover:bg-slate-50 rounded-xl transition-all duration-200">
-              <Bell className="h-4.5 w-4.5" />
-              {/* Pulsing indicator red dot */}
-              <span className="absolute top-1.5 right-1.5 h-2 w-2 rounded-full bg-red-500 flex items-center justify-center">
-                <span className="absolute inset-0 rounded-full bg-red-400 animate-ping" />
-              </span>
-            </button>
+            <div className="relative flex items-center animate-fadeIn" ref={dropdownRef}>
+              <button 
+                onClick={handleToggleNotifications}
+                className={`relative p-2.5 text-slate-400 hover:text-slate-600 hover:bg-slate-50 rounded-xl transition-all duration-200 ${showNotifications ? 'bg-slate-50 text-slate-700' : ''}`}
+                title="Notifikasi"
+              >
+                <Bell className="h-5.5 w-5.5" />
+                {/* Numeric indicator badge if there are unread count */}
+                {unreadCount > 0 && (
+                  <span className="absolute -top-0.5 -right-0.5 min-w-[18px] h-[18px] px-1 rounded-full bg-red-500 text-[10px] font-extrabold text-white flex items-center justify-center shadow-md select-none">
+                    {unreadCount > 9 ? '9+' : unreadCount}
+                  </span>
+                )}
+              </button>
+
+              {/* Notification Dropdown Panel */}
+              {showNotifications && (
+                <div className="absolute right-0 top-full mt-3 w-[340px] sm:w-[420px] bg-white border border-slate-200/80 rounded-2xl shadow-2xl z-50 overflow-hidden animate-in fade-in slide-in-from-top-3 duration-200">
+                  {/* Header */}
+                  <div className="px-5 py-4 border-b border-slate-100 flex items-center justify-between bg-slate-50/50">
+                    <div>
+                      <h4 className="font-extrabold text-slate-800 text-[15px]">Notifikasi</h4>
+                      <p className="text-[11px] font-bold text-slate-400 mt-0.5">
+                        {unreadCount > 0 ? `${unreadCount} Belum dibaca` : 'Tidak ada pesan baru'}
+                      </p>
+                    </div>
+                    {unreadCount > 0 && (
+                      <button 
+                        onClick={handleMarkAllAsRead}
+                        className="text-[11px] font-extrabold text-blue-650 hover:text-blue-750 transition-colors focus:outline-none"
+                      >
+                        Tandai semua dibaca
+                      </button>
+                    )}
+                  </div>
+
+                  {/* Notification List */}
+                  <div className="max-h-[360px] overflow-y-auto divide-y divide-slate-100">
+                    {notifications && notifications.length > 0 ? (
+                      notifications.map((notif) => {
+                        const isRead = readNotifications.includes(notif.id);
+                        return (
+                          <div 
+                            key={notif.id}
+                            onClick={() => handleNotificationClick(notif)}
+                            className={`p-4 flex gap-3.5 hover:bg-slate-50/80 cursor-pointer transition-colors relative ${!isRead ? 'bg-blue-50/10' : ''}`}
+                          >
+                            {/* Unread indicator dot */}
+                            {!isRead && (
+                              <span className="absolute top-4 right-4 h-2 w-2 rounded-full bg-blue-500 shadow-sm animate-pulse" />
+                            )}
+                            
+                            {/* Icon Wrapper */}
+                            <div className={`w-10 h-10 rounded-xl flex items-center justify-center flex-shrink-0 transition-colors ${
+                              !isRead ? 'bg-blue-500/10 text-blue-600' : 'bg-slate-100 text-slate-400'
+                            }`}>
+                              <Megaphone className="h-5 w-5" />
+                            </div>
+
+                            {/* Text content */}
+                            <div className="space-y-1 text-left flex-1 min-w-0 pr-3.5">
+                              <p className={`text-[13.5px] leading-relaxed text-slate-700 break-words ${!isRead ? 'font-bold' : 'font-medium'}`}>
+                                {notif.text}
+                              </p>
+                              <div className="flex items-center gap-2.5 mt-1.5">
+                                <div className="flex items-center gap-1.5 text-[11px] text-slate-400 font-semibold">
+                                  <Clock className="h-3.5 w-3.5" />
+                                  <span>{formatRelativeTime(notif.created_at)}</span>
+                                </div>
+                                {notif.link && (
+                                  <span className="flex items-center gap-1 text-[11px] text-blue-500 font-bold hover:underline">
+                                    <span>Tautan</span>
+                                    <ExternalLink className="h-3 w-3" />
+                                  </span>
+                                )}
+                              </div>
+                            </div>
+                          </div>
+                        );
+                      })
+                    ) : (
+                      /* Empty State */
+                      <div className="py-14 px-5 text-center text-slate-400">
+                        <Bell className="h-10 w-10 mx-auto mb-3 opacity-30 text-slate-500" />
+                        <p className="font-extrabold text-sm text-slate-500">Tidak ada pengumuman</p>
+                        <p className="text-[11px] font-medium text-slate-400 mt-1 max-w-[240px] mx-auto leading-relaxed">
+                          Semua pengumuman resmi dari sistem akan muncul di sini.
+                        </p>
+                      </div>
+                    )}
+                  </div>
+                </div>
+              )}
+            </div>
 
             {/* Profile Avatar & Details block (Desktop) */}
             <div className="flex items-center gap-2.5 sm:gap-3 pl-2 sm:pl-3.5 border-l border-slate-200">

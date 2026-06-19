@@ -14,7 +14,7 @@ export default function Home() {
     <div className="min-h-screen bg-slate-50/50 text-slate-900 font-sans selection:bg-blue-500/10 selection:text-blue-700">
 
       {/* ━━━ HERO SECTION ━━━ */}
-      <section id="beranda" className="relative overflow-hidden bg-white border-b border-slate-100 bg-grid-pattern pt-24 pb-16 sm:pt-32 sm:pb-24 lg:pt-40 lg:pb-32">
+      <section id="beranda" className="relative overflow-hidden bg-white border-b border-slate-100 bg-grid-pattern pt-16 pb-16 sm:pt-24 sm:pb-24 lg:pt-32 lg:pb-32">
         
         {/* Glow Blobs background */}
         <div className="absolute top-[-10%] left-[-10%] w-[300px] sm:w-[500px] h-[300px] sm:h-[500px] rounded-full bg-blue-400/10 blur-[80px] sm:blur-[120px] pointer-events-none animate-blob"></div>

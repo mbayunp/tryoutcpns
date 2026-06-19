@@ -6,7 +6,7 @@ export default function PolicyLayout({ title, description, children, lastUpdated
   }, [title]);
 
   return (
-    <div className="relative min-h-screen bg-slate-50/50 pb-20 pt-16">
+    <div className="relative min-h-screen bg-slate-50/50 pb-20 pt-4">
       {/* Grid Pattern Background */}
       <div className="absolute inset-0 bg-grid-pattern opacity-60 pointer-events-none" />
       

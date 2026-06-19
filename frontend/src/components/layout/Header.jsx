@@ -1,6 +1,6 @@
 import React, { useState, useEffect } from 'react';
 import { Link, useNavigate, useLocation } from 'react-router-dom';
-import { Menu, X } from 'lucide-react';
+import { Menu, X, Megaphone } from 'lucide-react';
 import Button from '../common/Button';
 import { useExamStore } from '../../store/useExamStore';
 
@@ -73,15 +73,16 @@ export default function Header() {
 
       {/* Dynamic Announcement Promo Bar */}
       {announcement && announcement.is_active && (
-        <div className="bg-gradient-to-r from-[#0B1C30] via-blue-900 to-[#1E3E66] text-white text-[11px] sm:text-xs py-2.5 relative flex items-center font-semibold tracking-wide shadow-sm overflow-hidden w-full">
-          <div className="animate-running-text">
-            <span>📢 {announcement.text}</span>
+        <div className="bg-slate-900 text-slate-200 text-[11px] sm:text-xs py-2 relative flex items-center font-semibold tracking-wide shadow-sm overflow-hidden w-full border-b border-white/5">
+          <div className="animate-running-text inline-flex items-center gap-2">
+            <Megaphone className="h-3.5 w-3.5 text-blue-400 flex-shrink-0" />
+            <span>{announcement.text}</span>
             {announcement.link && (
               <a
                 href={announcement.link}
                 target="_blank"
                 rel="noopener noreferrer"
-                className="underline hover:text-blue-200 font-bold ml-2 transition-colors"
+                className="underline hover:text-blue-400 font-bold ml-2 transition-colors"
               >
                 Lihat Selengkapnya &rarr;
               </a>
@@ -91,9 +92,9 @@ export default function Header() {
       )}
 
       {/* Main Navbar */}
-      <nav className={`w-full transition-all duration-500 ${isScrolled || isOpen
-        ? 'bg-white/80 backdrop-blur-md shadow-[0_8px_30px_rgb(0,0,0,0.03)] border-b border-slate-200/50 py-3'
-        : 'bg-transparent py-5'
+      <nav className={`w-full transition-all duration-300 ${isScrolled || isOpen
+        ? 'bg-white/85 backdrop-blur-xl border-b border-slate-200/50 shadow-sm py-3'
+        : 'bg-transparent border-b border-transparent py-5'
         }`}>
         <div className="max-w-6xl mx-auto px-4 sm:px-6 lg:px-8">
           <div className="flex justify-between items-center">
@@ -102,7 +103,7 @@ export default function Header() {
               <div className="bg-white p-1 rounded-xl shadow-premium group-hover:shadow-premium-hover transition-all duration-300">
                 <img src="/logo.jpg" alt="Logo CPNS TryOut" className="h-7 w-7 object-cover rounded-lg" />
               </div>
-              <span className="font-extrabold text-lg tracking-tight text-slate-900">
+              <span className="font-black text-lg tracking-tight text-slate-900">
                 WILDAN<span className="text-blue-700"> CASN</span>
               </span>
             </Link>

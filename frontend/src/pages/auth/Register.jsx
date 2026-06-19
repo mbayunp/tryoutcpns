@@ -1,4 +1,4 @@
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { useExamStore } from '../../store/useExamStore';
 import { AlertCircle, Eye, EyeOff, ShieldCheck, BarChart3, ArrowLeft } from 'lucide-react';
@@ -17,6 +17,23 @@ export default function Register() {
   const [showConfirmPassword, setShowConfirmPassword] = useState(false);
   const [loading, setLoading] = useState(false);
 
+  // Anti-spam Math CAPTCHA
+  const [captchaNum1, setCaptchaNum1] = useState(0);
+  const [captchaNum2, setCaptchaNum2] = useState(0);
+  const [captchaInput, setCaptchaInput] = useState('');
+
+  const generateCaptcha = () => {
+    const num1 = Math.floor(Math.random() * 9) + 1;
+    const num2 = Math.floor(Math.random() * 9) + 1;
+    setCaptchaNum1(num1);
+    setCaptchaNum2(num2);
+    setCaptchaInput('');
+  };
+
+  useEffect(() => {
+    generateCaptcha();
+  }, []);
+
   const handleSubmit = async (e) => {
     e.preventDefault();
     if (!name || !email || !password || !confirmPassword) {
@@ -29,6 +46,14 @@ export default function Register() {
     }
     if (password !== confirmPassword) {
       setError('Konfirmasi kata sandi tidak cocok.');
+      return;
+    }
+
+    // CAPTCHA verification
+    const expected = captchaNum1 + captchaNum2;
+    if (parseInt(captchaInput) !== expected) {
+      setError('Jawaban verifikasi keamanan (CAPTCHA) salah. Silakan coba lagi.');
+      generateCaptcha();
       return;
     }
     
@@ -177,6 +202,34 @@ export default function Register() {
                   className="absolute right-4 top-1/2 -translate-y-1/2 text-slate-400 hover:text-blue-600 transition-colors focus:outline-none border-0 bg-transparent cursor-pointer"
                 >
                   {showConfirmPassword ? <EyeOff className="h-5 w-5" /> : <Eye className="h-5 w-5" />}
+                </button>
+              </div>
+            </div>
+
+            {/* Math Captcha / Spam Prevention */}
+            <div className="space-y-1.5 p-3.5 bg-slate-50 border border-slate-200/60 rounded-xl animate-fadeIn">
+              <label className="text-[11px] font-bold text-slate-600 block">
+                Verifikasi Keamanan (Anti-Spam)
+              </label>
+              <div className="flex items-center gap-3">
+                <div className="bg-slate-200 border border-slate-300 rounded-lg px-3 py-1.5 text-sm font-extrabold text-slate-700 tracking-wider select-none">
+                  {captchaNum1} + {captchaNum2} =
+                </div>
+                <Input
+                  type="number"
+                  id="captcha"
+                  value={captchaInput}
+                  onChange={(e) => { setCaptchaInput(e.target.value); setError(''); }}
+                  placeholder="?"
+                  required
+                  className="w-16 text-center font-bold text-sm h-9"
+                />
+                <button
+                  type="button"
+                  onClick={generateCaptcha}
+                  className="text-xs text-blue-600 hover:text-blue-800 font-bold hover:underline bg-transparent border-0 cursor-pointer focus:outline-none"
+                >
+                  Ganti soal
                 </button>
               </div>
             </div>

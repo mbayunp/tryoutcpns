@@ -79,7 +79,7 @@ export default function HelpCenter() {
   };
 
   return (
-    <div className="min-h-screen bg-slate-50/50 pb-20 pt-16 relative">
+    <div className="min-h-screen bg-slate-50/50 pb-20 pt-4 relative">
       <div className="absolute inset-0 bg-grid-pattern opacity-60 pointer-events-none" />
       
       {/* Hero Section */}

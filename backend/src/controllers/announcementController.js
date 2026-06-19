@@ -14,6 +14,19 @@ const getActiveAnnouncement = async (req, res, next) => {
   }
 };
 
+// Get announcements for authenticated user notifications
+const getUserAnnouncements = async (req, res, next) => {
+  try {
+    const announcements = await Announcement.findAll({
+      order: [['created_at', 'DESC']],
+      limit: 15
+    });
+    return response.success(res, announcements, 'User announcements retrieved successfully');
+  } catch (err) {
+    next(err);
+  }
+};
+
 // Get all announcements (Admin)
 const getAllAnnouncements = async (req, res, next) => {
   try {
@@ -97,6 +110,7 @@ const deleteAnnouncement = async (req, res, next) => {
 
 module.exports = {
   getActiveAnnouncement,
+  getUserAnnouncements,
   getAllAnnouncements,
   createAnnouncement,
   updateAnnouncement,

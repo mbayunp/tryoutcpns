@@ -2,6 +2,7 @@ import React, { useState, useEffect } from 'react';
 import { useExamStore } from '../../store/useExamStore';
 import { Trash, Edit, Plus, X, FileText, Receipt, UploadCloud, Download, Table, AlertCircle, Check, Layers, Megaphone } from 'lucide-react';
 import * as XLSX from 'xlsx';
+import Swal from 'sweetalert2';
 import Card from '../../components/common/Card';
 import Button from '../../components/common/Button';
 import Badge from '../../components/common/Badge';
@@ -71,7 +72,13 @@ export default function DashboardAdmin() {
   const handleBannerSubmit = async (e) => {
     e.preventDefault();
     if (!bannerText) {
-      alert('Harap isi teks pengumuman!');
+      Swal.fire({
+        title: 'Peringatan',
+        text: 'Harap isi teks pengumuman!',
+        icon: 'warning',
+        confirmButtonText: 'OK',
+        confirmButtonColor: '#3085d6'
+      });
       return;
     }
 
@@ -84,24 +91,65 @@ export default function DashboardAdmin() {
     try {
       if (isEditingBanner) {
         await updateAnnouncement(editingBannerId, bannerData);
-        alert('Pengumuman/Banner berhasil diperbarui!');
+        Swal.fire({
+          title: 'Berhasil!',
+          text: 'Pengumuman/Banner berhasil diperbarui!',
+          icon: 'success',
+          timer: 2000,
+          showConfirmButton: false
+        });
       } else {
         await createAnnouncement(bannerData);
-        alert('Pengumuman/Banner baru berhasil ditambahkan!');
+        Swal.fire({
+          title: 'Berhasil!',
+          text: 'Pengumuman/Banner baru berhasil ditambahkan!',
+          icon: 'success',
+          timer: 2000,
+          showConfirmButton: false
+        });
       }
       resetBannerForm();
     } catch (err) {
-      alert('Gagal menyimpan pengumuman/banner.');
+      Swal.fire({
+        title: 'Gagal!',
+        text: 'Gagal menyimpan pengumuman/banner.',
+        icon: 'error',
+        confirmButtonText: 'OK',
+        confirmButtonColor: '#EF4444'
+      });
     }
   };
 
   const handleBannerDelete = async (id) => {
-    if (window.confirm('Apakah Anda yakin ingin menghapus pengumuman/banner ini?')) {
+    const result = await Swal.fire({
+      title: 'Hapus Banner',
+      text: 'Apakah Anda yakin ingin menghapus pengumuman/banner ini?',
+      icon: 'warning',
+      showCancelButton: true,
+      confirmButtonText: 'Ya, Hapus',
+      cancelButtonText: 'Batal',
+      confirmButtonColor: '#EF4444',
+      cancelButtonColor: '#6B7280'
+    });
+
+    if (result.isConfirmed) {
       try {
         await deleteAnnouncement(id);
-        alert('Pengumuman/Banner berhasil dihapus!');
+        Swal.fire({
+          title: 'Berhasil!',
+          text: 'Pengumuman/Banner berhasil dihapus!',
+          icon: 'success',
+          timer: 2000,
+          showConfirmButton: false
+        });
       } catch (err) {
-        alert('Gagal menghapus pengumuman/banner.');
+        Swal.fire({
+          title: 'Gagal!',
+          text: 'Gagal menghapus pengumuman/banner.',
+          icon: 'error',
+          confirmButtonText: 'OK',
+          confirmButtonColor: '#EF4444'
+        });
       }
     }
   };
@@ -135,13 +183,25 @@ export default function DashboardAdmin() {
     if (!selectedPkg) return;
     try {
       await assignQuestionsToPackage(selectedPkg.id, selectedQuestionIds);
-      alert('Mapping soal ke paket berhasil disimpan!');
+      Swal.fire({
+        title: 'Berhasil!',
+        text: 'Mapping soal ke paket berhasil disimpan!',
+        icon: 'success',
+        timer: 2000,
+        showConfirmButton: false
+      });
       setShowQuestionModal(false);
       setSelectedPkg(null);
       setSelectedQuestionIds([]);
       fetchPackages();
     } catch (err) {
-      alert('Gagal memetakan soal ke paket.');
+      Swal.fire({
+        title: 'Gagal!',
+        text: 'Gagal memetakan soal ke paket.',
+        icon: 'error',
+        confirmButtonText: 'OK',
+        confirmButtonColor: '#EF4444'
+      });
     }
   };
 
@@ -168,7 +228,13 @@ export default function DashboardAdmin() {
   const handlePkgSubmit = async (e) => {
     e.preventDefault();
     if (!pkgTitle || !pkgDescription || !pkgDuration) {
-      alert('Harap isi seluruh formulir data paket!');
+      Swal.fire({
+        title: 'Peringatan',
+        text: 'Harap isi seluruh formulir data paket!',
+        icon: 'warning',
+        confirmButtonText: 'OK',
+        confirmButtonColor: '#3085d6'
+      });
       return;
     }
 
@@ -183,24 +249,65 @@ export default function DashboardAdmin() {
     try {
       if (isEditingPkg) {
         await updatePackage(pkgData);
-        alert('Paket tryout berhasil diperbarui!');
+        Swal.fire({
+          title: 'Berhasil!',
+          text: 'Paket tryout berhasil diperbarui!',
+          icon: 'success',
+          timer: 2000,
+          showConfirmButton: false
+        });
       } else {
         await createPackage(pkgData);
-        alert('Paket tryout baru berhasil ditambahkan!');
+        Swal.fire({
+          title: 'Berhasil!',
+          text: 'Paket tryout baru berhasil ditambahkan!',
+          icon: 'success',
+          timer: 2000,
+          showConfirmButton: false
+        });
       }
       resetPkgForm();
     } catch (err) {
-      alert('Gagal menyimpan paket tryout.');
+      Swal.fire({
+        title: 'Gagal!',
+        text: 'Gagal menyimpan paket tryout.',
+        icon: 'error',
+        confirmButtonText: 'OK',
+        confirmButtonColor: '#EF4444'
+      });
     }
   };
 
   const handlePkgDelete = async (id) => {
-    if (window.confirm('Apakah Anda yakin ingin menghapus paket tryout ini?')) {
+    const result = await Swal.fire({
+      title: 'Hapus Paket',
+      text: 'Apakah Anda yakin ingin menghapus paket tryout ini?',
+      icon: 'warning',
+      showCancelButton: true,
+      confirmButtonText: 'Ya, Hapus',
+      cancelButtonText: 'Batal',
+      confirmButtonColor: '#EF4444',
+      cancelButtonColor: '#6B7280'
+    });
+
+    if (result.isConfirmed) {
       try {
         await deletePackage(id);
-        alert('Paket tryout berhasil dihapus!');
+        Swal.fire({
+          title: 'Berhasil!',
+          text: 'Paket tryout berhasil dihapus!',
+          icon: 'success',
+          timer: 2000,
+          showConfirmButton: false
+        });
       } catch (err) {
-        alert('Gagal menghapus paket tryout.');
+        Swal.fire({
+          title: 'Gagal!',
+          text: 'Gagal menghapus paket tryout.',
+          icon: 'error',
+          confirmButtonText: 'OK',
+          confirmButtonColor: '#EF4444'
+        });
       }
     }
   };
@@ -271,7 +378,13 @@ export default function DashboardAdmin() {
         const rows = XLSX.utils.sheet_to_json(worksheet, { header: 1 });
         
         if (rows.length === 0) {
-          alert('Berkas Excel kosong!');
+          Swal.fire({
+            title: 'Berkas Kosong',
+            text: 'Berkas Excel kosong!',
+            icon: 'warning',
+            confirmButtonText: 'OK',
+            confirmButtonColor: '#3085d6'
+          });
           return;
         }
 
@@ -388,7 +501,13 @@ export default function DashboardAdmin() {
         setPreviewQuestions(parsed);
       } catch (err) {
         console.error(err);
-        alert('Gagal membaca file Excel. Pastikan format berkas benar.');
+        Swal.fire({
+          title: 'Gagal Membaca Excel',
+          text: 'Gagal membaca file Excel. Pastikan format berkas benar.',
+          icon: 'error',
+          confirmButtonText: 'OK',
+          confirmButtonColor: '#EF4444'
+        });
       }
     };
     reader.readAsArrayBuffer(file);
@@ -408,7 +527,13 @@ export default function DashboardAdmin() {
   const handleSaveBulk = async () => {
     const validQuestions = previewQuestions.filter(pq => pq.isValid);
     if (validQuestions.length === 0) {
-      alert('Tidak ada soal valid untuk disimpan.');
+      Swal.fire({
+        title: 'Peringatan',
+        text: 'Tidak ada soal valid untuk disimpan.',
+        icon: 'warning',
+        confirmButtonText: 'OK',
+        confirmButtonColor: '#3085d6'
+      });
       return;
     }
 
@@ -429,12 +554,24 @@ export default function DashboardAdmin() {
       }));
 
       await bulkAddQuestions(mapped);
-      alert(`Berhasil mengimpor ${mapped.length} soal ke bank soal!`);
+      Swal.fire({
+        title: 'Berhasil!',
+        text: `Berhasil mengimpor ${mapped.length} soal ke bank soal!`,
+        icon: 'success',
+        timer: 2500,
+        showConfirmButton: false
+      });
       setPreviewQuestions([]);
       setShowExcelImport(false);
     } catch (err) {
       console.error(err);
-      alert('Terjadi kesalahan saat menyimpan soal.');
+      Swal.fire({
+        title: 'Gagal!',
+        text: 'Terjadi kesalahan saat menyimpan soal.',
+        icon: 'error',
+        confirmButtonText: 'OK',
+        confirmButtonColor: '#EF4444'
+      });
     }
   };
 
@@ -498,10 +635,16 @@ export default function DashboardAdmin() {
     }
   };
 
-  const handleSubmit = (e) => {
+  const handleSubmit = async (e) => {
     e.preventDefault();
     if (!questionText || !optA || !optB || !optC || !optD || !optE || !explanation) {
-      alert('Harap isi seluruh formulir data soal!');
+      Swal.fire({
+        title: 'Peringatan',
+        text: 'Harap isi seluruh formulir data soal!',
+        icon: 'warning',
+        confirmButtonText: 'OK',
+        confirmButtonColor: '#3085d6'
+      });
       return;
     }
 
@@ -526,20 +669,69 @@ export default function DashboardAdmin() {
       } : null
     };
 
-    if (isEditing) {
-      updateQuestion({ ...questionData, id: editingId });
-      alert('Soal ujian berhasil diperbarui!');
-    } else {
-      addQuestion(questionData);
-      alert('Soal ujian baru berhasil ditambahkan!');
+    try {
+      if (isEditing) {
+        await updateQuestion({ ...questionData, id: editingId });
+        Swal.fire({
+          title: 'Berhasil!',
+          text: 'Soal ujian berhasil diperbarui!',
+          icon: 'success',
+          timer: 2000,
+          showConfirmButton: false
+        });
+      } else {
+        await addQuestion(questionData);
+        Swal.fire({
+          title: 'Berhasil!',
+          text: 'Soal ujian baru berhasil ditambahkan!',
+          icon: 'success',
+          timer: 2000,
+          showConfirmButton: false
+        });
+      }
+      resetForm();
+    } catch (err) {
+      Swal.fire({
+        title: 'Gagal!',
+        text: 'Terjadi kesalahan saat menyimpan soal.',
+        icon: 'error',
+        confirmButtonText: 'OK',
+        confirmButtonColor: '#EF4444'
+      });
     }
-
-    resetForm();
   };
 
-  const handleDelete = (id) => {
-    if (window.confirm('Apakah Anda yakin ingin menghapus soal ini?')) {
-      deleteQuestion(id);
+  const handleDelete = async (id) => {
+    const result = await Swal.fire({
+      title: 'Hapus Soal',
+      text: 'Apakah Anda yakin ingin menghapus soal ini?',
+      icon: 'warning',
+      showCancelButton: true,
+      confirmButtonText: 'Ya, Hapus',
+      cancelButtonText: 'Batal',
+      confirmButtonColor: '#EF4444',
+      cancelButtonColor: '#6B7280'
+    });
+
+    if (result.isConfirmed) {
+      try {
+        await deleteQuestion(id);
+        Swal.fire({
+          title: 'Berhasil!',
+          text: 'Soal berhasil dihapus.',
+          icon: 'success',
+          timer: 2000,
+          showConfirmButton: false
+        });
+      } catch (err) {
+        Swal.fire({
+          title: 'Gagal!',
+          text: 'Gagal menghapus soal.',
+          icon: 'error',
+          confirmButtonText: 'OK',
+          confirmButtonColor: '#EF4444'
+        });
+      }
     }
   };
 
@@ -1259,9 +1451,21 @@ export default function DashboardAdmin() {
                             onClick={async () => {
                               try {
                                 await updateAnnouncement(ann.id, { is_active: !ann.is_active });
-                                alert(`Status banner berhasil diubah!`);
+                                Swal.fire({
+                                  title: 'Berhasil!',
+                                  text: 'Status banner berhasil diubah!',
+                                  icon: 'success',
+                                  timer: 1500,
+                                  showConfirmButton: false
+                                });
                               } catch (err) {
-                                alert('Gagal mengubah status banner.');
+                                Swal.fire({
+                                  title: 'Gagal!',
+                                  text: 'Gagal mengubah status banner.',
+                                  icon: 'error',
+                                  confirmButtonText: 'OK',
+                                  confirmButtonColor: '#EF4444'
+                                });
                               }
                             }}
                             className="focus:outline-none"

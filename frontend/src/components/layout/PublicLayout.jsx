@@ -9,7 +9,7 @@ export default function PublicLayout() {
       <Header />
       
       {/* Content */}
-      <main className="flex-grow">
+      <main className="flex-grow pt-28">
         <Outlet />
       </main>
 

@@ -1,18 +1,128 @@
-import React, { useState } from 'react';
+import React, { useState, useEffect, useCallback } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { useExamStore } from '../../store/useExamStore';
-import { AlertCircle, Eye, EyeOff, ShieldCheck, BarChart3 } from 'lucide-react';
+import { AlertCircle, Eye, EyeOff, ShieldCheck, BarChart3, Key } from 'lucide-react';
 import Button from '../../components/common/Button';
 import Input from '../../components/common/Input';
 import Card from '../../components/common/Card';
+import Swal from 'sweetalert2';
 
 export default function Login() {
   const navigate = useNavigate();
   const login = useExamStore((state) => state.login);
+  const loginWithGoogle = useExamStore((state) => state.loginWithGoogle);
+  const forgotPassword = useExamStore((state) => state.forgotPassword);
+  
   const [email, setEmail] = useState('');
   const [password, setPassword] = useState('');
   const [error, setError] = useState('');
   const [showPassword, setShowPassword] = useState(false);
+
+  const handleGoogleLoginCallback = useCallback(async (response) => {
+    try {
+      setError('');
+      Swal.fire({
+        title: 'Menghubungkan...',
+        text: 'Sedang masuk dengan akun Google Anda.',
+        allowOutsideClick: false,
+        didOpen: () => {
+          Swal.showLoading();
+        }
+      });
+
+      const loggedUser = await loginWithGoogle(response.credential);
+      Swal.close();
+      
+      if (loggedUser.role === 'admin') {
+        navigate('/admin');
+      } else {
+        navigate('/dashboard');
+      }
+    } catch (err) {
+      Swal.close();
+      setError(err.message || 'Login Google gagal.');
+    }
+  }, [loginWithGoogle, navigate]);
+
+  useEffect(() => {
+    const initGoogle = () => {
+      if (window.google) {
+        window.google.accounts.id.initialize({
+          client_id: "1036814674751-nsc1h2b04tqerhpt6f4ebt9kdfuibsh3.apps.googleusercontent.com", // Google Client ID
+          callback: handleGoogleLoginCallback
+        });
+        
+        window.google.accounts.id.renderButton(
+          document.getElementById("google-signin-btn"),
+          { 
+            theme: "outline", 
+            size: "large", 
+            width: 352, 
+            text: "signin_with", 
+            shape: "rectangular" 
+          }
+        );
+      }
+    };
+
+    initGoogle();
+
+    const script = document.querySelector('script[src="https://accounts.google.com/gsi/client"]');
+    if (script) {
+      script.addEventListener('load', initGoogle);
+    }
+    return () => {
+      if (script) script.removeEventListener('load', initGoogle);
+    };
+  }, [handleGoogleLoginCallback]);
+
+  const handleForgotPassword = async (e) => {
+    e.preventDefault();
+    const { value: targetEmail } = await Swal.fire({
+      title: 'Lupa Kata Sandi',
+      text: 'Masukkan alamat email Anda untuk menerima tautan atur ulang kata sandi.',
+      input: 'email',
+      inputPlaceholder: 'nama@email.com',
+      showCancelButton: true,
+      confirmButtonText: 'Kirim Link Reset',
+      cancelButtonText: 'Batal',
+      confirmButtonColor: '#2563eb',
+      cancelButtonColor: '#6B7280',
+      inputValidator: (value) => {
+        if (!value) {
+          return 'Alamat email wajib diisi!';
+        }
+      }
+    });
+
+    if (targetEmail) {
+      Swal.fire({
+        title: 'Mengirim...',
+        text: 'Sedang memproses pengiriman email.',
+        allowOutsideClick: false,
+        didOpen: () => {
+          Swal.showLoading();
+        }
+      });
+
+      try {
+        await forgotPassword(targetEmail);
+        Swal.fire({
+          title: 'Email Terkirim!',
+          text: 'Tautan untuk mengatur ulang kata sandi telah dikirim ke email Anda. Silakan cek kotak masuk atau folder spam Anda.',
+          icon: 'success',
+          confirmButtonColor: '#2563eb'
+        });
+      } catch (err) {
+        Swal.fire({
+          title: 'Gagal!',
+          text: err.message || 'Gagal mengirim email reset.',
+          icon: 'error',
+          confirmButtonColor: '#2563eb'
+        });
+      }
+    }
+  };
 
   const handleSubmit = async (e) => {
     e.preventDefault();
@@ -95,15 +205,16 @@ export default function Login() {
           {/* Tombol Demo Cepat */}
           <button 
             onClick={handleFillDemoUser}
-            className="w-full flex items-center justify-center gap-3 px-6 py-3.5 bg-white border border-slate-200 rounded-xl hover:bg-slate-50 hover:border-slate-300 transition-all duration-200 active:scale-[0.98] shadow-sm font-bold text-sm text-slate-700"
+            className="w-full flex items-center justify-center gap-3 px-6 py-3 bg-slate-900 text-white rounded-xl hover:bg-slate-800 transition-all duration-200 active:scale-[0.98] shadow-sm font-bold text-sm"
           >
-            <img 
-              alt="Google" 
-              className="w-5 h-5" 
-              src="https://www.svgrepo.com/show/475656/google-color.svg"
-            />
+            <Key className="w-4 h-4 text-amber-400" />
             <span>Masuk Cepat (Demo Peserta)</span>
           </button>
+
+          {/* Google Sign In Button */}
+          <div className="space-y-3 flex flex-col items-center justify-center">
+            <div id="google-signin-btn" className="w-full flex justify-center"></div>
+          </div>
 
           {/* Divider */}
           <div className="relative flex items-center py-2">
@@ -162,7 +273,13 @@ export default function Login() {
                 <input className="w-4 h-4 rounded border-slate-300 text-blue-600 focus:ring-blue-500/20 cursor-pointer transition-colors" type="checkbox"/>
                 <span className="text-slate-500 group-hover:text-slate-800 transition-colors">Ingat saya</span>
               </label>
-              <a className="text-blue-600 hover:text-blue-800 transition-colors" href="#forgot">Lupa sandi?</a>
+              <button 
+                type="button"
+                onClick={handleForgotPassword}
+                className="text-blue-600 hover:text-blue-800 transition-colors bg-transparent border-0 cursor-pointer font-bold focus:outline-none"
+              >
+                Lupa sandi?
+              </button>
             </div>
 
             <Button variant="primary" type="submit" className="w-full py-4 bg-blue-600 hover:bg-blue-700 text-white text-sm font-bold rounded-xl shadow-lg shadow-blue-600/20 transition-all duration-200 active:scale-[0.98] mt-2">

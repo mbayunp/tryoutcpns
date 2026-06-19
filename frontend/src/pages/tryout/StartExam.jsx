@@ -2,6 +2,7 @@ import React, { useState, useEffect, useRef, useCallback } from 'react';
 import { useNavigate, useLocation } from 'react-router-dom';
 import { useExamStore } from '../../store/useExamStore';
 import { Clock, Award, ChevronLeft, ChevronRight, AlertCircle, Send } from 'lucide-react';
+import Swal from 'sweetalert2';
 
 const formatTimer = (seconds) => {
   const hrs = Math.floor(seconds / 3600);
@@ -59,8 +60,15 @@ export default function StartExam() {
         setIsTimerRunning(true);
         setLoading(false);
       } catch (err) {
-        alert('Gagal memulai ujian: ' + err.message);
-        navigate('/dashboard');
+        Swal.fire({
+          title: 'Gagal Memulai Ujian',
+          text: err.message,
+          icon: 'error',
+          confirmButtonText: 'OK',
+          confirmButtonColor: '#EF4444'
+        }).then(() => {
+          navigate('/dashboard');
+        });
       }
     };
     initExam();
@@ -77,14 +85,29 @@ export default function StartExam() {
       setShowSubmitModal(false);
       navigate('/result', { state: { attemptId: result.attempt_id } });
     } catch (err) {
-      alert('Gagal mengirim jawaban: ' + err.message);
+      Swal.fire({
+        title: 'Gagal Mengirim Jawaban',
+        text: err.message,
+        icon: 'error',
+        confirmButtonText: 'OK',
+        confirmButtonColor: '#EF4444'
+      });
       setIsTimerRunning(true);
     }
   }, [answers, attemptId, submitExamAttempt, navigate]);
 
   const handleAutoSubmit = useCallback(() => {
-    alert('Waktu Ujian Simulasi Anda Telah Habis! Sistem akan mengumpulkan lembar jawaban Anda secara otomatis.');
-    handleFinishExam();
+    Swal.fire({
+      title: 'Waktu Ujian Habis!',
+      text: 'Waktu Ujian Simulasi Anda Telah Habis! Sistem akan mengumpulkan lembar jawaban Anda secara otomatis.',
+      icon: 'warning',
+      confirmButtonText: 'OK',
+      confirmButtonColor: '#EF4444',
+      allowOutsideClick: false,
+      allowEscapeKey: false
+    }).then(() => {
+      handleFinishExam();
+    });
   }, [handleFinishExam]);
 
   const handleAutoSubmitRef = useRef(null);

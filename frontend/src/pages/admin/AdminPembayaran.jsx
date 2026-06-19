@@ -1,4 +1,5 @@
 import React, { useState } from 'react';
+import Swal from 'sweetalert2';
 import {
     Search,
     CheckCircle2,
@@ -21,16 +22,68 @@ export default function AdminPembayaran() {
     }, [fetchTransactions]);
 
     // Fungsi untuk mengaktifkan paket (Approve)
-    const handleApprove = (id) => {
-        if (window.confirm('Verifikasi pembayaran ini dan aktifkan paket user?')) {
-            updateTransactionStatus(id, 'success');
+    const handleApprove = async (id) => {
+        const result = await Swal.fire({
+            title: 'Verifikasi Pembayaran',
+            text: 'Verifikasi pembayaran ini dan aktifkan paket user?',
+            icon: 'question',
+            showCancelButton: true,
+            confirmButtonText: 'Ya, Verifikasi',
+            cancelButtonText: 'Batal',
+            confirmButtonColor: '#10B981',
+            cancelButtonColor: '#6B7280'
+        });
+
+        if (result.isConfirmed) {
+            try {
+                await updateTransactionStatus(id, 'success');
+                Swal.fire({
+                    title: 'Berhasil!',
+                    text: 'Pembayaran berhasil diverifikasi dan paket diaktifkan.',
+                    icon: 'success',
+                    timer: 2000,
+                    showConfirmButton: false
+                });
+            } catch (err) {
+                Swal.fire({
+                    title: 'Gagal!',
+                    text: 'Gagal memverifikasi pembayaran.',
+                    icon: 'error'
+                });
+            }
         }
     };
 
     // Fungsi untuk menolak pembayaran (Reject)
-    const handleReject = (id) => {
-        if (window.confirm('Tolak pembayaran ini?')) {
-            updateTransactionStatus(id, 'failed');
+    const handleReject = async (id) => {
+        const result = await Swal.fire({
+            title: 'Tolak Pembayaran',
+            text: 'Tolak pembayaran ini?',
+            icon: 'warning',
+            showCancelButton: true,
+            confirmButtonText: 'Ya, Tolak',
+            cancelButtonText: 'Batal',
+            confirmButtonColor: '#EF4444',
+            cancelButtonColor: '#6B7280'
+        });
+
+        if (result.isConfirmed) {
+            try {
+                await updateTransactionStatus(id, 'failed');
+                Swal.fire({
+                    title: 'Ditolak!',
+                    text: 'Pembayaran telah ditolak.',
+                    icon: 'success',
+                    timer: 2000,
+                    showConfirmButton: false
+                });
+            } catch (err) {
+                Swal.fire({
+                    title: 'Gagal!',
+                    text: 'Gagal mengubah status pembayaran.',
+                    icon: 'error'
+                });
+            }
         }
     };
 

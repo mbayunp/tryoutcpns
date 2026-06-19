@@ -15,6 +15,7 @@ export const useExamStore = create(
       rankings: [],
       announcement: null,
       announcements: [],
+      notifications: [],
 
       // Actions
       login: async (email, password) => {
@@ -33,6 +34,46 @@ export const useExamStore = create(
           return userWithAvatar;
         } catch (error) {
           const message = error.response?.data?.message || 'Login gagal. Silakan periksa kembali email dan password Anda.';
+          throw new Error(message);
+        }
+      },
+
+      loginWithGoogle: async (idToken) => {
+        try {
+          const res = await API.post('/auth/google-login', { idToken });
+          const { user, token } = res.data.data;
+          
+          localStorage.setItem('token', token);
+          
+          const userWithAvatar = {
+            ...user,
+            avatar: user.avatar || '/images/icon.png'
+          };
+          
+          set({ user: userWithAvatar, token });
+          return userWithAvatar;
+        } catch (error) {
+          const message = error.response?.data?.message || 'Login via Google gagal.';
+          throw new Error(message);
+        }
+      },
+
+      forgotPassword: async (email) => {
+        try {
+          await API.post('/auth/forgot-password', { email });
+          return true;
+        } catch (error) {
+          const message = error.response?.data?.message || 'Gagal mengirim email atur ulang kata sandi.';
+          throw new Error(message);
+        }
+      },
+
+      resetPassword: async (token, newPassword) => {
+        try {
+          await API.post('/auth/reset-password', { token, newPassword });
+          return true;
+        } catch (error) {
+          const message = error.response?.data?.message || 'Gagal mengatur ulang kata sandi.';
           throw new Error(message);
         }
       },
@@ -140,6 +181,15 @@ export const useExamStore = create(
           set({ announcements: res.data.data || [] });
         } catch (error) {
           console.error('Failed to fetch announcements:', error);
+        }
+      },
+
+      fetchNotifications: async () => {
+        try {
+          const res = await API.get('/announcements/notifications');
+          set({ notifications: res.data.data || [] });
+        } catch (error) {
+          console.error('Failed to fetch notifications:', error);
         }
       },
 

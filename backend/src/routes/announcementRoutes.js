@@ -7,6 +7,9 @@ const adminMiddleware = require('../middlewares/adminMiddleware');
 // Public endpoint to show on landing page banner
 router.get('/active', announcementController.getActiveAnnouncement);
 
+// Authenticated user endpoint to show on notification bell
+router.get('/notifications', authMiddleware, announcementController.getUserAnnouncements);
+
 // Admin-only endpoints to manage announcements
 router.get('/', authMiddleware, adminMiddleware, announcementController.getAllAnnouncements);
 router.post('/', authMiddleware, adminMiddleware, announcementController.createAnnouncement);
