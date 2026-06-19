@@ -13,11 +13,16 @@ const getTransactions = async (req, res, next) => {
 
 const createTransaction = async (req, res, next) => {
   try {
-    const { tryout_id, amount } = req.body;
+    const { tryout_id, amount, proof_image, proofImage } = req.body;
     if (!tryout_id) {
       return response.error(res, 'tryout_id is required', 400);
     }
-    const transaction = await transactionService.createTransaction(req.user.id, tryout_id, amount);
+    const transaction = await transactionService.createTransaction(
+      req.user.id,
+      tryout_id,
+      amount,
+      proof_image || proofImage
+    );
     return response.success(res, transaction, 'Transaction created successfully', 201);
   } catch (err) {
     next(err);

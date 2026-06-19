@@ -1,6 +1,6 @@
 import React, { useState, useEffect } from 'react';
 import { useExamStore } from '../../store/useExamStore';
-import { Trash, Edit, Plus, X, FileText, Receipt, UploadCloud, Download, Table, AlertCircle, Check, Layers, Megaphone } from 'lucide-react';
+import { Trash, Edit, Plus, X, FileText, Receipt, UploadCloud, Download, Table, AlertCircle, Check, Layers, Megaphone, Search, Clock } from 'lucide-react';
 import * as XLSX from 'xlsx';
 import Swal from 'sweetalert2';
 import Card from '../../components/common/Card';
@@ -9,12 +9,12 @@ import Badge from '../../components/common/Badge';
 import AdminPembayaran from './AdminPembayaran'; // <-- Import halaman pembayaran
 
 export default function DashboardAdmin() {
-  const { 
-    questions, 
-    addQuestion, 
-    deleteQuestion, 
-    updateQuestion, 
-    fetchQuestions, 
+  const {
+    questions,
+    addQuestion,
+    deleteQuestion,
+    updateQuestion,
+    fetchQuestions,
     bulkAddQuestions,
     packages,
     createPackage,
@@ -27,13 +27,17 @@ export default function DashboardAdmin() {
     fetchAnnouncements,
     createAnnouncement,
     updateAnnouncement,
-    deleteAnnouncement
+    deleteAnnouncement,
+    transactions,
+    fetchTransactions
   } = useExamStore();
 
   // State untuk Tab Navigasi Admin
   const [activeTab, setActiveTab] = useState('soal'); // 'soal', 'pembayaran', 'paket'
 
-  const [showManualForm, setShowManualForm] = useState(true);
+  const [showManualForm, setShowManualForm] = useState(false);
+  const [searchQuery, setSearchQuery] = useState('');
+  const [filterCategory, setFilterCategory] = useState('ALL');
   const [showExcelImport, setShowExcelImport] = useState(false);
   const [previewQuestions, setPreviewQuestions] = useState([]);
 
@@ -174,7 +178,7 @@ export default function DashboardAdmin() {
   };
 
   const handleToggleQuestionSelection = (qId) => {
-    setSelectedQuestionIds(prev => 
+    setSelectedQuestionIds(prev =>
       prev.includes(qId) ? prev.filter(id => id !== qId) : [...prev, qId]
     );
   };
@@ -316,7 +320,8 @@ export default function DashboardAdmin() {
     fetchQuestions(1);
     fetchPackages();
     fetchAnnouncements();
-  }, [fetchQuestions, fetchPackages, fetchAnnouncements]);
+    fetchTransactions();
+  }, [fetchQuestions, fetchPackages, fetchAnnouncements, fetchTransactions]);
 
   const handleDownloadTemplate = () => {
     const headers = [
@@ -374,9 +379,9 @@ export default function DashboardAdmin() {
         const workbook = XLSX.read(data, { type: 'array' });
         const sheetName = workbook.SheetNames[0];
         const worksheet = workbook.Sheets[sheetName];
-        
+
         const rows = XLSX.utils.sheet_to_json(worksheet, { header: 1 });
-        
+
         if (rows.length === 0) {
           Swal.fire({
             title: 'Berkas Kosong',
@@ -429,7 +434,7 @@ export default function DashboardAdmin() {
           const valD = getVal(idxOpsiD);
           const valE = getVal(idxOpsiE);
           const rawKey = getVal(idxKunci).toUpperCase();
-          
+
           const rawSkorA = getVal(idxSkorA);
           const rawSkorB = getVal(idxSkorB);
           const rawSkorC = getVal(idxSkorC);
@@ -439,7 +444,7 @@ export default function DashboardAdmin() {
           const explanation = getVal(idxPembahasan);
 
           const errors = [];
-          
+
           if (!rawCategory || !['TWK', 'TIU', 'TKP'].includes(rawCategory)) {
             errors.push('Kategori harus TWK, TIU, atau TKP');
           }
@@ -461,10 +466,10 @@ export default function DashboardAdmin() {
             const scoreE = rawSkorE ? parseInt(rawSkorE) : 1;
 
             if (isNaN(scoreA) || scoreA < 1 || scoreA > 5 ||
-                isNaN(scoreB) || scoreB < 1 || scoreB > 5 ||
-                isNaN(scoreC) || scoreC < 1 || scoreC > 5 ||
-                isNaN(scoreD) || scoreD < 1 || scoreD > 5 ||
-                isNaN(scoreE) || scoreE < 1 || scoreE > 5) {
+              isNaN(scoreB) || scoreB < 1 || scoreB > 5 ||
+              isNaN(scoreC) || scoreC < 1 || scoreC > 5 ||
+              isNaN(scoreD) || scoreD < 1 || scoreD > 5 ||
+              isNaN(scoreE) || scoreE < 1 || scoreE > 5) {
               errors.push('Skor A-E untuk TKP harus berkisar antara 1-5');
             }
 
@@ -611,6 +616,7 @@ export default function DashboardAdmin() {
     setScoreC(3);
     setScoreD(2);
     setScoreE(1);
+    setShowManualForm(false);
   };
 
   const handleEditClick = (q) => {
@@ -633,6 +639,7 @@ export default function DashboardAdmin() {
       setScoreD(q.scores.D || 2);
       setScoreE(q.scores.E || 1);
     }
+    setShowManualForm(true);
   };
 
   const handleSubmit = async (e) => {
@@ -747,6 +754,24 @@ export default function DashboardAdmin() {
     { key: 'E', val: optE, set: setOptE, score: scoreE, setScore: setScoreE }
   ];
 
+  // Hitung ringkasan metrics
+  const totalQuestions = questions ? questions.length : 0;
+  const twkCount = questions ? questions.filter(q => q.category === 'TWK').length : 0;
+  const tiuCount = questions ? questions.filter(q => q.category === 'TIU').length : 0;
+  const tkpCount = questions ? questions.filter(q => q.category === 'TKP').length : 0;
+
+  const totalPackages = packages ? packages.length : 0;
+  const pendingVerifications = transactions ? transactions.filter(t => t.status === 'pending').length : 0;
+  const activeBanners = announcements ? announcements.filter(a => a.is_active).length : 0;
+
+  // Filter questions berdasarkan query pencarian dan filter kategori
+  const filteredQuestions = questions.filter(q => {
+    const matchesSearch = q.question.toLowerCase().includes(searchQuery.toLowerCase()) ||
+      String(q.id).includes(searchQuery);
+    const matchesCategory = filterCategory === 'ALL' || q.category === filterCategory;
+    return matchesSearch && matchesCategory;
+  });
+
   return (
     <div className="max-w-7xl mx-auto space-y-6 pb-12 font-sans">
 
@@ -762,8 +787,8 @@ export default function DashboardAdmin() {
           <button
             onClick={() => setActiveTab('soal')}
             className={`flex items-center gap-2 px-4 py-3 text-sm font-bold border-b-2 transition-all whitespace-nowrap ${activeTab === 'soal'
-                ? 'border-blue-600 text-blue-600'
-                : 'border-transparent text-slate-500 hover:text-slate-700 hover:border-slate-300'
+              ? 'border-blue-600 text-blue-600'
+              : 'border-transparent text-slate-500 hover:text-slate-700 hover:border-slate-300'
               }`}
           >
             <FileText className="h-4 w-4" />
@@ -773,8 +798,8 @@ export default function DashboardAdmin() {
           <button
             onClick={() => setActiveTab('pembayaran')}
             className={`flex items-center gap-2 px-4 py-3 text-sm font-bold border-b-2 transition-all whitespace-nowrap ${activeTab === 'pembayaran'
-                ? 'border-blue-600 text-blue-600'
-                : 'border-transparent text-slate-500 hover:text-slate-700 hover:border-slate-300'
+              ? 'border-blue-600 text-blue-600'
+              : 'border-transparent text-slate-500 hover:text-slate-700 hover:border-slate-300'
               }`}
           >
             <Receipt className="h-4 w-4" />
@@ -789,8 +814,8 @@ export default function DashboardAdmin() {
           <button
             onClick={() => setActiveTab('paket')}
             className={`flex items-center gap-2 px-4 py-3 text-sm font-bold border-b-2 transition-all whitespace-nowrap ${activeTab === 'paket'
-                ? 'border-blue-600 text-blue-600'
-                : 'border-transparent text-slate-500 hover:text-slate-700 hover:border-slate-300'
+              ? 'border-blue-600 text-blue-600'
+              : 'border-transparent text-slate-500 hover:text-slate-700 hover:border-slate-300'
               }`}
           >
             <Layers className="h-4 w-4" />
@@ -800,8 +825,8 @@ export default function DashboardAdmin() {
           <button
             onClick={() => setActiveTab('banner')}
             className={`flex items-center gap-2 px-4 py-3 text-sm font-bold border-b-2 transition-all whitespace-nowrap ${activeTab === 'banner'
-                ? 'border-blue-600 text-blue-600'
-                : 'border-transparent text-slate-500 hover:text-slate-700 hover:border-slate-300'
+              ? 'border-blue-600 text-blue-600'
+              : 'border-transparent text-slate-500 hover:text-slate-700 hover:border-slate-300'
               }`}
           >
             <Megaphone className="h-4 w-4" />
@@ -813,22 +838,73 @@ export default function DashboardAdmin() {
       {/* ─── KONTEN TAB KELOLA SOAL ─── */}
       {activeTab === 'soal' && (
         <div className="space-y-6 animate-fadeIn">
+          {/* Metrics Grid */}
+          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-5">
+            <Card className="p-5 border border-slate-200/60 shadow-premium flex items-center gap-4 bg-white hover:-translate-y-0.5 transition-all duration-300">
+              <div className="w-12 h-12 bg-blue-500/10 rounded-xl flex items-center justify-center text-blue-600">
+                <FileText className="h-6 w-6" />
+              </div>
+              <div className="space-y-0.5">
+                <p className="text-xs font-bold text-slate-400 uppercase tracking-wider">Total Bank Soal</p>
+                <h3 className="text-2xl font-extrabold text-[#0B1C30]">{totalQuestions} <span className="text-xs font-medium text-slate-500">Soal</span></h3>
+                <div className="flex gap-2 text-[10px] font-bold text-slate-400">
+                  <span className="text-red-650">TWK: {twkCount}</span>
+                  <span className="text-indigo-650">TIU: {tiuCount}</span>
+                  <span className="text-emerald-600">TKP: {tkpCount}</span>
+                </div>
+              </div>
+            </Card>
+
+            <Card className="p-5 border border-slate-200/60 shadow-premium flex items-center gap-4 bg-white hover:-translate-y-0.5 transition-all duration-300">
+              <div className="w-12 h-12 bg-indigo-500/10 rounded-xl flex items-center justify-center text-indigo-600">
+                <Layers className="h-6 w-6" />
+              </div>
+              <div className="space-y-0.5">
+                <p className="text-xs font-bold text-slate-400 uppercase tracking-wider">Total Paket Ujian</p>
+                <h3 className="text-2xl font-extrabold text-[#0B1C30]">{totalPackages} <span className="text-xs font-medium text-slate-500">Paket</span></h3>
+                <p className="text-[10px] text-slate-400 font-semibold">Aktif & Terkunci</p>
+              </div>
+            </Card>
+
+            <Card className="p-5 border border-slate-200/60 shadow-premium flex items-center gap-4 bg-white hover:-translate-y-0.5 transition-all duration-300">
+              <div className="w-12 h-12 bg-amber-500/10 rounded-xl flex items-center justify-center text-amber-600">
+                <Clock className="h-6 w-6" />
+              </div>
+              <div className="space-y-0.5">
+                <p className="text-xs font-bold text-slate-400 uppercase tracking-wider">Verifikasi Pending</p>
+                <h3 className="text-2xl font-extrabold text-[#0B1C30]">{pendingVerifications} <span className="text-xs font-medium text-slate-500">Trx</span></h3>
+                <p className="text-[10px] text-amber-650 font-semibold animate-pulse">Butuh Tindakan</p>
+              </div>
+            </Card>
+
+            <Card className="p-5 border border-slate-200/60 shadow-premium flex items-center gap-4 bg-white hover:-translate-y-0.5 transition-all duration-300">
+              <div className="w-12 h-12 bg-purple-500/10 rounded-xl flex items-center justify-center text-purple-600">
+                <Megaphone className="h-6 w-6" />
+              </div>
+              <div className="space-y-0.5">
+                <p className="text-xs font-bold text-slate-400 uppercase tracking-wider">Banner Aktif</p>
+                <h3 className="text-2xl font-extrabold text-[#0B1C30]">{activeBanners} <span className="text-xs font-medium text-slate-500">Banner</span></h3>
+                <p className="text-[10px] text-slate-400 font-semibold">Tampil di Header</p>
+              </div>
+            </Card>
+          </div>
+
           {/* Top Control Card */}
           <Card className="p-5 flex flex-wrap gap-4 items-center justify-between bg-white border border-slate-200/60 shadow-premium">
             <div className="flex flex-wrap gap-3">
-              <Button 
-                variant={showManualForm ? "primary" : "outline"} 
+              <Button
+                variant="primary"
                 onClick={() => {
-                  setShowManualForm(!showManualForm);
-                  setShowExcelImport(false);
+                  resetForm();
+                  setShowManualForm(true);
                 }}
-                className="flex items-center gap-2"
+                className="flex items-center gap-2 bg-[#0B1C30] hover:bg-[#102A43] text-white"
               >
                 <Plus className="h-4 w-4" />
-                {showManualForm ? "Tutup Form" : "Tambah Manual"}
+                Tambah Soal Manual
               </Button>
-              <Button 
-                variant={showExcelImport ? "primary" : "outline"} 
+              <Button
+                variant={showExcelImport ? "primary" : "outline"}
                 onClick={() => {
                   setShowExcelImport(!showExcelImport);
                   setShowManualForm(false);
@@ -839,8 +915,8 @@ export default function DashboardAdmin() {
                 Import Excel
               </Button>
             </div>
-            <Button 
-              variant="outline" 
+            <Button
+              variant="outline"
               onClick={handleDownloadTemplate}
               className="flex items-center gap-2 text-slate-700"
             >
@@ -858,18 +934,18 @@ export default function DashboardAdmin() {
               </div>
 
               {/* Upload Dropzone */}
-              <div 
+              <div
                 className="border-2 border-dashed border-slate-200 hover:border-blue-500 rounded-2xl p-8 text-center bg-slate-50/50 hover:bg-blue-50/10 cursor-pointer transition-all duration-300 flex flex-col items-center justify-center gap-3 group"
                 onDragOver={(e) => e.preventDefault()}
                 onDrop={handleFileDrop}
                 onClick={() => document.getElementById('excel-file-input').click()}
               >
-                <input 
-                  id="excel-file-input" 
-                  type="file" 
-                  accept=".xlsx, .xls" 
-                  className="hidden" 
-                  onChange={handleFileSelect} 
+                <input
+                  id="excel-file-input"
+                  type="file"
+                  accept=".xlsx, .xls"
+                  className="hidden"
+                  onChange={handleFileSelect}
                 />
                 <div className="h-12 w-12 rounded-full bg-slate-100 flex items-center justify-center text-slate-400 group-hover:bg-blue-50 group-hover:text-blue-600 transition-colors shadow-sm">
                   <UploadCloud className="h-6 w-6" />
@@ -954,14 +1030,14 @@ export default function DashboardAdmin() {
                   </div>
 
                   <div className="flex justify-end gap-3 pt-2">
-                    <Button 
-                      variant="outline" 
+                    <Button
+                      variant="outline"
                       onClick={() => setPreviewQuestions([])}
                     >
                       Batal
                     </Button>
-                    <Button 
-                      variant="primary" 
+                    <Button
+                      variant="primary"
                       onClick={handleSaveBulk}
                       disabled={previewQuestions.filter(q => q.isValid).length === 0}
                       className="bg-emerald-600 hover:bg-emerald-700 text-white animate-pulse"
@@ -976,17 +1052,137 @@ export default function DashboardAdmin() {
 
           {/* Grid Utama Form / Tabel Bank Soal */}
           <div className="grid grid-cols-1 lg:grid-cols-12 gap-5 items-start">
-            {showManualForm && (
-              <Card className="lg:col-span-4 p-5 space-y-5">
-                <div className="flex items-center justify-between">
-                  <h3 className="text-sm font-bold text-slate-800">
-                    {isEditing ? 'Edit Soal' : 'Soal Baru'}
+            <div className="lg:col-span-12">
+              {/* Table Bank Soal */}
+              <Card className="p-0 overflow-hidden bg-white border border-slate-200/60 shadow-premium">
+                <div className="p-5 border-b border-slate-200/60 flex flex-col md:flex-row justify-between items-start md:items-center gap-4 bg-white">
+                  <div>
+                    <h3 className="text-sm font-bold text-slate-800">Bank Soal</h3>
+                    <p className="text-[10px] text-slate-400 mt-0.5 font-semibold">
+                      Menampilkan {filteredQuestions.length} dari {questions.length} butir soal
+                    </p>
+                  </div>
+                  <Badge variant="primary">CPNS SKD</Badge>
+                </div>
+
+                {/* Filter and Search Bar Control Row */}
+                <div className="p-4 border-b border-slate-100 flex flex-col sm:flex-row justify-between items-center gap-3 bg-slate-50/50">
+                  <div className="relative w-full sm:w-80">
+                    <Search className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-slate-400" />
+                    <input
+                      type="text"
+                      placeholder="Cari pertanyaan atau ID..."
+                      value={searchQuery}
+                      onChange={(e) => setSearchQuery(e.target.value)}
+                      className="w-full pl-9 pr-4 py-2 bg-white border border-slate-200 rounded-xl text-xs focus:outline-none focus:ring-2 focus:ring-blue-500/20 focus:border-blue-500 transition-all font-medium placeholder:text-slate-400 text-slate-700"
+                    />
+                  </div>
+
+                  <div className="flex flex-wrap gap-1.5 w-full sm:w-auto">
+                    {[
+                      { key: 'ALL', label: 'SEMUA' },
+                      { key: 'TWK', label: 'TWK' },
+                      { key: 'TIU', label: 'TIU' },
+                      { key: 'TKP', label: 'TKP' }
+                    ].map(tab => (
+                      <button
+                        key={tab.key}
+                        type="button"
+                        onClick={() => setFilterCategory(tab.key)}
+                        className={`px-3 py-1.5 rounded-lg text-xs font-bold transition-all ${filterCategory === tab.key
+                          ? 'bg-[#0B1C30] text-white shadow-sm'
+                          : 'bg-white text-slate-500 border border-slate-200 hover:bg-slate-50'
+                          }`}
+                      >
+                        {tab.label}
+                      </button>
+                    ))}
+                  </div>
+                </div>
+
+                <div className="overflow-x-auto">
+                  <table className="w-full text-left">
+                    <thead>
+                      <tr className="bg-slate-50/80 text-[10px] font-bold uppercase text-slate-400 tracking-wider border-b border-slate-100">
+                        <th className="px-5 py-3 w-10 text-center">#</th>
+                        <th className="px-5 py-3 w-20">Kat</th>
+                        <th className="px-5 py-3">Pertanyaan</th>
+                        <th className="px-5 py-3 text-center w-24">Kunci</th>
+                        <th className="px-5 py-3 text-center w-20">Aksi</th>
+                      </tr>
+                    </thead>
+                    <tbody className="divide-y divide-slate-100/80 text-sm">
+                      {filteredQuestions.length > 0 ? (
+                        filteredQuestions.map((q) => (
+                          <tr key={q.id} className="hover:bg-slate-50/50 transition-colors duration-150">
+                            <td className="px-5 py-3 text-center text-[10px] font-bold text-slate-400">{q.id}</td>
+                            <td className="px-5 py-3">
+                              <Badge variant={
+                                q.category === 'TWK' ? 'primary' : q.category === 'TIU' ? 'secondary' : 'warning'
+                              }>
+                                {q.category}
+                              </Badge>
+                            </td>
+                            <td className="px-5 py-3">
+                              <p className="line-clamp-2 text-xs font-medium text-slate-700 leading-relaxed">{q.question}</p>
+                            </td>
+                            <td className="px-5 py-3 text-center">
+                              {q.category === 'TKP' ? (
+                                <span className="text-[10px] font-bold text-amber-600 bg-amber-50 px-2 py-0.5 rounded ring-1 ring-amber-100">1-5</span>
+                              ) : (
+                                <span className="text-[10px] font-bold text-blue-600 bg-blue-50 px-2 py-0.5 rounded ring-1 ring-blue-100">{q.correctAnswer}</span>
+                              )}
+                            </td>
+                            <td className="px-5 py-3 text-center">
+                              <div className="flex justify-center gap-1">
+                                <button
+                                  onClick={() => handleEditClick(q)}
+                                  className="p-1.5 text-blue-600 hover:bg-blue-50 rounded-lg transition-colors"
+                                  title="Edit"
+                                >
+                                  <Edit className="h-3.5 w-3.5" />
+                                </button>
+                                <button
+                                  onClick={() => handleDelete(q.id)}
+                                  className="p-1.5 text-red-500 hover:bg-red-50 rounded-lg transition-colors"
+                                  title="Hapus"
+                                >
+                                  <Trash className="h-3.5 w-3.5" />
+                                </button>
+                              </div>
+                            </td>
+                          </tr>
+                        ))
+                      ) : (
+                        <tr>
+                          <td colSpan="5" className="px-5 py-12 text-center text-slate-400 font-semibold text-xs">
+                            Tidak ada soal yang cocok dengan filter pencarian.
+                          </td>
+                        </tr>
+                      )}
+                    </tbody>
+                  </table>
+                </div>
+              </Card>
+            </div>
+          </div>
+
+          {/* ─── MODAL INPUT SOAL MANUAL (OVERLAY) ─── */}
+          {showManualForm && (
+            <div className="fixed inset-0 z-50 flex items-center justify-center px-4">
+              <div
+                className="fixed inset-0 bg-slate-950/50 backdrop-blur-sm"
+                onClick={resetForm}
+              />
+
+              <div className="relative z-10 bg-white rounded-3xl border border-slate-200/60 shadow-premium-lg max-w-2xl w-full p-6 sm:p-8 space-y-5 animate-scaleUp max-h-[90vh] overflow-y-auto">
+                <div className="flex items-center justify-between border-b border-slate-100 pb-3">
+                  <h3 className="text-base font-extrabold text-slate-900">
+                    {isEditing ? 'Edit Soal Ujian' : 'Input Soal Manual Baru'}
                   </h3>
-                  {isEditing && (
-                    <button onClick={resetForm} className="p-1 rounded-lg hover:bg-slate-100 text-slate-400 transition-colors">
-                      <X className="h-4 w-4" />
-                    </button>
-                  )}
+                  <button onClick={resetForm} className="p-2 rounded-xl hover:bg-slate-100 text-slate-400 hover:text-slate-650 transition-colors">
+                    <X className="h-5 w-5" />
+                  </button>
                 </div>
 
                 <form onSubmit={handleSubmit} className="space-y-4">
@@ -1064,91 +1260,16 @@ export default function DashboardAdmin() {
                     />
                   </div>
 
-                  <div className="flex gap-2.5 pt-1">
-                    {isEditing && (
-                      <Button variant="outline" className="flex-1" onClick={resetForm}>Batal</Button>
-                    )}
-                    <Button type="submit" variant="primary" className="flex-grow">
-                      {isEditing ? (
-                        <>Simpan Perubahan</>
-                      ) : (
-                        <><Plus className="h-3.5 w-3.5 mr-1" />Tambah Soal</>
-                      )}
+                  <div className="flex gap-3 pt-3 border-t border-slate-100">
+                    <Button type="button" variant="outline" className="flex-1" onClick={resetForm}>Batal</Button>
+                    <Button type="submit" variant="primary" className="flex-grow bg-[#0B1C30] hover:bg-[#102A43] text-white">
+                      {isEditing ? 'Simpan Perubahan' : 'Tambah Soal'}
                     </Button>
                   </div>
                 </form>
-              </Card>
-            )}
-
-            <div className={showManualForm ? "lg:col-span-8" : "lg:col-span-12"}>
-              {/* Table Bank Soal */}
-              <Card className="p-0 overflow-hidden">
-                <div className="p-5 border-b border-slate-100 flex justify-between items-center">
-                  <div>
-                    <h3 className="text-sm font-bold text-slate-800">Bank Soal</h3>
-                    <p className="text-[10px] text-slate-400 mt-0.5 font-semibold">{questions.length} butir soal</p>
-                  </div>
-                  <Badge variant="primary">CPNS SKD</Badge>
-                </div>
-
-                <div className="overflow-x-auto">
-                  <table className="w-full text-left">
-                    <thead>
-                      <tr className="bg-slate-50/80 text-[10px] font-bold uppercase text-slate-400 tracking-wider border-b border-slate-100">
-                        <th className="px-5 py-3 w-10 text-center">#</th>
-                        <th className="px-5 py-3 w-20">Kat</th>
-                        <th className="px-5 py-3">Pertanyaan</th>
-                        <th className="px-5 py-3 text-center w-24">Kunci</th>
-                        <th className="px-5 py-3 text-center w-20">Aksi</th>
-                      </tr>
-                    </thead>
-                    <tbody className="divide-y divide-slate-100/80 text-sm">
-                      {questions.map((q) => (
-                        <tr key={q.id} className="hover:bg-slate-50/50 transition-colors duration-150">
-                          <td className="px-5 py-3 text-center text-[10px] font-bold text-slate-400">{q.id}</td>
-                          <td className="px-5 py-3">
-                            <Badge variant={
-                              q.category === 'TWK' ? 'primary' : q.category === 'TIU' ? 'secondary' : 'warning'
-                            }>
-                              {q.category}
-                            </Badge>
-                          </td>
-                          <td className="px-5 py-3">
-                            <p className="line-clamp-2 text-xs font-medium text-slate-700 leading-relaxed">{q.question}</p>
-                          </td>
-                          <td className="px-5 py-3 text-center">
-                            {q.category === 'TKP' ? (
-                              <span className="text-[10px] font-bold text-amber-600 bg-amber-50 px-2 py-0.5 rounded ring-1 ring-amber-100">1-5</span>
-                            ) : (
-                              <span className="text-[10px] font-bold text-blue-600 bg-blue-50 px-2 py-0.5 rounded ring-1 ring-blue-100">{q.correctAnswer}</span>
-                            )}
-                          </td>
-                          <td className="px-5 py-3 text-center">
-                            <div className="flex justify-center gap-1">
-                              <button
-                                onClick={() => handleEditClick(q)}
-                                className="p-1.5 text-blue-600 hover:bg-blue-50 rounded-lg transition-colors"
-                                title="Edit"
-                              >
-                                <Edit className="h-3.5 w-3.5" />
-                              </button>
-                              <button
-                                onClick={() => handleDelete(q.id)}
-                                className="p-1.5 text-red-500 hover:bg-red-50 rounded-lg transition-colors"
-                                title="Hapus"
-                              >
-                                <Trash className="h-3.5 w-3.5" />
-                              </button>
-                            </div>
-                          </td>
-                        </tr>
-                      ))}
-                    </tbody>
-                  </table>
-                </div>
-              </Card>
+              </div>
             </div>
-          </div>
+          )}
         </div>
       )}
 
@@ -1538,16 +1659,15 @@ export default function DashboardAdmin() {
                     <div
                       key={q.id}
                       onClick={() => handleToggleQuestionSelection(q.id)}
-                      className={`flex items-start gap-4 p-4 rounded-2xl border cursor-pointer transition-all duration-200 ${
-                        isChecked
-                          ? 'border-blue-500 bg-blue-50/10 ring-1 ring-blue-500'
-                          : 'border-slate-200 hover:border-slate-300 bg-white'
-                      }`}
+                      className={`flex items-start gap-4 p-4 rounded-2xl border cursor-pointer transition-all duration-200 ${isChecked
+                        ? 'border-blue-500 bg-blue-50/10 ring-1 ring-blue-500'
+                        : 'border-slate-200 hover:border-slate-300 bg-white'
+                        }`}
                     >
                       <input
                         type="checkbox"
                         checked={isChecked}
-                        onChange={() => {}} // Click handled by parent div
+                        onChange={() => { }} // Click handled by parent div
                         className="h-4.5 w-4.5 rounded border-slate-300 text-blue-600 focus:ring-blue-500 mt-0.5 cursor-pointer"
                       />
                       <div className="flex-grow space-y-1.5">

@@ -1,12 +1,14 @@
 import React, { useState } from 'react';
 import Swal from 'sweetalert2';
+import * as XLSX from 'xlsx';
 import {
     Search,
     CheckCircle2,
     XCircle,
     Clock,
     MoreVertical,
-    Receipt
+    Receipt,
+    Download
 } from 'lucide-react';
 import Card from '../../components/common/Card';
 import Badge from '../../components/common/Badge';
@@ -112,6 +114,33 @@ export default function AdminPembayaran() {
         return new Intl.NumberFormat('id-ID', { style: 'currency', currency: 'IDR', maximumFractionDigits: 0 }).format(num).replace(/,00$/, '');
     };
 
+    const exportToExcel = () => {
+        const successTrx = transactions.filter(t => t.status === 'success');
+        if (successTrx.length === 0) {
+            Swal.fire({
+                title: 'Informasi',
+                text: 'Tidak ada data transaksi sukses untuk diekspor.',
+                icon: 'info',
+                confirmButtonColor: '#0B1C30'
+            });
+            return;
+        }
+        const dataToExport = successTrx.map((t, idx) => ({
+            "No": idx + 1,
+            "ID Transaksi": t.id,
+            "Tanggal": t.date,
+            "Nama User": t.userName,
+            "Email": t.email,
+            "Paket Tryout": t.package,
+            "Nominal": t.amount,
+            "Status": "SUKSES"
+        }));
+        const ws = XLSX.utils.json_to_sheet(dataToExport);
+        const wb = XLSX.utils.book_new();
+        XLSX.utils.book_append_sheet(wb, ws, "Laporan Keuangan");
+        XLSX.writeFile(wb, "laporan_keuangan_tryout.xlsx");
+    };
+
     return (
         <div className="space-y-6">
             {/* Header & Stats */}
@@ -151,15 +180,25 @@ export default function AdminPembayaran() {
             <Card className="p-0 border border-slate-200/60 shadow-premium overflow-hidden">
                 {/* Table Toolbar */}
                 <div className="p-5 border-b border-slate-200/60 flex flex-col sm:flex-row justify-between items-center gap-4 bg-white">
-                    <div className="relative w-full sm:w-80">
-                        <Search className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-slate-400" />
-                        <input
-                            type="text"
-                            placeholder="Cari ID Transaksi atau Nama..."
-                            value={searchTerm}
-                            onChange={(e) => setSearchTerm(e.target.value)}
-                            className="w-full pl-10 pr-4 py-2 bg-slate-50 border border-slate-200 rounded-xl text-sm focus:outline-none focus:ring-2 focus:ring-blue-500/20 focus:border-blue-500 transition-all"
-                        />
+                    <div className="flex flex-col sm:flex-row gap-3 w-full sm:w-auto items-stretch sm:items-center">
+                        <div className="relative w-full sm:w-80">
+                            <Search className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-slate-400" />
+                            <input
+                                type="text"
+                                placeholder="Cari ID Transaksi atau Nama..."
+                                value={searchTerm}
+                                onChange={(e) => setSearchTerm(e.target.value)}
+                                className="w-full pl-10 pr-4 py-2 bg-slate-50 border border-slate-200 rounded-xl text-sm focus:outline-none focus:ring-2 focus:ring-blue-500/20 focus:border-blue-500 transition-all font-semibold"
+                            />
+                        </div>
+                        <button
+                            type="button"
+                            onClick={exportToExcel}
+                            className="px-4 py-2 bg-emerald-600 hover:bg-emerald-700 text-white font-bold rounded-xl text-xs flex items-center justify-center gap-2 transition-all shadow-sm active:scale-[0.97] whitespace-nowrap"
+                        >
+                            <Download className="h-4 w-4" />
+                            <span>Unduh Laporan (Excel)</span>
+                        </button>
                     </div>
 
                     <div className="flex gap-2 w-full sm:w-auto">
@@ -186,6 +225,7 @@ export default function AdminPembayaran() {
                                 <th className="px-6 py-4">ID & Tanggal</th>
                                 <th className="px-6 py-4">Informasi User</th>
                                 <th className="px-6 py-4">Paket & Nominal</th>
+                                <th className="px-6 py-4 text-center">Bukti</th>
                                 <th className="px-6 py-4 text-center">Status</th>
                                 <th className="px-6 py-4 text-center">Aksi</th>
                             </tr>
@@ -205,6 +245,23 @@ export default function AdminPembayaran() {
                                         <td className="px-6 py-4">
                                             <div className="font-bold text-blue-600">{trx.package}</div>
                                             <div className="text-xs font-extrabold text-slate-700 mt-0.5">{trx.amount}</div>
+                                        </td>
+                                        <td className="px-6 py-4 text-center">
+                                            <button
+                                                type="button"
+                                                onClick={() => Swal.fire({
+                                                    title: 'Bukti Transfer Pembayaran',
+                                                    text: `Transaksi ID: ${trx.id} (${trx.userName})`,
+                                                    imageUrl: trx.proofImage || 'https://placehold.co/600x400?text=Bukti+Transfer',
+                                                    imageWidth: 400,
+                                                    imageAlt: 'Bukti Transfer',
+                                                    confirmButtonText: 'Tutup',
+                                                    confirmButtonColor: '#0B1C35'
+                                                })}
+                                                className="px-2.5 py-1.5 bg-blue-50 text-blue-600 hover:bg-blue-100 hover:text-blue-800 rounded-lg text-xs font-bold transition-all border-0 cursor-pointer"
+                                            >
+                                                Lihat Bukti
+                                            </button>
                                         </td>
                                         <td className="px-6 py-4 text-center">
                                             <Badge variant={
@@ -234,7 +291,7 @@ export default function AdminPembayaran() {
                                                     </button>
                                                 </div>
                                             ) : (
-                                                <button className="p-2 text-slate-300 hover:text-slate-600 transition-colors">
+                                                <button className="p-2 text-slate-300 hover:text-slate-650 transition-colors bg-transparent border-0 cursor-pointer">
                                                     <MoreVertical className="h-4 w-4" />
                                                 </button>
                                             )}
@@ -243,7 +300,7 @@ export default function AdminPembayaran() {
                                 ))
                             ) : (
                                 <tr>
-                                    <td colSpan="5" className="px-6 py-12 text-center text-slate-400">
+                                    <td colSpan="6" className="px-6 py-12 text-center text-slate-400">
                                         <Receipt className="h-8 w-8 mx-auto mb-3 opacity-50" />
                                         <p className="font-semibold text-sm">Tidak ada data transaksi ditemukan.</p>
                                     </td>

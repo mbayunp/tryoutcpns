@@ -28,6 +28,7 @@ export default function Result() {
   const [answers, setAnswers] = useState({});
   const [currentQuestionIndex, setCurrentQuestionIndex] = useState(0);
   const [showNav, setShowNav] = useState(true);
+  const [reviewFilter, setReviewFilter] = useState('ALL');
 
   const attemptId = location.state?.attemptId;
 
@@ -151,6 +152,21 @@ export default function Result() {
   const userAnswer = answers[currentQuestion?.id];
   const isPassed = attempt.result === 'LULUS';
   const answeredCount = Object.keys(answers).filter(k => answers[k]).length;
+  
+  const filteredQuestionsIndices = questions.map((q, idx) => ({ q, idx })).filter(({ q }) => {
+    const ans = answers[q.id];
+    if (reviewFilter === 'ALL') return true;
+    if (reviewFilter === 'CORRECT') {
+      return ans && (q.category !== 'TKP' ? ans === q.correctAnswer : q.scores?.[ans] === 5);
+    }
+    if (reviewFilter === 'WRONG') {
+      return ans && (q.category !== 'TKP' ? ans !== q.correctAnswer : q.scores?.[ans] !== 5);
+    }
+    if (reviewFilter === 'EMPTY') {
+      return !ans;
+    }
+    return true;
+  }).map(({ idx }) => idx);
   
   const displayDate = attempt?.finished_at || attempt?.created_at
     ? new Date(attempt.finished_at || attempt.created_at).toLocaleDateString('id-ID', {
@@ -428,13 +444,37 @@ export default function Result() {
           })()}
 
           <div className="bg-white rounded-2xl border border-slate-200/60 shadow-premium p-5 sticky top-24">
-            <div className="flex items-center justify-between mb-5">
+            <div className="flex items-center justify-between mb-4">
               <h3 className="text-xs font-bold text-slate-800 tracking-tight">Navigasi Soal</h3>
               <span className="text-[10px] text-slate-500 font-bold">{answeredCount}/{questions.length} dijawab</span>
             </div>
 
+            {/* Filter Bar */}
+            <div className="flex gap-1 mb-4 bg-slate-100 p-1.5 rounded-xl">
+              {[
+                { id: 'ALL', name: 'SEMUA' },
+                { id: 'CORRECT', name: 'BENAR' },
+                { id: 'WRONG', name: 'SALAH' },
+                { id: 'EMPTY', name: 'KOSONG' }
+              ].map(item => (
+                <button
+                  key={item.id}
+                  type="button"
+                  onClick={() => setReviewFilter(item.id)}
+                  className={`flex-1 py-1.5 rounded-lg text-[9px] font-extrabold transition-all text-center tracking-tight ${
+                    reviewFilter === item.id
+                      ? 'bg-slate-900 text-white shadow-sm'
+                      : 'text-slate-500 hover:text-slate-850'
+                  }`}
+                >
+                  {item.name}
+                </button>
+              ))}
+            </div>
+
             <div className="grid grid-cols-6 gap-1.5">
-              {questions.map((q, idx) => {
+              {filteredQuestionsIndices.map((idx) => {
+                const q = questions[idx];
                 const ans = answers[q.id];
                 const isActive = currentQuestionIndex === idx;
                 let btnColor = 'bg-slate-50 text-slate-400 border border-slate-200/60';

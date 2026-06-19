@@ -488,15 +488,17 @@ export const useExamStore = create(
         }
       },
 
-      createPendingTransaction: async (tryoutId, amount) => {
+      createPendingTransaction: async (tryoutId, amount, proofImage) => {
         try {
           await API.post('/transactions', {
             tryout_id: tryoutId,
-            amount: amount
+            amount: amount,
+            proof_image: proofImage || null
           });
           await get().fetchPackages();
         } catch (error) {
           console.error('Failed to create transaction:', error);
+          throw error;
         }
       },
 

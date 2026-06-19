@@ -1,6 +1,6 @@
 import React, { useState, useEffect } from 'react';
 import { useExamStore } from '../../store/useExamStore';
-import { Trophy, Medal, Flame, Search, AlertCircle, RefreshCw } from 'lucide-react';
+import { Trophy, Medal, Flame, Search, AlertCircle, RefreshCw, Award } from 'lucide-react';
 import Card from '../../components/common/Card';
 import Badge from '../../components/common/Badge';
 
@@ -147,6 +147,92 @@ export default function RankingTab() {
         </Card>
       )}
 
+      {/* PODIUM JUARA (TOP 3) */}
+      {!loading && sortedRankings.length > 0 && (
+        <div className="flex flex-col md:flex-row items-end justify-center gap-5 py-6 px-5 bg-white border border-slate-200/60 rounded-2xl shadow-premium">
+          {/* Peringkat 2 (Kiri) */}
+          {sortedRankings.length > 1 && (() => {
+            const item = sortedRankings[1];
+            return (
+              <div className="flex flex-col items-center bg-slate-50/50 border border-slate-200/50 rounded-2xl p-4 w-full md:w-44 h-36 justify-between order-2 md:order-1 transition-all hover:-translate-y-0.5 duration-200">
+                <div className="flex flex-col items-center gap-1.5 w-full">
+                  <div className="relative">
+                    <div className="h-11 w-11 rounded-full bg-slate-100 border-2 border-slate-300 flex items-center justify-center font-bold text-slate-700 text-xs">
+                      {item.userName.slice(0, 2).toUpperCase()}
+                    </div>
+                    <div className="absolute -bottom-1 -right-1 bg-slate-400 text-white rounded-full p-0.5 border border-white">
+                      <Award className="h-3 w-3 text-slate-400" />
+                    </div>
+                  </div>
+                  <div className="text-center w-full">
+                    <p className="text-xs font-bold text-slate-800 truncate px-1">{item.userName}</p>
+                    <p className="text-[9px] text-slate-400 font-bold truncate px-1">{item.email}</p>
+                  </div>
+                </div>
+                <div className="text-center w-full border-t border-slate-100 pt-1.5">
+                  <span className="block text-[9px] font-extrabold text-slate-400 uppercase tracking-widest">Perak (#2)</span>
+                  <span className="block text-xs font-black text-slate-700">{item.score} Poin</span>
+                </div>
+              </div>
+            );
+          })()}
+
+          {/* Peringkat 1 (Tengah - Lebih Tinggi) */}
+          {sortedRankings.length > 0 && (() => {
+            const item = sortedRankings[0];
+            return (
+              <div className="flex flex-col items-center bg-gradient-to-b from-amber-50/20 to-white border-2 border-amber-300 rounded-2xl p-5 w-full md:w-52 h-44 justify-between order-1 md:order-2 shadow-md transition-all hover:-translate-y-0.5 duration-200 scale-105">
+                <div className="flex flex-col items-center gap-1.5 w-full">
+                  <div className="relative">
+                    <div className="h-14 w-14 rounded-full bg-amber-100 border-2 border-amber-400 flex items-center justify-center font-bold text-amber-800 text-sm shadow-sm">
+                      {item.userName.slice(0, 2).toUpperCase()}
+                    </div>
+                    <div className="absolute -bottom-1 -right-1 bg-yellow-550 text-white rounded-full p-1 border border-white shadow animate-pulse">
+                      <Trophy className="h-3.5 w-3.5 text-yellow-500" />
+                    </div>
+                  </div>
+                  <div className="text-center w-full">
+                    <p className="text-xs font-black text-slate-900 truncate px-1">{item.userName}</p>
+                    <p className="text-[9px] text-slate-400 font-bold truncate px-1">{item.email}</p>
+                  </div>
+                </div>
+                <div className="text-center w-full border-t border-amber-100 pt-1.5">
+                  <span className="block text-[9px] font-extrabold text-yellow-600 uppercase tracking-widest">🏆 Emas (#1)</span>
+                  <span className="block text-sm font-black text-amber-700">{item.score} Poin</span>
+                </div>
+              </div>
+            );
+          })()}
+
+          {/* Peringkat 3 (Kanan) */}
+          {sortedRankings.length > 2 && (() => {
+            const item = sortedRankings[2];
+            return (
+              <div className="flex flex-col items-center bg-slate-50/50 border border-slate-200/50 rounded-2xl p-4 w-full md:w-44 h-36 justify-between order-3 md:order-3 transition-all hover:-translate-y-0.5 duration-200">
+                <div className="flex flex-col items-center gap-1.5 w-full">
+                  <div className="relative">
+                    <div className="h-11 w-11 rounded-full bg-slate-100 border-2 border-amber-700/30 flex items-center justify-center font-bold text-amber-850 text-xs">
+                      {item.userName.slice(0, 2).toUpperCase()}
+                    </div>
+                    <div className="absolute -bottom-1 -right-1 bg-amber-600 text-white rounded-full p-0.5 border border-white">
+                      <Award className="h-3 w-3 text-amber-600" />
+                    </div>
+                  </div>
+                  <div className="text-center w-full">
+                    <p className="text-xs font-bold text-slate-800 truncate px-1">{item.userName}</p>
+                    <p className="text-[9px] text-slate-400 font-bold truncate px-1">{item.email}</p>
+                  </div>
+                </div>
+                <div className="text-center w-full border-t border-slate-100 pt-1.5">
+                  <span className="block text-[9px] font-extrabold text-amber-600 uppercase tracking-widest">Perunggu (#3)</span>
+                  <span className="block text-xs font-black text-slate-700">{item.score} Poin</span>
+                </div>
+              </div>
+            );
+          })()}
+        </div>
+      )}
+
       {/* FILTER & SEARCH */}
       <Card className="p-0 border border-slate-200/60 shadow-premium overflow-hidden bg-white">
         <div className="p-5 border-b border-slate-100 flex flex-col md:flex-row items-center justify-between gap-4">
@@ -214,8 +300,8 @@ export default function RankingTab() {
                 </tr>
               </thead>
               <tbody className="divide-y divide-slate-100 text-slate-700">
-                {sortedRankings.map((item, idx) => {
-                  const currentRank = idx + 1;
+                {sortedRankings.slice(3).map((item, idx) => {
+                  const currentRank = idx + 4;
                   const isSelf = item.userId === user?.id;
                   
                   return (
@@ -233,9 +319,7 @@ export default function RankingTab() {
                           <div className={`h-8 w-8 rounded-lg flex items-center justify-center font-bold text-xs ${
                             isSelf 
                               ? 'bg-blue-600 text-white shadow-sm'
-                              : currentRank === 1 
-                              ? 'bg-amber-100 text-amber-700 shadow-sm'
-                              : 'bg-slate-100 text-slate-650'
+                              : 'bg-slate-100 text-slate-655'
                           }`}>
                             {item.userName.slice(0, 2).toUpperCase()}
                           </div>

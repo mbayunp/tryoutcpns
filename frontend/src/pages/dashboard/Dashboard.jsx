@@ -1,5 +1,6 @@
 import React from 'react';
 import { useNavigate } from 'react-router-dom';
+import Swal from 'sweetalert2';
 import { useExamStore } from '../../store/useExamStore';
 import {
   FileText,
@@ -12,7 +13,6 @@ import {
   Award,
   X,
   MessageCircle,
-  CheckCircle2,
   Flame // <-- Ditambahkan untuk Daily Streak
 } from 'lucide-react';
 import { AreaChart, Area, XAxis, YAxis, CartesianGrid, Tooltip, ResponsiveContainer } from 'recharts';
@@ -26,6 +26,9 @@ export default function Dashboard() {
   const navigate = useNavigate();
   const { user, packages, history, activeTab, setActiveTab, fetchPackages, fetchHistory, createPendingTransaction, transactions } = useExamStore();
   const [selectedLockedPackage, setSelectedLockedPackage] = React.useState(null);
+  const [proofFile, setProofFile] = React.useState(null);
+  const [proofFilePreview, setProofFilePreview] = React.useState('');
+  const [isSubmittingPay, setIsSubmittingPay] = React.useState(false);
 
   React.useEffect(() => {
     fetchPackages();
@@ -44,19 +47,79 @@ export default function Dashboard() {
     navigate('/exam', { state: { packageId: pkg.id } });
   };
 
+  const handleFileChange = (e) => {
+    const file = e.target.files[0];
+    if (file) {
+      if (file.size > 2 * 1024 * 1024) {
+        Swal.fire({
+          title: 'Berkas Terlalu Besar',
+          text: 'Ukuran berkas maksimal adalah 2MB!',
+          icon: 'warning',
+          confirmButtonText: 'Mengerti',
+          confirmButtonColor: '#0B1C30'
+        });
+        return;
+      }
+      setProofFile(file);
+      const reader = new FileReader();
+      reader.onloadend = () => {
+        setProofFilePreview(reader.result);
+      };
+      reader.readAsDataURL(file);
+    }
+  };
+
+  const handleDirectConfirm = async () => {
+    if (!proofFilePreview) {
+      Swal.fire({
+        title: 'Bukti Pembayaran Wajib',
+        text: 'Harap unggah bukti transfer QRIS terlebih dahulu!',
+        icon: 'warning',
+        confirmButtonText: 'Mengerti',
+        confirmButtonColor: '#0B1C30'
+      });
+      return;
+    }
+
+    setIsSubmittingPay(true);
+    try {
+      await createPendingTransaction(selectedLockedPackage.id, 'Rp 199.000', proofFilePreview);
+      Swal.fire({
+        title: 'Bukti Terkirim!',
+        text: 'Bukti transfer berhasil disimpan. Admin akan memverifikasi dalam beberapa saat.',
+        icon: 'success',
+        confirmButtonColor: '#0B1C30'
+      });
+      setSelectedLockedPackage(null);
+      setProofFile(null);
+      setProofFilePreview('');
+    } catch (err) {
+      Swal.fire({
+        title: 'Gagal Mengirim',
+        text: 'Terjadi kesalahan saat mengirim bukti pembayaran.',
+        icon: 'error',
+        confirmButtonColor: '#EF4444'
+      });
+    } finally {
+      setIsSubmittingPay(false);
+    }
+  };
+
   // --- FUNGSI KONFIRMASI WHATSAPP ---
   const handleWhatsAppConfirm = () => {
     const adminPhone = "6281297298862"; // <-- GANTI DENGAN NOMOR WA ADMIN
     const message = `Halo Admin WILDAN CASN, saya ingin konfirmasi pembayaran.%0A%0A*Detail Pesanan:*%0ANama: ${user?.name || 'User'}%0AEmail: ${user?.email || 'email'}%0APaket: ${selectedLockedPackage?.title}%0A%0ASaya telah melakukan scan QRIS. Berikut saya lampirkan bukti transfernya:`;
 
     // Catat di tabel admin bahwa user ini sedang menunggu konfirmasi
-    createPendingTransaction(selectedLockedPackage.id, 'Rp 199.000');
+    createPendingTransaction(selectedLockedPackage.id, 'Rp 199.000', proofFilePreview || null);
 
     // Buka tab WhatsApp baru
     window.open(`https://wa.me/${adminPhone}?text=${message}`, '_blank');
 
     // Tutup modal
     setSelectedLockedPackage(null);
+    setProofFile(null);
+    setProofFilePreview('');
   };
 
   return (
@@ -174,28 +237,28 @@ export default function Dashboard() {
                       >
                         <defs>
                           <linearGradient id="colorSkorDashboard" x1="0" y1="0" x2="0" y2="1">
-                            <stop offset="5%" stopColor="#3B82F6" stopOpacity={0.4}/>
-                            <stop offset="95%" stopColor="#3B82F6" stopOpacity={0.0}/>
+                            <stop offset="5%" stopColor="#3B82F6" stopOpacity={0.4} />
+                            <stop offset="95%" stopColor="#3B82F6" stopOpacity={0.0} />
                           </linearGradient>
                         </defs>
                         <CartesianGrid strokeDasharray="3 3" stroke="#F1F5F9" />
-                        <XAxis 
-                          dataKey="name" 
+                        <XAxis
+                          dataKey="name"
                           tick={{ fill: '#94A3B8', fontSize: 11, fontWeight: 700 }}
                           axisLine={false}
                           tickLine={false}
                         />
-                        <YAxis 
-                          domain={[0, 600]} 
+                        <YAxis
+                          domain={[0, 600]}
                           tick={{ fill: '#94A3B8', fontSize: 10 }}
                           axisLine={false}
                           tickLine={false}
                         />
-                        <Tooltip 
-                          contentStyle={{ 
-                            backgroundColor: '#0B1C30', 
-                            border: 'none', 
-                            borderRadius: '12px', 
+                        <Tooltip
+                          contentStyle={{
+                            backgroundColor: '#0B1C30',
+                            border: 'none',
+                            borderRadius: '12px',
                             color: '#fff',
                             fontSize: '11px',
                             fontWeight: 'bold',
@@ -205,13 +268,13 @@ export default function Dashboard() {
                           itemStyle={{ color: '#fff' }}
                           labelStyle={{ display: 'none' }}
                         />
-                        <Area 
-                          type="monotone" 
-                          dataKey="skor" 
-                          stroke="#3B82F6" 
+                        <Area
+                          type="monotone"
+                          dataKey="skor"
+                          stroke="#3B82F6"
                           strokeWidth={3}
-                          fillOpacity={1} 
-                          fill="url(#colorSkorDashboard)" 
+                          fillOpacity={1}
+                          fill="url(#colorSkorDashboard)"
                         />
                       </AreaChart>
                     </ResponsiveContainer>
@@ -426,18 +489,26 @@ export default function Dashboard() {
 
       {/* ─── MODAL PEMBAYARAN QRIS ─── */}
       {selectedLockedPackage && (
-        <div className="fixed inset-0 z-50 flex items-center justify-center px-4 animate-fadeIn">
+        <div className="fixed inset-0 z-[100] flex items-center justify-center px-4 animate-fadeIn">
           {/* Overlay background blur */}
           <div
             className="fixed inset-0 bg-slate-900/60 backdrop-blur-sm"
-            onClick={() => setSelectedLockedPackage(null)}
+            onClick={() => {
+              setSelectedLockedPackage(null);
+              setProofFile(null);
+              setProofFilePreview('');
+            }}
           ></div>
 
           <div className="relative z-10 bg-white rounded-3xl shadow-2xl max-w-md w-full overflow-hidden animate-scaleUp">
             {/* Header Modal */}
             <div className="bg-slate-900 p-6 text-center text-white relative">
               <button
-                onClick={() => setSelectedLockedPackage(null)}
+                onClick={() => {
+                  setSelectedLockedPackage(null);
+                  setProofFile(null);
+                  setProofFilePreview('');
+                }}
                 className="absolute top-4 right-4 text-slate-400 hover:text-white transition-colors"
               >
                 <X className="h-5 w-5" />
@@ -446,7 +517,7 @@ export default function Dashboard() {
               <p className="text-xs text-slate-400 font-medium">Buka akses untuk paket tryout</p>
             </div>
 
-            <div className="p-6 sm:p-8 space-y-6 text-center">
+            <div className="p-6 sm:p-8 space-y-5 text-center">
 
               {/* Detail Paket */}
               <div className="bg-slate-50 p-4 rounded-xl border border-slate-100 text-left">
@@ -460,7 +531,7 @@ export default function Dashboard() {
                 <img
                   src="/image/qris.jpeg"
                   alt="QRIS WILDAN CASN"
-                  className="w-48 h-48 object-contain rounded-xl shadow-sm bg-white p-2 mx-auto"
+                  className="w-44 h-44 object-contain rounded-xl shadow-sm bg-white p-2 mx-auto"
                   onError={(e) => {
                     e.target.onerror = null;
                     e.target.src = "https://upload.wikimedia.org/wikipedia/commons/d/d0/QR_code_for_mobile_English_Wikipedia.svg";
@@ -471,28 +542,68 @@ export default function Dashboard() {
               {/* Harga */}
               <div className="space-y-1">
                 <p className="text-[10px] font-bold text-slate-400 uppercase tracking-widest">Nominal Transfer</p>
-                <p className="text-3xl font-extrabold text-emerald-600 tracking-tight">
+                <p className="text-2xl font-extrabold text-emerald-600 tracking-tight">
                   Rp 199.000
-                </p>
-                <p className="text-xs font-semibold text-emerald-600 flex items-center justify-center gap-1 mt-2">
-                  <CheckCircle2 className="h-4 w-4" /> Bebas biaya admin via QRIS
                 </p>
               </div>
 
+              {/* Upload Proof Area */}
+              <div className="space-y-2 text-left">
+                <label className="block text-[10px] font-bold text-slate-450 uppercase tracking-wider">Unggah Bukti Transfer</label>
+                <div
+                  className="border-2 border-dashed border-slate-200 hover:border-slate-350 rounded-xl p-4 bg-slate-50/50 hover:bg-slate-50 transition-all flex flex-col items-center justify-center cursor-pointer relative group min-h-[90px]"
+                  onClick={() => document.getElementById('proof-upload-input').click()}
+                >
+                  <input
+                    id="proof-upload-input"
+                    type="file"
+                    accept="image/*"
+                    className="hidden"
+                    onChange={handleFileChange}
+                  />
+                  {proofFilePreview ? (
+                    <div className="flex items-center gap-3 w-full">
+                      <img src={proofFilePreview} alt="Bukti Transfer" className="h-14 w-14 object-cover rounded-lg border border-slate-200" />
+                      <div className="overflow-hidden flex-1">
+                        <p className="text-xs font-bold text-slate-800 truncate">{proofFile?.name}</p>
+                        <p className="text-[10px] text-slate-450 font-semibold">{(proofFile?.size / 1024).toFixed(1)} KB</p>
+                      </div>
+                      <button
+                        onClick={(e) => {
+                          e.stopPropagation();
+                          setProofFile(null);
+                          setProofFilePreview('');
+                        }}
+                        className="p-1 rounded-lg hover:bg-red-50 text-red-500 transition-colors"
+                      >
+                        <X className="h-4 w-4" />
+                      </button>
+                    </div>
+                  ) : (
+                    <div className="text-center space-y-1">
+                      <span className="text-xs font-bold text-slate-700">Pilih Berkas Bukti Transfer</span>
+                      <p className="text-[10px] text-slate-405 font-semibold">Maksimal 2MB (.png, .jpg, .jpeg)</p>
+                    </div>
+                  )}
+                </div>
+              </div>
+
               {/* Action Buttons */}
-              <div className="pt-6 border-t border-slate-100 space-y-3">
+              <div className="pt-4 border-t border-slate-100 space-y-2.5">
+                <button
+                  onClick={handleDirectConfirm}
+                  disabled={isSubmittingPay || !proofFilePreview}
+                  className="w-full bg-[#0B1C30] hover:bg-[#102A43] disabled:opacity-40 disabled:cursor-not-allowed text-white flex items-center justify-center gap-2 py-3.5 rounded-xl font-bold shadow-md transition-all active:scale-[0.98]"
+                >
+                  {isSubmittingPay ? 'Mengirim...' : 'Kirim Bukti Pembayaran'}
+                </button>
+
                 <button
                   onClick={handleWhatsAppConfirm}
-                  className="w-full bg-[#25D366] hover:bg-[#20bd5a] text-white flex items-center justify-center gap-2 py-3.5 rounded-xl font-bold shadow-lg shadow-green-500/20 transition-all active:scale-[0.98]"
+                  className="w-full bg-white border border-slate-200 text-slate-650 hover:bg-slate-50 flex items-center justify-center gap-2 py-3 rounded-xl font-bold transition-all active:scale-[0.98]"
                 >
-                  <MessageCircle className="h-5 w-5" />
-                  Konfirmasi via WhatsApp
-                </button>
-                <button
-                  onClick={() => setSelectedLockedPackage(null)}
-                  className="w-full bg-white hover:bg-slate-50 text-slate-500 border border-slate-200 flex items-center justify-center gap-2 py-3.5 rounded-xl font-bold transition-all active:scale-[0.98]"
-                >
-                  Nanti Saja
+                  <MessageCircle className="h-4 w-4 text-[#25D366]" />
+                  Hubungi Admin WA (Backup)
                 </button>
               </div>
 

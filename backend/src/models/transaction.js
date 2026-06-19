@@ -26,6 +26,10 @@ const Transaction = sequelize.define('Transaction', {
     type: DataTypes.STRING,
     allowNull: true,
   },
+  proof_image: {
+    type: DataTypes.TEXT('long'),
+    allowNull: true,
+  },
 }, {
   tableName: 'transactions',
 });

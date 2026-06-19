@@ -1,6 +1,6 @@
 const { Transaction, User, Tryout } = require('../models');
 
-const createTransaction = async (userId, tryoutId, amount) => {
+const createTransaction = async (userId, tryoutId, amount, proofImage) => {
   // Check if tryout exists
   const tryout = await Tryout.findByPk(tryoutId);
   if (!tryout) {
@@ -20,7 +20,8 @@ const createTransaction = async (userId, tryoutId, amount) => {
     tryout_id: tryoutId,
     amount: amount || 'Rp 199.000',
     status: 'pending',
-    payment_method: 'Manual Bank Transfer'
+    payment_method: 'Manual Bank Transfer',
+    proof_image: proofImage || null
   });
 
   return transaction;
@@ -64,7 +65,8 @@ const getTransactions = async (userId, isAdmin = false) => {
         hour: '2-digit',
         minute: '2-digit'
       }).replace(/\./g, ':'),
-      status: trx.status
+      status: trx.status,
+      proofImage: trx.proof_image
     };
   });
 };

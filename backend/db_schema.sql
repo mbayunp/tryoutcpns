@@ -125,6 +125,7 @@ CREATE TABLE IF NOT EXISTS `transactions` (
   `amount` VARCHAR(50) NOT NULL,
   `status` ENUM('pending', 'success', 'failed') DEFAULT 'pending',
   `payment_method` VARCHAR(255) DEFAULT NULL,
+  `proof_image` LONGTEXT DEFAULT NULL,
   `created_at` DATETIME NOT NULL DEFAULT CURRENT_TIMESTAMP,
   `updated_at` DATETIME NOT NULL DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP,
   FOREIGN KEY (`user_id`) REFERENCES `users` (`id`) ON DELETE CASCADE,

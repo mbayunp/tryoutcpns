@@ -35,6 +35,7 @@ export default function StartExam() {
   const [showSubmitModal, setShowSubmitModal] = useState(false);
   const [showNav, setShowNav] = useState(true);
   const [showBottomSheet, setShowBottomSheet] = useState(false);
+  const [fontSize, setFontSize] = useState('md');
   const touchStartX = useRef(0);
 
   const handleTouchStart = (e) => {
@@ -227,7 +228,7 @@ export default function StartExam() {
   return (
     <div className="min-h-screen flex flex-col bg-[#F4F6F9] select-none animate-fadeIn">
       {/* ─── ZEN HEADER — Minimal Chrome ─── */}
-      <header className="bg-white border-b border-slate-200/60 py-3.5 px-4 sm:px-6 flex items-center justify-between sticky top-0 z-30 backdrop-blur-xl bg-white/90">
+      <header className="bg-white border-b border-slate-200/60 py-3.5 px-4 sm:px-6 flex items-center justify-between sticky top-0 z-30 backdrop-blur-xl bg-white/90 relative">
         <div className="flex items-center gap-3">
           <div className="bg-[#0B1C30] text-white p-2 rounded-xl shadow-sm">
             <Award className="h-5 w-5" />
@@ -241,7 +242,7 @@ export default function StartExam() {
             </p>
           </div>
         </div>
-        <div className="flex items-center gap-4">
+        <div className="flex items-center gap-4 animate-fadeIn">
           {/* Timer Box and Auto-save Banner */}
           <div className="flex flex-col items-end gap-1">
             <div className={`flex items-center justify-center gap-2 px-4 py-2 sm:px-6 sm:py-2.5 rounded-xl border-2 transition-all duration-500 shadow-sm ${
@@ -271,6 +272,16 @@ export default function StartExam() {
             <span className="text-xs font-bold">{answeredCount}/{examQuestions.length}</span>
           </button>
         </div>
+
+        {/* Visual Progress Timer Line */}
+        <div className="absolute bottom-0 left-0 right-0 w-full h-[4px] bg-slate-100 overflow-hidden">
+          <div
+            className={`h-full transition-all duration-1000 ease-linear ${
+              examTimeLeft < 900 ? 'bg-red-500' : 'bg-emerald-500'
+            }`}
+            style={{ width: `${Math.max(0, Math.min(100, (examTimeLeft / (currentPkg.duration * 60)) * 100))}%` }}
+          />
+        </div>
       </header>
 
       {/* ─── MAIN CONTENT ─── */}
@@ -278,17 +289,53 @@ export default function StartExam() {
         {/* Question Panel */}
         <div className="lg:col-span-8 space-y-5">
           {/* Question header */}
-          <div className="flex items-center gap-3">
-            <span className="text-xl font-extrabold tracking-tight text-[#0B1C30]">
-              Soal No {currentQuestionIndex + 1}
-            </span>
-            <span className={`inline-flex items-center px-3 py-1 rounded-full text-xs font-bold ${
-              currentQuestion.category === 'TWK' ? 'bg-[#0B1C30]/10 text-[#0B1C30]' :
-              currentQuestion.category === 'TIU' ? 'bg-indigo-55/10 text-indigo-700' :
-              'bg-amber-55/10 text-amber-700'
-            }`}>
-              {currentQuestion.category}
-            </span>
+          <div className="flex items-center justify-between gap-4 flex-wrap">
+            <div className="flex items-center gap-3">
+              <span className="text-xl font-extrabold tracking-tight text-[#0B1C30]">
+                Soal No {currentQuestionIndex + 1}
+              </span>
+              <span className={`inline-flex items-center px-3 py-1 rounded-full text-xs font-bold ${
+                currentQuestion.category === 'TWK' ? 'bg-red-50 text-red-700 border border-red-200/60' :
+                currentQuestion.category === 'TIU' ? 'bg-indigo-50 text-indigo-700 border border-indigo-200/60' :
+                'bg-emerald-50 text-emerald-700 border border-emerald-200/60'
+              }`}>
+                {currentQuestion.category}
+              </span>
+            </div>
+
+            {/* Font Sizer Toolbar */}
+            <div className="flex items-center gap-1 bg-white border border-slate-200/60 rounded-xl p-1 shadow-sm">
+              <button
+                type="button"
+                onClick={() => setFontSize('sm')}
+                className={`w-7 h-7 flex items-center justify-center text-xs font-bold rounded-lg transition-all ${
+                  fontSize === 'sm' ? 'bg-[#0B1C30] text-white shadow-sm' : 'text-slate-500 hover:bg-slate-100'
+                }`}
+                title="Teks Kecil"
+              >
+                A-
+              </button>
+              <button
+                type="button"
+                onClick={() => setFontSize('md')}
+                className={`w-7 h-7 flex items-center justify-center text-sm font-bold rounded-lg transition-all ${
+                  fontSize === 'md' ? 'bg-[#0B1C30] text-white shadow-sm' : 'text-slate-500 hover:bg-slate-100'
+                }`}
+                title="Teks Sedang"
+              >
+                A
+              </button>
+              <button
+                type="button"
+                onClick={() => setFontSize('lg')}
+                className={`w-7 h-7 flex items-center justify-center text-base font-bold rounded-lg transition-all ${
+                  fontSize === 'lg' ? 'bg-[#0B1C30] text-white shadow-sm' : 'text-slate-500 hover:bg-slate-100'
+                }`}
+                title="Teks Besar"
+              >
+                A+
+              </button>
+            </div>
           </div>
 
           {/* Question Body */}
@@ -297,7 +344,9 @@ export default function StartExam() {
             onTouchEnd={handleTouchEnd}
             className="bg-white rounded-2xl border-l-4 border-l-[#0B1C30] border border-y-slate-200/60 border-r-slate-200/60 shadow-premium p-6 sm:p-8 touch-pan-y"
           >
-            <p className="text-sm sm:text-base font-semibold text-slate-800 leading-[1.8]">
+            <p className={`${
+              fontSize === 'sm' ? 'text-sm' : fontSize === 'lg' ? 'text-lg' : 'text-base'
+            } font-semibold text-slate-800 leading-[1.8] transition-all duration-150`}>
               {currentQuestion.question}
             </p>
           </div>
