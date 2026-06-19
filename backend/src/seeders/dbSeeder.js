@@ -38,6 +38,7 @@ const seed = async () => {
     let adminUser = await User.findOne({ where: { email: 'admin@wildan.com' } });
     if (adminUser) {
       adminUser.password = adminPassword;
+      adminUser.phone_number = '081234567890';
       await adminUser.save();
     } else {
       adminUser = await User.create({
@@ -45,6 +46,7 @@ const seed = async () => {
         email: 'admin@wildan.com',
         password: adminPassword,
         role: 'admin',
+        phone_number: '081234567890',
         is_active: true
       });
     }
@@ -52,6 +54,7 @@ const seed = async () => {
     let regularUser = await User.findOne({ where: { email: 'user@wildan.com' } });
     if (regularUser) {
       regularUser.password = userPassword;
+      regularUser.phone_number = '089876543210';
       await regularUser.save();
     } else {
       regularUser = await User.create({
@@ -59,6 +62,7 @@ const seed = async () => {
         email: 'user@wildan.com',
         password: userPassword,
         role: 'user',
+        phone_number: '089876543210',
         is_active: true
       });
     }

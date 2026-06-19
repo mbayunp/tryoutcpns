@@ -37,10 +37,10 @@ export const useExamStore = create(
         }
       },
 
-      register: async (name, email, password) => {
+      register: async (name, email, password, phone_number) => {
         try {
           // 1. Post to register endpoint
-          await API.post('/auth/register', { name, email, password });
+          await API.post('/auth/register', { name, email, password, phone_number });
           
           // 2. Automatically log in the user upon successful registration
           const user = await get().login(email, password);

@@ -4,12 +4,12 @@ const jwtConfig = require('../config/jwt');
 const { User } = require('../models');
 
 const register = async (userData) => {
-  const { name, email, password, role } = userData;
+  const { name, email, password, role, phone_number } = userData;
 
   // Check if email already exists
   const existingUser = await User.findOne({ where: { email } });
   if (existingUser) {
-    const error = new Error('Email is already registered');
+    const error = new Error('Email sudah terdaftar');
     error.statusCode = 400;
     throw error;
   }
@@ -24,6 +24,7 @@ const register = async (userData) => {
     email,
     password: hashedPassword,
     role: role || 'user',
+    phone_number,
     is_active: true
   });
 
@@ -80,8 +81,76 @@ const profile = async (userId) => {
   return userResponse;
 };
 
+const normalizePhone = (phone) => {
+  if (!phone) return '';
+  let clean = phone.replace(/\D/g, ''); // keep only digits
+  if (clean.startsWith('62')) {
+    clean = '0' + clean.slice(2);
+  }
+  return clean;
+};
+
+const checkEmail = async (email) => {
+  const user = await User.findOne({ where: { email } });
+  if (!user) {
+    const error = new Error('Email tidak terdaftar');
+    error.statusCode = 404;
+    throw error;
+  }
+  return true;
+};
+
+const verifyPhone = async (email, phone_number) => {
+  const user = await User.findOne({ where: { email } });
+  if (!user) {
+    const error = new Error('Email tidak terdaftar');
+    error.statusCode = 404;
+    throw error;
+  }
+
+  const normUserPhone = normalizePhone(user.phone_number);
+  const normInputPhone = normalizePhone(phone_number);
+
+  if (!user.phone_number || normUserPhone !== normInputPhone) {
+    const error = new Error('Nomor telepon konfirmasi salah');
+    error.statusCode = 400;
+    throw error;
+  }
+  return true;
+};
+
+const resetPassword = async (email, phone_number, newPassword) => {
+  const user = await User.findOne({ where: { email } });
+  if (!user) {
+    const error = new Error('Email tidak terdaftar');
+    error.statusCode = 404;
+    throw error;
+  }
+
+  const normUserPhone = normalizePhone(user.phone_number);
+  const normInputPhone = normalizePhone(phone_number);
+
+  if (!user.phone_number || normUserPhone !== normInputPhone) {
+    const error = new Error('Nomor telepon konfirmasi salah');
+    error.statusCode = 400;
+    throw error;
+  }
+
+  // Hash new password
+  const salt = await bcrypt.genSalt(10);
+  const hashedPassword = await bcrypt.hash(newPassword, salt);
+
+  user.password = hashedPassword;
+  await user.save();
+
+  return true;
+};
+
 module.exports = {
   register,
   login,
-  profile
+  profile,
+  checkEmail,
+  verifyPhone,
+  resetPassword
 };

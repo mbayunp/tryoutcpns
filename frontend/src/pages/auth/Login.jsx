@@ -162,7 +162,13 @@ export default function Login() {
                 <input className="w-4 h-4 rounded border-slate-300 text-blue-600 focus:ring-blue-500/20 cursor-pointer transition-colors" type="checkbox"/>
                 <span className="text-slate-500 group-hover:text-slate-800 transition-colors">Ingat saya</span>
               </label>
-              <a className="text-blue-600 hover:text-blue-800 transition-colors" href="#forgot">Lupa sandi?</a>
+              <button
+                type="button"
+                onClick={() => navigate('/forgot-password')}
+                className="text-blue-600 hover:text-blue-800 transition-colors border-0 bg-transparent cursor-pointer font-semibold"
+              >
+                Lupa sandi?
+              </button>
             </div>
 
             <Button variant="primary" type="submit" className="w-full py-4 bg-blue-600 hover:bg-blue-700 text-white text-sm font-bold rounded-xl shadow-lg shadow-blue-600/20 transition-all duration-200 active:scale-[0.98] mt-2">

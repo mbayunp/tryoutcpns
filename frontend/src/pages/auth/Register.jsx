@@ -10,6 +10,7 @@ export default function Register() {
   const register = useExamStore((state) => state.register);
   const [name, setName] = useState('');
   const [email, setEmail] = useState('');
+  const [phoneNumber, setPhoneNumber] = useState('');
   const [password, setPassword] = useState('');
   const [confirmPassword, setConfirmPassword] = useState('');
   const [error, setError] = useState('');
@@ -19,8 +20,12 @@ export default function Register() {
 
   const handleSubmit = async (e) => {
     e.preventDefault();
-    if (!name || !email || !password || !confirmPassword) {
+    if (!name || !email || !phoneNumber || !password || !confirmPassword) {
       setError('Harap isi semua kolom formulir.');
+      return;
+    }
+    if (phoneNumber.length < 8 || phoneNumber.length > 20) {
+      setError('Nomor telepon harus antara 8 sampai 20 karakter.');
       return;
     }
     if (password.length < 6) {
@@ -35,7 +40,7 @@ export default function Register() {
     setError('');
     setLoading(true);
     try {
-      await register(name, email, password);
+      await register(name, email, password, phoneNumber);
       // Automatically logs in and routes to dashboard
       navigate('/dashboard');
     } catch (err) {
@@ -132,6 +137,19 @@ export default function Register() {
                 value={email}
                 onChange={(e) => { setEmail(e.target.value); setError(''); }}
                 placeholder="nama@email.com"
+                required
+                className="w-full h-11"
+              />
+            </div>
+            
+            <div className="space-y-1">
+              <label className="text-xs font-bold text-slate-700">Nomor Telepon / WhatsApp</label>
+              <Input
+                type="tel"
+                id="phoneNumber"
+                value={phoneNumber}
+                onChange={(e) => { setPhoneNumber(e.target.value); setError(''); }}
+                placeholder="Contoh: 081234567890"
                 required
                 className="w-full h-11"
               />
