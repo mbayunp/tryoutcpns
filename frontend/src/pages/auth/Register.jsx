@@ -1,9 +1,24 @@
 import React, { useState, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { useExamStore } from '../../store/useExamStore';
-import { AlertCircle, Eye, EyeOff, ShieldCheck, BarChart3, ArrowLeft } from 'lucide-react';
+import { AlertCircle, Eye, EyeOff, ShieldCheck, BarChart3, ArrowLeft, Check } from 'lucide-react';
 import Button from '../../components/common/Button';
 import Input from '../../components/common/Input';
+
+const getPasswordStrength = (pass) => {
+  if (!pass) return { score: 0, label: '', color: 'bg-slate-200', width: 'w-0' };
+  const hasNum = /\d/.test(pass);
+  const hasUpper = /[A-Z]/.test(pass);
+  const len = pass.length;
+
+  if (len >= 8 && hasNum && hasUpper) {
+    return { score: 3, label: 'Kuat', color: 'bg-emerald-500', width: 'w-full' };
+  }
+  if (len >= 6 && hasNum) {
+    return { score: 2, label: 'Sedang', color: 'bg-amber-500', width: 'w-2/3' };
+  }
+  return { score: 1, label: 'Lemah', color: 'bg-rose-500', width: 'w-1/3' };
+};
 
 export default function Register() {
   const navigate = useNavigate();
@@ -180,7 +195,7 @@ export default function Register() {
               />
             </div>
             
-            <div className="space-y-1 relative">
+            <div className="space-y-1">
               <label className="text-xs font-bold text-slate-700">Kata Sandi</label>
               <div className="relative">
                 <Input
@@ -199,6 +214,40 @@ export default function Register() {
                 >
                   {showPassword ? <EyeOff className="h-5 w-5" /> : <Eye className="h-5 w-5" />}
                 </button>
+              </div>
+              {/* Password Strength Visualizer */}
+              {password && (
+                <div className="space-y-1.5 pt-1.5 animate-fadeIn">
+                  <div className="w-full bg-slate-100 h-1.5 rounded-full overflow-hidden">
+                    <div className={`h-full rounded-full transition-all duration-300 ${getPasswordStrength(password).color} ${getPasswordStrength(password).width}`}></div>
+                  </div>
+                  <div className="flex justify-between items-center text-[10px] font-bold">
+                    <span className="text-slate-400">Kekuatan Sandi:</span>
+                    <span className={
+                      getPasswordStrength(password).score === 3 ? 'text-emerald-600 animate-pulse' :
+                      getPasswordStrength(password).score === 2 ? 'text-amber-600' :
+                      'text-rose-600'
+                    }>
+                      {getPasswordStrength(password).label}
+                    </span>
+                  </div>
+                </div>
+              )}
+
+              {/* Password Criteria Checklist */}
+              <div className="flex flex-wrap gap-x-4 gap-y-1 pt-1.5 text-[10px] font-bold">
+                <div className={`flex items-center gap-1 transition-colors duration-200 ${
+                  password.length >= 6 ? 'text-emerald-600' : 'text-slate-400'
+                }`}>
+                  <Check className="h-3.5 w-3.5" />
+                  <span>Minimal 6 karakter</span>
+                </div>
+                <div className={`flex items-center gap-1 transition-colors duration-200 ${
+                  (/[a-zA-Z]/.test(password) && /\d/.test(password)) ? 'text-emerald-600' : 'text-slate-400'
+                }`}>
+                  <Check className="h-3.5 w-3.5" />
+                  <span>Mengandung huruf & angka</span>
+                </div>
               </div>
             </div>
 

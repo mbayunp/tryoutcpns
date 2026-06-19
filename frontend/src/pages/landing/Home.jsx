@@ -7,6 +7,8 @@ import Reveal from '../../components/common/Reveal';
 export default function Home() {
   const navigate = useNavigate();
   const [openFaq, setOpenFaq] = useState(null);
+  const [selectedQuizOption, setSelectedQuizOption] = useState(null);
+  const [quizLocked, setQuizLocked] = useState(false);
 
   const toggleFaq = (idx) => setOpenFaq(openFaq === idx ? null : idx);
 
@@ -79,6 +81,86 @@ export default function Home() {
                       <span>Telah Lolos SKD CASN</span>
                     </p>
                   </div>
+                </div>
+
+                {/* ─── MINI QUIZ INTERAKTIF ─── */}
+                <div className="mt-8 border border-slate-200 bg-slate-50/50 backdrop-blur-md p-6 rounded-2xl text-left space-y-4 max-w-md mx-auto lg:mx-0 shadow-sm animate-fadeIn">
+                  <div className="flex items-center justify-between">
+                    <span className="text-[10px] font-extrabold text-blue-600 bg-blue-50 border border-blue-100 px-2.5 py-1 rounded-md uppercase tracking-wider">
+                      Coba Simulasi Mini TIU
+                    </span>
+                    <span className="text-[10px] text-slate-400 font-bold">Deret Geometri</span>
+                  </div>
+                  
+                  <p className="text-xs sm:text-sm font-extrabold text-slate-800 leading-relaxed">
+                    Tentukan angka berikutnya dalam deret berikutnya:<br />
+                    <span className="font-mono text-blue-600 text-sm">2, 4, 8, 16, ...</span>
+                  </p>
+
+                  <div className="grid grid-cols-5 gap-1.5">
+                    {['A', 'B', 'C', 'D', 'E'].map((opt) => {
+                      const textMap = { A: '20', B: '24', C: '32', D: '36', E: '40' };
+                      const isSelected = selectedQuizOption === opt;
+                      const isCorrect = opt === 'C';
+                      
+                      let btnClass = 'bg-white border-slate-200 hover:border-slate-350 text-slate-700';
+                      if (quizLocked) {
+                        if (isCorrect) {
+                          btnClass = 'bg-emerald-50 border-emerald-500 text-emerald-700 font-bold';
+                        } else if (isSelected) {
+                          btnClass = 'bg-rose-50 border-rose-500 text-rose-700 font-bold';
+                        } else {
+                          btnClass = 'bg-white border-slate-100 text-slate-300 opacity-60';
+                        }
+                      }
+
+                      return (
+                        <button
+                          key={opt}
+                          disabled={quizLocked}
+                          onClick={() => {
+                            setSelectedQuizOption(opt);
+                            setQuizLocked(true);
+                          }}
+                          className={`h-10 rounded-lg text-xs font-bold transition-all flex flex-col items-center justify-center border cursor-pointer ${btnClass}`}
+                        >
+                          <span className="text-[9px] text-slate-400 font-semibold mb-0.5 block">{opt}</span>
+                          <span>{textMap[opt]}</span>
+                        </button>
+                      );
+                    })}
+                  </div>
+
+                  {quizLocked && (
+                    <div className="space-y-3.5 pt-1 animate-slideDown">
+                      <div className="p-3 bg-white border border-slate-100 rounded-xl">
+                        <p className="text-[10px] text-slate-400 font-bold uppercase mb-1">Pembahasan</p>
+                        <p className="text-xs text-slate-650 font-medium leading-relaxed">
+                          Deret ini merupakan deret geometri dengan rasio r = 2. Setiap suku berikutnya dikalikan 2 dari suku sebelumnya: 16 x 2 = <span className="font-bold text-emerald-600">32</span>.
+                        </p>
+                      </div>
+
+                      {/* CTA Banner */}
+                      <div className="bg-gradient-to-r from-blue-600 to-indigo-600 text-white p-4 rounded-xl space-y-2.5 shadow-md">
+                        <div className="flex justify-between items-center">
+                          <p className="text-xs font-extrabold">
+                            Skor Anda: <span className="text-yellow-300 font-mono text-sm">{selectedQuizOption === 'C' ? '+5' : '+0'}</span>
+                          </p>
+                          <span className="text-[9px] bg-white/20 border border-white/10 px-2 py-0.5 rounded-full font-bold uppercase">Gratis</span>
+                        </div>
+                        <p className="text-[10px] opacity-90 font-semibold leading-relaxed">
+                          Daftar Akun Gratis Sekarang untuk Menyimpan Skor dan Melihat Peringkat Nasional Anda!
+                        </p>
+                        <button
+                          onClick={() => navigate('/register')}
+                          className="w-full bg-white hover:bg-slate-100 text-blue-600 font-extrabold py-2 px-3 rounded-lg text-xs transition-colors border-0 cursor-pointer shadow flex items-center justify-center gap-1.5"
+                        >
+                          <span>Daftar Akun Sekarang</span>
+                          <ArrowRight className="h-3.5 w-3.5" />
+                        </button>
+                      </div>
+                    </div>
+                  )}
                 </div>
               </Reveal>
             </div>

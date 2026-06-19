@@ -1,7 +1,7 @@
 import React, { useState, useEffect, useRef, useCallback } from 'react';
 import { useNavigate, useLocation } from 'react-router-dom';
 import { useExamStore } from '../../store/useExamStore';
-import { Clock, Award, ChevronLeft, ChevronRight, AlertCircle, Send } from 'lucide-react';
+import { Clock, Award, ChevronLeft, ChevronRight, AlertCircle, Send, CheckCircle2 } from 'lucide-react';
 import Swal from 'sweetalert2';
 
 const formatTimer = (seconds) => {
@@ -34,8 +34,53 @@ export default function StartExam() {
   const [isTimerRunning, setIsTimerRunning] = useState(false);
   const [showSubmitModal, setShowSubmitModal] = useState(false);
   const [showNav, setShowNav] = useState(true);
+  const [showBottomSheet, setShowBottomSheet] = useState(false);
+  const touchStartX = useRef(0);
+
+  const handleTouchStart = (e) => {
+    touchStartX.current = e.changedTouches[0].clientX;
+  };
+
+  const handleTouchEnd = (e) => {
+    const touchEndX = e.changedTouches[0].clientX;
+    const diffX = touchStartX.current - touchEndX;
+    const threshold = 50;
+    if (diffX > threshold) {
+      setCurrentQuestionIndex(prev => Math.min(examQuestions.length - 1, prev + 1));
+    } else if (diffX < -threshold) {
+      setCurrentQuestionIndex(prev => Math.max(0, prev - 1));
+    }
+  };
 
   const timerRef = useRef(null);
+
+  const playBeep = () => {
+    try {
+      const AudioContextClass = window.AudioContext || window.webkitAudioContext;
+      if (!AudioContextClass) return;
+      const ctx = new AudioContextClass();
+      const osc = ctx.createOscillator();
+      const gain = ctx.createGain();
+      osc.type = 'sine';
+      osc.frequency.setValueAtTime(880, ctx.currentTime);
+      gain.gain.setValueAtTime(0.1, ctx.currentTime);
+      osc.connect(gain);
+      gain.connect(ctx.destination);
+      osc.start();
+      osc.stop(ctx.currentTime + 0.15);
+    } catch (e) {
+      console.warn('AudioContext failed:', e);
+    }
+  };
+
+  useEffect(() => {
+    if (examTimeLeft === 300 || examTimeLeft === 60) {
+      playBeep();
+      if (navigator.vibrate) {
+        navigator.vibrate(200);
+      }
+    }
+  }, [examTimeLeft]);
 
   useEffect(() => {
     const initExam = async () => {
@@ -196,26 +241,32 @@ export default function StartExam() {
             </p>
           </div>
         </div>
-
         <div className="flex items-center gap-4">
-          {/* Timer Box */}
-          <div className={`flex items-center justify-center gap-2 px-4 py-2 sm:px-6 sm:py-2.5 rounded-xl border-2 transition-all duration-500 shadow-sm ${
-            timerUrgency === 'critical'
-              ? 'bg-red-50 text-red-600 border-red-350 animate-pulse'
-              : timerUrgency === 'warning'
-              ? 'bg-amber-55/70 text-amber-600 border-amber-250'
-              : 'bg-slate-50 text-[#0B1C30] border-slate-150'
-          }`}>
-            <Clock className="h-4 w-4 sm:h-5 sm:w-5" />
-            <span className="text-base sm:text-lg tabular-nums font-extrabold tracking-wider font-mono">
-              {formatTimer(examTimeLeft)}
-            </span>
+          {/* Timer Box and Auto-save Banner */}
+          <div className="flex flex-col items-end gap-1">
+            <div className={`flex items-center justify-center gap-2 px-4 py-2 sm:px-6 sm:py-2.5 rounded-xl border-2 transition-all duration-500 shadow-sm ${
+              timerUrgency === 'critical'
+                ? 'bg-red-50 text-red-600 border-red-350 animate-pulse'
+                : timerUrgency === 'warning'
+                ? 'bg-amber-55/70 text-amber-600 border-amber-250'
+                : 'bg-slate-50 text-[#0B1C30] border-slate-150'
+            }`}>
+              <Clock className="h-4 w-4 sm:h-5 sm:w-5" />
+              <span className="text-base sm:text-lg tabular-nums font-extrabold tracking-wider font-mono">
+                {formatTimer(examTimeLeft)}
+              </span>
+            </div>
+            
+            <div className="flex items-center gap-1 text-[9px] font-bold text-emerald-600 animate-pulse">
+              <CheckCircle2 className="h-3 w-3" />
+              <span>Jawaban otomatis tersimpan</span>
+            </div>
           </div>
 
           {/* Toggle nav on mobile */}
           <button
-            onClick={() => setShowNav(!showNav)}
-            className="lg:hidden p-2 rounded-xl hover:bg-slate-100 transition-colors text-slate-500 border border-slate-200 bg-white"
+            onClick={() => setShowBottomSheet(true)}
+            className="lg:hidden p-2 rounded-xl hover:bg-slate-100 transition-colors text-slate-500 border border-slate-200 bg-white animate-fadeIn"
           >
             <span className="text-xs font-bold">{answeredCount}/{examQuestions.length}</span>
           </button>
@@ -241,7 +292,11 @@ export default function StartExam() {
           </div>
 
           {/* Question Body */}
-          <div className="bg-white rounded-2xl border-l-4 border-l-[#0B1C30] border border-y-slate-200/60 border-r-slate-200/60 shadow-premium p-6 sm:p-8">
+          <div 
+            onTouchStart={handleTouchStart}
+            onTouchEnd={handleTouchEnd}
+            className="bg-white rounded-2xl border-l-4 border-l-[#0B1C30] border border-y-slate-200/60 border-r-slate-200/60 shadow-premium p-6 sm:p-8 touch-pan-y"
+          >
             <p className="text-sm sm:text-base font-semibold text-slate-800 leading-[1.8]">
               {currentQuestion.question}
             </p>
@@ -323,7 +378,7 @@ export default function StartExam() {
         </div>
 
         {/* ─── NAVIGATION SIDEBAR ─── */}
-        <div className={`lg:col-span-4 ${showNav ? 'block' : 'hidden lg:block'}`}>
+        <div className="lg:col-span-4 hidden lg:block">
           <div className="bg-white rounded-2xl border border-slate-200/60 shadow-premium p-5 sticky top-24 space-y-5">
             <div className="flex items-center justify-between">
               <h3 className="text-xs font-bold text-slate-800 tracking-tight">Navigasi Soal</h3>
@@ -429,6 +484,85 @@ export default function StartExam() {
           </div>
         </div>
       )}
+
+      {/* ─── MOBILE NATIVE FAB ─── */}
+      <button
+        onClick={() => setShowBottomSheet(true)}
+        className="fixed bottom-6 right-6 z-40 lg:hidden bg-[#0B1C30] hover:bg-[#102A43] text-white px-5 py-3.5 rounded-full shadow-premium-lg flex items-center gap-2 border-0 cursor-pointer transition-all active:scale-95 font-bold text-xs tracking-wider animate-fadeIn"
+      >
+        <Award className="h-4 w-4" />
+        <span>Peta Soal</span>
+      </button>
+
+      {/* ─── MOBILE NATIVE BOTTOM SHEET ─── */}
+      <div 
+        className={`fixed inset-0 bg-slate-950/40 backdrop-blur-sm z-45 lg:hidden transition-opacity duration-300 ${
+          showBottomSheet ? 'opacity-100 pointer-events-auto' : 'opacity-0 pointer-events-none'
+        }`}
+        onClick={() => setShowBottomSheet(false)}
+      />
+
+      <div className={`fixed bottom-0 left-0 right-0 bg-white rounded-t-2xl z-50 p-6 lg:hidden border-t border-slate-200 shadow-premium-lg transform transition-transform duration-300 ease-out ${
+        showBottomSheet ? 'translate-y-0' : 'translate-y-full'
+      }`}>
+        <div className="flex items-center justify-between mb-5">
+          <div>
+            <h3 className="text-sm font-extrabold text-slate-800">Peta Soal</h3>
+            <p className="text-[10px] text-slate-400 font-bold">{answeredCount}/{examQuestions.length} Terjawab</p>
+          </div>
+          <button 
+            onClick={() => setShowBottomSheet(false)}
+            className="text-xs font-bold text-slate-500 hover:text-slate-800 bg-slate-100 hover:bg-slate-200 px-3 py-1.5 rounded-lg border-0 cursor-pointer transition-colors"
+          >
+            Tutup
+          </button>
+        </div>
+        
+        <div className="max-h-[60vh] overflow-y-auto pb-4 space-y-5">
+          {/* Grid */}
+          <div className="grid grid-cols-6 gap-2">
+            {examQuestions.map((q, idx) => {
+              const isAnswered = !!answers[q.id];
+              const isActive = currentQuestionIndex === idx;
+
+              return (
+                <button
+                  key={q.id}
+                  onClick={() => {
+                    setCurrentQuestionIndex(idx);
+                    setShowBottomSheet(false);
+                  }}
+                  className={`h-11 rounded-xl text-xs font-bold flex items-center justify-center transition-all duration-150 ${
+                    isActive ? 'ring-2 ring-[#0B1C30] scale-110 z-10' : ''
+                  } ${
+                    isAnswered
+                      ? 'bg-emerald-600 text-white shadow-sm'
+                      : 'bg-slate-50 text-slate-500 border border-slate-200/60 hover:bg-slate-100'
+                  }`}
+                >
+                  {idx + 1}
+                </button>
+              );
+            })}
+          </div>
+
+          {/* Legend */}
+          <div className="grid grid-cols-2 gap-2 pt-4 border-t border-slate-100">
+            {[
+              { color: 'bg-emerald-600', label: 'Terjawab', count: answeredCount },
+              { color: 'bg-slate-250', label: 'Kosong', count: unansweredCount }
+            ].map((item) => (
+              <div key={item.label} className="text-center p-2 rounded-xl bg-slate-50 border border-slate-100">
+                <span className="block text-sm font-extrabold tracking-tight text-slate-800">{item.count}</span>
+                <div className="flex items-center justify-center gap-1 mt-0.5">
+                  <span className={`w-1.5 h-1.5 rounded-full ${item.color}`} />
+                  <span className="text-[10px] font-bold text-slate-400">{item.label}</span>
+                </div>
+              </div>
+            ))}
+          </div>
+        </div>
+      </div>
     </div>
   );
 }

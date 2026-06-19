@@ -17,8 +17,18 @@ const startServer = async () => {
       force: false
     };
     
-    await sequelize.sync(syncOptions);
-    console.log('Database schemas synchronized successfully.');
+    try {
+      await sequelize.sync(syncOptions);
+      console.log('Database schemas synchronized successfully.');
+    } catch (syncError) {
+      if (syncOptions.alter) {
+        console.warn('Database sync with alter failed, trying without alter:', syncError.message);
+        await sequelize.sync({ force: false, alter: false });
+        console.log('Database schemas synchronized successfully (fallback).');
+      } else {
+        throw syncError;
+      }
+    }
 
     // Start listening
     app.listen(PORT, () => {

@@ -11,9 +11,11 @@ import {
   PlusCircle,
   Award,
   X,
-  MessageCircle, // <-- Ditambahkan
-  CheckCircle2   // <-- Ditambahkan
+  MessageCircle,
+  CheckCircle2,
+  Flame // <-- Ditambahkan untuk Daily Streak
 } from 'lucide-react';
+import { AreaChart, Area, XAxis, YAxis, CartesianGrid, Tooltip, ResponsiveContainer } from 'recharts';
 import Card from '../../components/common/Card';
 import Badge from '../../components/common/Badge';
 import Button from '../../components/common/Button';
@@ -90,7 +92,7 @@ export default function Dashboard() {
           </section>
 
           {/* Summary Cards (Bento Style) */}
-          <div className="grid grid-cols-1 md:grid-cols-3 gap-gutter">
+          <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-gutter animate-fadeIn">
             <Card className="p-6 border border-slate-200/60 shadow-premium flex items-start gap-4 hover:-translate-y-1 hover:shadow-premium-hover transition-all duration-300 ease-out border-l-4 border-l-[#0B1C30]/80 bg-white">
               <div className="w-12 h-12 bg-[#0B1C30]/10 rounded-xl flex items-center justify-center text-[#0B1C30] flex-shrink-0">
                 <FileText className="h-5 w-5" />
@@ -126,6 +128,18 @@ export default function Dashboard() {
                 </h3>
               </div>
             </Card>
+
+            <Card className="p-6 border border-slate-200/60 shadow-premium flex items-start gap-4 hover:-translate-y-1 hover:shadow-premium-hover transition-all duration-300 ease-out border-l-4 border-l-orange-500 bg-white">
+              <div className="w-12 h-12 bg-orange-500/10 rounded-xl flex items-center justify-center text-orange-500 flex-shrink-0 animate-pulse">
+                <Flame className="h-5 w-5 fill-current" />
+              </div>
+              <div className="space-y-1">
+                <p className="text-slate-400 text-xs font-bold uppercase tracking-wider">Daily Streak</p>
+                <h3 className="text-2xl font-extrabold text-[#0B1C30]">
+                  3 Hari <span className="text-xs font-normal text-slate-400">Beruntun</span>
+                </h3>
+              </div>
+            </Card>
           </div>
 
           {/* Two Column Layout (Bento Grid) */}
@@ -139,34 +153,71 @@ export default function Dashboard() {
                 </div>
               </div>
 
-              {/* Chart Mockup */}
-              <div className="h-60 flex items-end justify-between gap-4 relative pt-4">
-                <div className="flex-1 bg-slate-100 rounded-t-xl transition-all hover:bg-[#0B1C30]/20 group relative h-[40%] cursor-pointer">
-                  <div className="absolute -top-8 left-1/2 -translate-x-1/2 bg-slate-900 text-white text-[10px] font-bold px-2 py-1 rounded-lg opacity-0 group-hover:opacity-100 transition-opacity z-10 shadow-md">320</div>
-                </div>
-                <div className="flex-1 bg-slate-100 rounded-t-xl transition-all hover:bg-[#0B1C30]/20 group relative h-[65%] cursor-pointer">
-                  <div className="absolute -top-8 left-1/2 -translate-x-1/2 bg-slate-900 text-white text-[10px] font-bold px-2 py-1 rounded-lg opacity-0 group-hover:opacity-100 transition-opacity z-10 shadow-md">410</div>
-                </div>
-                <div className="flex-1 bg-slate-100 rounded-t-xl transition-all hover:bg-[#0B1C30]/20 group relative h-[55%] cursor-pointer">
-                  <div className="absolute -top-8 left-1/2 -translate-x-1/2 bg-slate-900 text-white text-[10px] font-bold px-2 py-1 rounded-lg opacity-0 group-hover:opacity-100 transition-opacity z-10 shadow-md">380</div>
-                </div>
-                <div className="flex-1 bg-[#0B1C30] rounded-t-xl transition-all hover:bg-[#0B1C30]/90 group relative h-[85%] cursor-pointer shadow-md">
-                  <div className="absolute -top-8 left-1/2 -translate-x-1/2 bg-slate-900 text-white text-[10px] font-bold px-2 py-1 rounded-lg opacity-0 group-hover:opacity-100 transition-opacity z-10 shadow-md">490</div>
-                </div>
-                <div className="flex-1 bg-slate-100 rounded-t-xl transition-all hover:bg-[#0B1C30]/20 group relative h-[45%] cursor-pointer">
-                  <div className="absolute -top-8 left-1/2 -translate-x-1/2 bg-slate-900 text-white text-[10px] font-bold px-2 py-1 rounded-lg opacity-0 group-hover:opacity-100 transition-opacity z-10 shadow-md">350</div>
-                </div>
-                <div className="flex-1 bg-slate-100 rounded-t-xl transition-all hover:bg-[#0B1C30]/20 group relative h-[70%] cursor-pointer">
-                  <div className="absolute -top-8 left-1/2 -translate-x-1/2 bg-slate-900 text-white text-[10px] font-bold px-2 py-1 rounded-lg opacity-0 group-hover:opacity-100 transition-opacity z-10 shadow-md">430</div>
-                </div>
-                <div className="flex-1 bg-slate-100 rounded-t-xl transition-all hover:bg-[#0B1C30]/20 group relative h-[95%] cursor-pointer">
-                  <div className="absolute -top-8 left-1/2 -translate-x-1/2 bg-slate-900 text-white text-[10px] font-bold px-2 py-1 rounded-lg opacity-0 group-hover:opacity-100 transition-opacity z-10 shadow-md">520</div>
-                </div>
-              </div>
+              {/* Chart Recharts */}
+              {(() => {
+                const chartData = [
+                  { name: 'Sen', skor: 320 },
+                  { name: 'Sel', skor: 410 },
+                  { name: 'Rab', skor: 380 },
+                  { name: 'Kam', skor: 490 },
+                  { name: 'Jum', skor: 350 },
+                  { name: 'Sab', skor: 430 },
+                  { name: 'Min', skor: 520 },
+                ];
 
-              <div className="flex justify-between text-xs font-bold text-slate-400 px-2">
-                <span>Sen</span><span>Sel</span><span>Rab</span><span>Kam</span><span>Jum</span><span>Sab</span><span>Min</span>
-              </div>
+                return (
+                  <div className="h-60 w-full animate-fadeIn">
+                    <ResponsiveContainer width="100%" height="100%">
+                      <AreaChart
+                        data={chartData}
+                        margin={{ top: 10, right: 10, left: -20, bottom: 0 }}
+                      >
+                        <defs>
+                          <linearGradient id="colorSkorDashboard" x1="0" y1="0" x2="0" y2="1">
+                            <stop offset="5%" stopColor="#3B82F6" stopOpacity={0.4}/>
+                            <stop offset="95%" stopColor="#3B82F6" stopOpacity={0.0}/>
+                          </linearGradient>
+                        </defs>
+                        <CartesianGrid strokeDasharray="3 3" stroke="#F1F5F9" />
+                        <XAxis 
+                          dataKey="name" 
+                          tick={{ fill: '#94A3B8', fontSize: 11, fontWeight: 700 }}
+                          axisLine={false}
+                          tickLine={false}
+                        />
+                        <YAxis 
+                          domain={[0, 600]} 
+                          tick={{ fill: '#94A3B8', fontSize: 10 }}
+                          axisLine={false}
+                          tickLine={false}
+                        />
+                        <Tooltip 
+                          contentStyle={{ 
+                            backgroundColor: '#0B1C30', 
+                            border: 'none', 
+                            borderRadius: '12px', 
+                            color: '#fff',
+                            fontSize: '11px',
+                            fontWeight: 'bold',
+                            padding: '8px 12px',
+                            boxShadow: '0 10px 15px -3px rgba(0,0,0,0.1)'
+                          }}
+                          itemStyle={{ color: '#fff' }}
+                          labelStyle={{ display: 'none' }}
+                        />
+                        <Area 
+                          type="monotone" 
+                          dataKey="skor" 
+                          stroke="#3B82F6" 
+                          strokeWidth={3}
+                          fillOpacity={1} 
+                          fill="url(#colorSkorDashboard)" 
+                        />
+                      </AreaChart>
+                    </ResponsiveContainer>
+                  </div>
+                );
+              })()}
 
               {/* Progress sliders */}
               <div className="pt-6 border-t border-slate-100 grid grid-cols-1 md:grid-cols-2 gap-6">

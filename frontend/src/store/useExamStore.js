@@ -38,7 +38,6 @@ export const useExamStore = create(
         }
       },
 
-<<<<<<< HEAD
       loginWithGoogle: async (idToken) => {
         try {
           const res = await API.post('/auth/google-login', { idToken });
@@ -59,30 +58,7 @@ export const useExamStore = create(
         }
       },
 
-      forgotPassword: async (email) => {
-        try {
-          await API.post('/auth/forgot-password', { email });
-          return true;
-        } catch (error) {
-          const message = error.response?.data?.message || 'Gagal mengirim email atur ulang kata sandi.';
-          throw new Error(message);
-        }
-      },
-
-      resetPassword: async (token, newPassword) => {
-        try {
-          await API.post('/auth/reset-password', { token, newPassword });
-          return true;
-        } catch (error) {
-          const message = error.response?.data?.message || 'Gagal mengatur ulang kata sandi.';
-          throw new Error(message);
-        }
-      },
-
-      register: async (name, email, password) => {
-=======
       register: async (name, email, password, phone_number) => {
->>>>>>> d4fbcdcaf39bd4747051786470511408feeddbd0
         try {
           // 1. Post to register endpoint
           await API.post('/auth/register', { name, email, password, phone_number });

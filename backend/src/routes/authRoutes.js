@@ -2,7 +2,6 @@ const express = require('express');
 const router = express.Router();
 const authController = require('../controllers/authController');
 const authMiddleware = require('../middlewares/authMiddleware');
-const { registerValidation, loginValidation } = require('../validations/authValidation');
 const rateLimit = require('express-rate-limit');
 const {
   registerValidation,
@@ -32,6 +31,6 @@ router.get('/profile', authMiddleware, authController.profile);
 
 router.post('/forgot-password/check-email', forgotPasswordCheckEmailValidation, authController.checkEmail);
 router.post('/forgot-password/verify-phone', forgotPasswordVerifyPhoneValidation, authController.verifyPhone);
-router.post('/forgot-password/reset', forgotPasswordResetValidation, authController.resetPassword);
+router.post('/forgot-password/reset', forgotPasswordResetValidation, authController.forgotPasswordReset);
 
 module.exports = router;

@@ -11,7 +11,7 @@ export default function Login() {
   const navigate = useNavigate();
   const login = useExamStore((state) => state.login);
   const loginWithGoogle = useExamStore((state) => state.loginWithGoogle);
-  const forgotPassword = useExamStore((state) => state.forgotPassword);
+  // const forgotPassword = useExamStore((state) => state.forgotPassword);
 
   const [email, setEmail] = useState('');
   const [password, setPassword] = useState('');
@@ -76,6 +76,7 @@ export default function Login() {
     };
   }, [handleGoogleLoginCallback]);
 
+  /*
   const handleForgotPassword = async (e) => {
     e.preventDefault();
     const { value: targetEmail } = await Swal.fire({
@@ -123,6 +124,7 @@ export default function Login() {
       }
     }
   };
+  */
 
   const handleSubmit = async (e) => {
     e.preventDefault();

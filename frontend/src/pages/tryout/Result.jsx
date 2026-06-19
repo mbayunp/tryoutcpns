@@ -13,6 +13,7 @@ import {
 } from 'lucide-react';
 import Button from '../../components/common/Button';
 import API from '../../utils/api';
+import { Radar, RadarChart, PolarGrid, PolarAngleAxis, PolarRadiusAxis, ResponsiveContainer } from 'recharts';
 
 export default function Result() {
   const navigate = useNavigate();
@@ -357,6 +358,74 @@ export default function Result() {
               </div>
             </div>
           </div>
+
+          {/* Card: Analisis Penguasaan Materi */}
+          {(() => {
+            const radarData = [
+              { subject: `TWK (${attempt.twk || 0}/150)`, skor: Math.round(((attempt.twk || 0) / 150) * 100), passing: Math.round((65 / 150) * 100) },
+              { subject: `TIU (${attempt.tiu || 0}/175)`, skor: Math.round(((attempt.tiu || 0) / 175) * 100), passing: Math.round((80 / 175) * 100) },
+              { subject: `TKP (${attempt.tkp || 0}/225)`, skor: Math.round(((attempt.tkp || 0) / 225) * 100), passing: Math.round((166 / 225) * 100) }
+            ];
+
+            return (
+              <div className="bg-white rounded-2xl border border-slate-200/60 shadow-premium p-5 space-y-4 animate-fadeIn">
+                <div className="flex items-center justify-between">
+                  <h3 className="text-xs font-extrabold text-slate-800 tracking-tight">Analisis Penguasaan Materi</h3>
+                  <span className="text-[10px] bg-emerald-50 text-emerald-700 px-2.5 py-1 rounded-full font-bold">Persentase (%)</span>
+                </div>
+                
+                <div className="flex justify-center items-center w-full min-h-[260px]">
+                  <ResponsiveContainer width="100%" height={260}>
+                    <RadarChart cx="50%" cy="50%" outerRadius="70%" data={radarData}>
+                      <defs>
+                        <linearGradient id="colorSkor" x1="0" y1="0" x2="0" y2="1">
+                          <stop offset="5%" stopColor="#3B82F6" stopOpacity={0.4}/>
+                          <stop offset="95%" stopColor="#10B981" stopOpacity={0.1}/>
+                        </linearGradient>
+                      </defs>
+                      <PolarGrid stroke="#E2E8F0" />
+                      <PolarAngleAxis 
+                        dataKey="subject" 
+                        tick={{ fill: '#1E293B', fontSize: 11, fontWeight: 700 }}
+                      />
+                      <PolarRadiusAxis 
+                        angle={30} 
+                        domain={[0, 100]} 
+                        tick={{ fill: '#94A3B8', fontSize: 9 }}
+                      />
+                      <Radar 
+                        name="Target Passing Grade" 
+                        dataKey="passing" 
+                        stroke="#94A3B8" 
+                        strokeDasharray="4 4"
+                        fill="#F1F5F9" 
+                        fillOpacity={0.3} 
+                      />
+                      <Radar 
+                        name="Skor Anda" 
+                        dataKey="skor" 
+                        stroke="#10B981" 
+                        fill="url(#colorSkor)" 
+                        fillOpacity={1} 
+                      />
+                    </RadarChart>
+                  </ResponsiveContainer>
+                </div>
+                
+                {/* Legend info */}
+                <div className="text-[10px] text-slate-400 font-bold flex justify-center gap-4 border-t border-slate-100 pt-3">
+                  <div className="flex items-center gap-1.5">
+                    <span className="w-2.5 h-2.5 border border-dashed border-slate-400 bg-slate-100 inline-block rounded-sm"></span>
+                    <span>Passing Grade</span>
+                  </div>
+                  <div className="flex items-center gap-1.5">
+                    <span className="w-2.5 h-2.5 bg-emerald-500 inline-block rounded-sm"></span>
+                    <span>Skor Anda</span>
+                  </div>
+                </div>
+              </div>
+            );
+          })()}
 
           <div className="bg-white rounded-2xl border border-slate-200/60 shadow-premium p-5 sticky top-24">
             <div className="flex items-center justify-between mb-5">
