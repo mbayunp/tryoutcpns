@@ -4,7 +4,13 @@ const authController = require('../controllers/authController');
 const authMiddleware = require('../middlewares/authMiddleware');
 const { registerValidation, loginValidation } = require('../validations/authValidation');
 const rateLimit = require('express-rate-limit');
-
+const {
+  registerValidation,
+  loginValidation,
+  forgotPasswordCheckEmailValidation,
+  forgotPasswordVerifyPhoneValidation,
+  forgotPasswordResetValidation
+} = require('../validations/authValidation');
 // Rate limiting to prevent registration spam
 const registerLimiter = rateLimit({
   windowMs: 15 * 60 * 1000, // 15 minutes
@@ -23,5 +29,9 @@ router.post('/google-login', authController.googleLogin);
 router.post('/forgot-password', authController.forgotPassword);
 router.post('/reset-password', authController.resetPassword);
 router.get('/profile', authMiddleware, authController.profile);
+
+router.post('/forgot-password/check-email', forgotPasswordCheckEmailValidation, authController.checkEmail);
+router.post('/forgot-password/verify-phone', forgotPasswordVerifyPhoneValidation, authController.verifyPhone);
+router.post('/forgot-password/reset', forgotPasswordResetValidation, authController.resetPassword);
 
 module.exports = router;

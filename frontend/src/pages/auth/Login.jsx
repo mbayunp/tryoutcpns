@@ -12,7 +12,7 @@ export default function Login() {
   const login = useExamStore((state) => state.login);
   const loginWithGoogle = useExamStore((state) => state.loginWithGoogle);
   const forgotPassword = useExamStore((state) => state.forgotPassword);
-  
+
   const [email, setEmail] = useState('');
   const [password, setPassword] = useState('');
   const [error, setError] = useState('');
@@ -32,7 +32,7 @@ export default function Login() {
 
       const loggedUser = await loginWithGoogle(response.credential);
       Swal.close();
-      
+
       if (loggedUser.role === 'admin') {
         navigate('/admin');
       } else {
@@ -51,15 +51,15 @@ export default function Login() {
           client_id: "1036814674751-nsc1h2b04tqerhpt6f4ebt9kdfuibsh3.apps.googleusercontent.com", // Google Client ID
           callback: handleGoogleLoginCallback
         });
-        
+
         window.google.accounts.id.renderButton(
           document.getElementById("google-signin-btn"),
-          { 
-            theme: "outline", 
-            size: "large", 
-            width: 352, 
-            text: "signin_with", 
-            shape: "rectangular" 
+          {
+            theme: "outline",
+            size: "large",
+            width: 352,
+            text: "signin_with",
+            shape: "rectangular"
           }
         );
       }
@@ -157,7 +157,7 @@ export default function Login() {
 
   return (
     <div className="flex min-h-screen w-full bg-white font-sans">
-      
+
       {/* ─── KIRI: BRANDING & ILUSTRASI ─── */}
       <div className="hidden lg:flex w-1/2 relative bg-gradient-to-br from-blue-700 to-blue-900 overflow-hidden items-center justify-center p-20">
         {/* Dekorasi Latar */}
@@ -172,7 +172,7 @@ export default function Login() {
           <p className="text-lg mb-12 text-blue-100 leading-relaxed font-medium">
             Platform persiapan CPNS paling komprehensif dengan simulasi CAT real-time, pembahasan mendalam, dan kurikulum yang selalu terupdate.
           </p>
-          
+
           <div className="grid grid-cols-2 gap-6 text-left">
             <div className="bg-white/10 backdrop-blur-md p-6 rounded-2xl border border-white/20 flex flex-col gap-3 transition-transform hover:-translate-y-1 duration-300">
               <ShieldCheck className="h-8 w-8 text-blue-300" />
@@ -196,14 +196,14 @@ export default function Login() {
       <div className="flex-1 flex items-center justify-center p-6 sm:p-12">
         {/* Container Form (Diperlebar menjadi max-w-[400px]) */}
         <div className="w-full max-w-[400px] space-y-8">
-          
+
           <div className="text-center lg:text-left">
             <h2 className="text-3xl font-extrabold text-slate-900 mb-2 tracking-tight">Selamat Datang</h2>
             <p className="text-sm text-slate-500 font-medium">Masuk ke akun Anda untuk melanjutkan persiapan.</p>
           </div>
 
           {/* Tombol Demo Cepat */}
-          <button 
+          <button
             onClick={handleFillDemoUser}
             className="w-full flex items-center justify-center gap-3 px-6 py-3 bg-slate-900 text-white rounded-xl hover:bg-slate-800 transition-all duration-200 active:scale-[0.98] shadow-sm font-bold text-sm"
           >
@@ -245,7 +245,7 @@ export default function Login() {
                 className="w-full h-12"
               />
             </div>
-            
+
             <div className="space-y-1 relative">
               <label className="text-xs font-bold text-slate-700">Kata Sandi</label>
               <div className="relative">
@@ -258,7 +258,7 @@ export default function Login() {
                   required
                   className="w-full h-12 pr-12"
                 />
-                <button 
+                <button
                   type="button"
                   onClick={() => setShowPassword(!showPassword)}
                   className="absolute right-4 top-1/2 -translate-y-1/2 text-slate-400 hover:text-blue-600 transition-colors focus:outline-none"
@@ -270,13 +270,13 @@ export default function Login() {
 
             <div className="flex items-center justify-between text-xs font-semibold pt-1">
               <label className="flex items-center gap-2 cursor-pointer group">
-                <input className="w-4 h-4 rounded border-slate-300 text-blue-600 focus:ring-blue-500/20 cursor-pointer transition-colors" type="checkbox"/>
+                <input className="w-4 h-4 rounded border-slate-300 text-blue-600 focus:ring-blue-500/20 cursor-pointer transition-colors" type="checkbox" />
                 <span className="text-slate-500 group-hover:text-slate-800 transition-colors">Ingat saya</span>
               </label>
-              <button 
+              <button
                 type="button"
-                onClick={handleForgotPassword}
-                className="text-blue-600 hover:text-blue-800 transition-colors bg-transparent border-0 cursor-pointer font-bold focus:outline-none"
+                onClick={() => navigate('/forgot-password')}
+                className="text-blue-600 hover:text-blue-800 transition-colors border-0 bg-transparent cursor-pointer font-semibold"
               >
                 Lupa sandi?
               </button>

@@ -6,12 +6,12 @@ const { verifyGoogleToken } = require('../utils/googleAuth');
 const { sendResetPasswordEmail } = require('../utils/mailer');
 
 const register = async (userData) => {
-  const { name, email, password, role } = userData;
+  const { name, email, password, role, phone_number } = userData;
 
   // Check if email already exists
   const existingUser = await User.findOne({ where: { email } });
   if (existingUser) {
-    const error = new Error('Email is already registered');
+    const error = new Error('Email sudah terdaftar');
     error.statusCode = 400;
     throw error;
   }
@@ -26,6 +26,7 @@ const register = async (userData) => {
     email,
     password: hashedPassword,
     role: role || 'user',
+    phone_number,
     is_active: true
   });
 
@@ -83,125 +84,171 @@ const profile = async (userId) => {
 };
 
 const forgotPassword = async (email) => {
-  const user = await User.findOne({ where: { email } });
-  if (!user) {
-    const error = new Error('Email tidak terdaftar');
-    error.statusCode = 404;
-    throw error;
-  }
-
-  // Create reset token signed with current password as secret
-  const secret = jwtConfig.secret + user.password;
-  const token = jwt.sign(
-    { id: user.id, email: user.email },
-    secret,
-    { expiresIn: '15m' } // Expires in 15 minutes
-  );
-
-  await sendResetPasswordEmail(user.email, user.name, token);
-  return true;
-};
-
-const resetPassword = async (token, newPassword) => {
-  if (!token) {
-    const error = new Error('Token atur ulang kata sandi diperlukan');
-    error.statusCode = 400;
-    throw error;
-  }
-
-  // Decode first to get user email and id
-  const decoded = jwt.decode(token);
-  if (!decoded || !decoded.email) {
-    const error = new Error('Tautan tidak valid');
-    error.statusCode = 400;
-    throw error;
-  }
-
-  const user = await User.findOne({ where: { email: decoded.email } });
-  if (!user) {
-    const error = new Error('Pengguna tidak ditemukan');
-    error.statusCode = 404;
-    throw error;
-  }
-
-  // Verify signature using user's password hash in the secret
-  const secret = jwtConfig.secret + user.password;
-  try {
-    jwt.verify(token, secret);
-  } catch (err) {
-    const error = new Error('Tautan telah kedaluwarsa atau tidak valid');
-    error.statusCode = 400;
-    throw error;
-  }
-
-  // Hash new password
-  const salt = await bcrypt.genSalt(10);
-  const hashedPassword = await bcrypt.hash(newPassword, salt);
-
-  user.password = hashedPassword;
-  await user.save();
-  return true;
-};
-
-const googleLogin = async (idToken) => {
-  let googleUser;
-  try {
-    googleUser = await verifyGoogleToken(idToken);
-  } catch (err) {
-    console.error('Google ID token verification failed:', err);
-    const error = new Error('Verifikasi login Google gagal: ' + err.message);
-    error.statusCode = 400;
-    throw error;
-  }
-
-  const { email, name } = googleUser;
-  if (!email) {
-    const error = new Error('Email tidak diterima dari akun Google Anda');
-    error.statusCode = 400;
-    throw error;
-  }
-
-  let user = await User.findOne({ where: { email } });
-  if (!user) {
-    // Create new user with a secure random password
-    const randomPassword = Math.random().toString(36).slice(-10) + Math.random().toString(36).toUpperCase().slice(-10);
-    const salt = await bcrypt.genSalt(10);
-    const hashedPassword = await bcrypt.hash(randomPassword, salt);
-
-    user = await User.create({
-      name: name || 'Pengguna Google',
-      email,
-      password: hashedPassword,
-      role: 'user',
-      is_active: true
-    });
-  } else if (!user.is_active) {
-    const error = new Error('Akun dinonaktifkan oleh administrator');
-    error.statusCode = 401;
-    throw error;
-  }
-
-  // Generate token
-  const token = jwt.sign(
-    { id: user.id, email: user.email, role: user.role },
-    jwtConfig.secret,
-    { expiresIn: jwtConfig.expiresIn }
-  );
-
-  const userResponse = user.toJSON();
-  delete userResponse.password;
-
-  return {
-    user: userResponse,
-    token
+  const normalizePhone = (phone) => {
+    if (!phone) return '';
+    let clean = phone.replace(/\D/g, ''); // keep only digits
+    if (clean.startsWith('62')) {
+      clean = '0' + clean.slice(2);
+    }
+    return clean;
   };
-};
 
-module.exports = {
-  register,
-  login,
-  profile,
-  forgotPassword,
-  resetPassword,
-  googleLogin
-};
+  const checkEmail = async (email) => {
+    const user = await User.findOne({ where: { email } });
+    if (!user) {
+      const error = new Error('Email tidak terdaftar');
+      error.statusCode = 404;
+      throw error;
+    }
+    return true;
+  };
+
+  const verifyPhone = async (email, phone_number) => {
+    const user = await User.findOne({ where: { email } });
+    if (!user) {
+      const error = new Error('Email tidak terdaftar');
+      error.statusCode = 404;
+      throw error;
+    }
+
+    // Create reset token signed with current password as secret
+    const secret = jwtConfig.secret + user.password;
+    const token = jwt.sign(
+      { id: user.id, email: user.email },
+      secret,
+      { expiresIn: '15m' } // Expires in 15 minutes
+    );
+
+    await sendResetPasswordEmail(user.email, user.name, token);
+    return true;
+  };
+
+  const resetPassword = async (token, newPassword) => {
+    if (!token) {
+      const error = new Error('Token atur ulang kata sandi diperlukan');
+      error.statusCode = 400;
+      throw error;
+    }
+
+    // Decode first to get user email and id
+    const decoded = jwt.decode(token);
+    if (!decoded || !decoded.email) {
+      const error = new Error('Tautan tidak valid');
+      error.statusCode = 400;
+      throw error;
+    }
+
+    const user = await User.findOne({ where: { email: decoded.email } });
+    if (!user) {
+      const error = new Error('Pengguna tidak ditemukan');
+      const normUserPhone = normalizePhone(user.phone_number);
+      const normInputPhone = normalizePhone(phone_number);
+
+      if (!user.phone_number || normUserPhone !== normInputPhone) {
+        const error = new Error('Nomor telepon konfirmasi salah');
+        error.statusCode = 400;
+        throw error;
+      }
+      return true;
+    };
+
+    const resetPassword = async (email, phone_number, newPassword) => {
+      const user = await User.findOne({ where: { email } });
+      if (!user) {
+        const error = new Error('Email tidak terdaftar');
+        error.statusCode = 404;
+        throw error;
+      }
+
+      // Verify signature using user's password hash in the secret
+      const secret = jwtConfig.secret + user.password;
+      try {
+        jwt.verify(token, secret);
+      } catch (err) {
+        const error = new Error('Tautan telah kedaluwarsa atau tidak valid');
+        const normUserPhone = normalizePhone(user.phone_number);
+        const normInputPhone = normalizePhone(phone_number);
+
+        if (!user.phone_number || normUserPhone !== normInputPhone) {
+          const error = new Error('Nomor telepon konfirmasi salah');
+          error.statusCode = 400;
+          throw error;
+        }
+
+        // Hash new password
+        const salt = await bcrypt.genSalt(10);
+        const hashedPassword = await bcrypt.hash(newPassword, salt);
+
+        user.password = hashedPassword;
+        await user.save();
+        return true;
+      };
+
+      const googleLogin = async (idToken) => {
+        let googleUser;
+        try {
+          googleUser = await verifyGoogleToken(idToken);
+        } catch (err) {
+          console.error('Google ID token verification failed:', err);
+          const error = new Error('Verifikasi login Google gagal: ' + err.message);
+          error.statusCode = 400;
+          throw error;
+        }
+
+        const { email, name } = googleUser;
+        if (!email) {
+          const error = new Error('Email tidak diterima dari akun Google Anda');
+          error.statusCode = 400;
+          throw error;
+        }
+
+        let user = await User.findOne({ where: { email } });
+        if (!user) {
+          // Create new user with a secure random password
+          const randomPassword = Math.random().toString(36).slice(-10) + Math.random().toString(36).toUpperCase().slice(-10);
+          const salt = await bcrypt.genSalt(10);
+          const hashedPassword = await bcrypt.hash(randomPassword, salt);
+
+          user = await User.create({
+            name: name || 'Pengguna Google',
+            email,
+            password: hashedPassword,
+            role: 'user',
+            is_active: true
+          });
+        } else if (!user.is_active) {
+          const error = new Error('Akun dinonaktifkan oleh administrator');
+          error.statusCode = 401;
+          throw error;
+        }
+
+        // Generate token
+        const token = jwt.sign(
+          { id: user.id, email: user.email, role: user.role },
+          jwtConfig.secret,
+          { expiresIn: jwtConfig.expiresIn }
+        );
+
+        const userResponse = user.toJSON();
+        delete userResponse.password;
+
+        return {
+          user: userResponse,
+          token
+        };
+      };
+
+      return true;
+    };
+
+    module.exports = {
+      register,
+      login,
+      profile,
+      forgotPassword,
+      resetPassword,
+      googleLogin
+     checkEmail,
+      verifyPhone,
+      resetPassword
+    };
