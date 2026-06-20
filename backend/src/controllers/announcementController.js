@@ -1,11 +1,12 @@
 const { Announcement } = require('../models');
 const response = require('../utils/response');
+const { Op } = require('sequelize');
 
 // Get active announcement (Public)
 const getActiveAnnouncement = async (req, res, next) => {
   try {
     const announcements = await Announcement.findAll({
-      where: { is_active: true },
+      where: { is_active: true, user_id: null }, // Global public only
       order: [['updated_at', 'DESC']]
     });
     return response.success(res, announcements, 'Active announcements retrieved successfully');
@@ -18,6 +19,13 @@ const getActiveAnnouncement = async (req, res, next) => {
 const getUserAnnouncements = async (req, res, next) => {
   try {
     const announcements = await Announcement.findAll({
+      where: {
+        [Op.or]: [
+          { user_id: null },
+          { user_id: req.user.id }
+        ],
+        is_active: true
+      },
       order: [['created_at', 'DESC']],
       limit: 15
     });

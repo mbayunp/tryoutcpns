@@ -19,6 +19,10 @@ const Announcement = sequelize.define('Announcement', {
     type: DataTypes.BOOLEAN,
     defaultValue: true,
   },
+  user_id: {
+    type: DataTypes.INTEGER,
+    allowNull: true,
+  },
 }, {
   tableName: 'announcements',
 });

@@ -65,6 +65,10 @@ Payment.belongsTo(Transaction, { foreignKey: 'transaction_id', as: 'transaction'
 Category.hasMany(Video, { foreignKey: 'category_id', as: 'videos' });
 Video.belongsTo(Category, { foreignKey: 'category_id', as: 'category' });
 
+// 9. User <-> Announcement (Notifications)
+User.hasMany(Announcement, { foreignKey: 'user_id', as: 'announcements' });
+Announcement.belongsTo(User, { foreignKey: 'user_id', as: 'user' });
+
 const db = {
   sequelize,
   User,

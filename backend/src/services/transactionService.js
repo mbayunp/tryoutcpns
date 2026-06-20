@@ -1,4 +1,4 @@
-const { Transaction, User, Tryout } = require('../models');
+const { Transaction, User, Tryout, Announcement } = require('../models');
 
 const createTransaction = async (userId, tryoutId, amount, proofImage) => {
   // Check if tryout exists
@@ -85,8 +85,34 @@ const updateTransactionStatus = async (transactionId, status) => {
     throw error;
   }
 
+  const oldStatus = transaction.status;
   transaction.status = status;
   await transaction.save();
+
+  // If status changed to success or failed, generate a targeted notification for the user
+  if (oldStatus !== status && (status === 'success' || status === 'failed')) {
+    try {
+      const tryout = await Tryout.findByPk(transaction.tryout_id);
+      const tryoutTitle = tryout ? tryout.title : 'Paket Ujian';
+      
+      let notificationText = '';
+      if (status === 'success') {
+        notificationText = `Pembayaran Anda untuk paket "${tryoutTitle}" telah berhasil dikonfirmasi. Paket Anda kini aktif!`;
+      } else {
+        notificationText = `Pembayaran Anda untuk paket "${tryoutTitle}" ditolak atau gagal dikonfirmasi. Silakan hubungi admin atau unggah kembali bukti pembayaran yang benar.`;
+      }
+
+      await Announcement.create({
+        text: notificationText,
+        link: '/dashboard',
+        is_active: true,
+        user_id: transaction.user_id
+      });
+    } catch (notifErr) {
+      // Don't crash the transaction status update if notification fails
+      console.error('Failed to create payment confirmation notification:', notifErr);
+    }
+  }
 
   return transaction;
 };
