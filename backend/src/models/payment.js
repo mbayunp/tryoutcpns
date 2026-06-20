@@ -8,7 +8,7 @@ const Payment = sequelize.define('Payment', {
     autoIncrement: true,
   },
   transaction_id: {
-    type: DataTypes.INTEGER,
+    type: DataTypes.STRING(50),
     allowNull: false,
   },
   payment_gateway_ref: {
