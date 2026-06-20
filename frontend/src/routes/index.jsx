@@ -1,4 +1,4 @@
-import React from 'react';
+import React, { Suspense } from 'react';
 import { Routes, Route } from 'react-router-dom';
 import PublicLayout from '../components/layout/PublicLayout';
 import AuthLayout from '../components/layout/AuthLayout';
@@ -10,13 +10,15 @@ import ForgotPassword from '../pages/auth/ForgotPassword';
 import Dashboard from '../pages/dashboard/Dashboard';
 import StartExam from '../pages/tryout/StartExam';
 import Result from '../pages/tryout/Result';
-import DashboardAdmin from '../pages/admin/DashboardAdmin';
+import LoadingSpinner from '../components/common/LoadingSpinner';
 
 // Public Pages
 import PrivacyPolicy from '../pages/public/PrivacyPolicy';
 import TermsConditions from '../pages/public/TermsConditions';
 import RefundPolicy from '../pages/public/RefundPolicy';
 import HelpCenter from '../pages/public/HelpCenter';
+
+const DashboardAdmin = React.lazy(() => import('../pages/admin/DashboardAdmin'));
 
 export default function AppRoutes() {
   return (
@@ -41,7 +43,11 @@ export default function AppRoutes() {
       <Route element={<DashboardLayout />}>
         <Route path="/dashboard" element={<Dashboard />} />
         <Route path="/result" element={<Result />} />
-        <Route path="/admin" element={<DashboardAdmin />} />
+        <Route path="/admin" element={
+          <Suspense fallback={<LoadingSpinner />}>
+            <DashboardAdmin />
+          </Suspense>
+        } />
       </Route>
 
       {/* Standalone Exam (CAT Mode - Distraction-free) */}

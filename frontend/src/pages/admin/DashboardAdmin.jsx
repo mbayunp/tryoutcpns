@@ -1,4 +1,4 @@
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, Suspense } from 'react';
 import { useExamStore } from '../../store/useExamStore';
 import { Trash, Edit, Plus, X, FileText, Receipt, UploadCloud, Download, Table, AlertCircle, Check, Layers, Megaphone, Search, Clock } from 'lucide-react';
 import * as XLSX from 'xlsx';
@@ -6,7 +6,9 @@ import Swal from 'sweetalert2';
 import Card from '../../components/common/Card';
 import Button from '../../components/common/Button';
 import Badge from '../../components/common/Badge';
-import AdminPembayaran from './AdminPembayaran'; // <-- Import halaman pembayaran
+import LoadingSpinner from '../../components/common/LoadingSpinner';
+
+const AdminPembayaran = React.lazy(() => import('./AdminPembayaran')); // <-- Lazy-load halaman pembayaran
 
 export default function DashboardAdmin() {
   const {
@@ -23,6 +25,11 @@ export default function DashboardAdmin() {
     fetchPackages,
     assignQuestionsToPackage,
     getQuestionsForPackage,
+    categories,
+    fetchCategories,
+    createCategory,
+    deleteCategory: deleteStoreCategory, // Rename to avoid clash with deleteQuestion
+    syncCategoryQuestions,
     announcements,
     fetchAnnouncements,
     createAnnouncement,
@@ -40,6 +47,11 @@ export default function DashboardAdmin() {
   const [filterCategory, setFilterCategory] = useState('ALL');
   const [showExcelImport, setShowExcelImport] = useState(false);
   const [previewQuestions, setPreviewQuestions] = useState([]);
+  const [showCategoryManager, setShowCategoryManager] = useState(false);
+  const [newCategoryName, setNewCategoryName] = useState('');
+  const [showSyncModal, setShowSyncModal] = useState(false);
+  const [syncTargetPackageId, setSyncTargetPackageId] = useState('');
+  const [syncTargetCategory, setSyncTargetCategory] = useState('');
 
   // CRUD state for Packages
   const [isEditingPkg, setIsEditingPkg] = useState(false);
@@ -321,7 +333,8 @@ export default function DashboardAdmin() {
     fetchPackages();
     fetchAnnouncements();
     fetchTransactions();
-  }, [fetchQuestions, fetchPackages, fetchAnnouncements, fetchTransactions]);
+    fetchCategories();
+  }, [fetchQuestions, fetchPackages, fetchAnnouncements, fetchTransactions, fetchCategories]);
 
   const handleDownloadTemplate = () => {
     const headers = [
@@ -445,8 +458,9 @@ export default function DashboardAdmin() {
 
           const errors = [];
 
-          if (!rawCategory || !['TWK', 'TIU', 'TKP'].includes(rawCategory)) {
-            errors.push('Kategori harus TWK, TIU, atau TKP');
+          const categoryNames = categories.map(c => c.name.toUpperCase());
+          if (!rawCategory || !categoryNames.includes(rawCategory.trim())) {
+            errors.push(`Kategori harus salah satu dari: ${categoryNames.join(', ')}`);
           }
           if (!questionText) {
             errors.push('Pertanyaan tidak boleh kosong');
@@ -577,6 +591,118 @@ export default function DashboardAdmin() {
         confirmButtonText: 'OK',
         confirmButtonColor: '#EF4444'
       });
+    }
+  };
+
+  const handleAddCategory = async (e) => {
+    e.preventDefault();
+    if (!newCategoryName.trim()) return;
+    try {
+      await createCategory(newCategoryName.trim());
+      setNewCategoryName('');
+      Swal.fire({
+        title: 'Berhasil!',
+        text: 'Tipe soal baru berhasil ditambahkan!',
+        icon: 'success',
+        timer: 1500,
+        showConfirmButton: false
+      });
+    } catch (err) {
+      Swal.fire({
+        title: 'Gagal!',
+        text: err.response?.data?.message || 'Gagal menambahkan tipe soal.',
+        icon: 'error',
+        confirmButtonText: 'OK'
+      });
+    }
+  };
+
+  const handleDeleteCategory = async (id, name) => {
+    const result = await Swal.fire({
+      title: 'Hapus Tipe Soal',
+      text: `Apakah Anda yakin ingin menghapus tipe soal "${name}"? Semua soal dengan tipe ini mungkin akan terpengaruh.`,
+      icon: 'warning',
+      showCancelButton: true,
+      confirmButtonText: 'Ya, Hapus',
+      cancelButtonText: 'Batal',
+      confirmButtonColor: '#EF4444',
+      cancelButtonColor: '#6B7280'
+    });
+
+    if (result.isConfirmed) {
+      try {
+        await deleteStoreCategory(id);
+        Swal.fire({
+          title: 'Berhasil!',
+          text: 'Tipe soal berhasil dihapus!',
+          icon: 'success',
+          timer: 1500,
+          showConfirmButton: false
+        });
+      } catch (err) {
+        Swal.fire({
+          title: 'Gagal!',
+          text: 'Gagal menghapus tipe soal. Pastikan tipe soal tidak digunakan oleh soal aktif.',
+          icon: 'error',
+          confirmButtonText: 'OK'
+        });
+      }
+    }
+  };
+
+  const handleSyncSubmit = async (e) => {
+    e.preventDefault();
+    if (!syncTargetPackageId || !syncTargetCategory) {
+      Swal.fire({
+        title: 'Peringatan',
+        text: 'Harap pilih paket try out dan tipe soal!',
+        icon: 'warning',
+        confirmButtonText: 'OK'
+      });
+      return;
+    }
+
+    const targetPkg = packages.find(p => p.id === parseInt(syncTargetPackageId));
+    
+    const result = await Swal.fire({
+      title: 'Konfirmasi Sinkronisasi',
+      text: `Apakah Anda yakin ingin mensinkronkan semua soal tipe "${syncTargetCategory}" dari bank soal ke paket "${targetPkg?.title || ''}"?`,
+      icon: 'question',
+      showCancelButton: true,
+      confirmButtonText: 'Ya, Sinkronkan',
+      cancelButtonText: 'Batal',
+      confirmButtonColor: '#3085d6',
+      cancelButtonColor: '#6B7280'
+    });
+
+    if (result.isConfirmed) {
+      Swal.fire({
+        title: 'Sedang Sinkronisasi...',
+        text: 'Harap tunggu sebentar.',
+        allowOutsideClick: false,
+        didOpen: () => {
+          Swal.showLoading();
+        }
+      });
+
+      try {
+        await syncCategoryQuestions(parseInt(syncTargetPackageId), syncTargetCategory);
+        Swal.fire({
+          title: 'Berhasil!',
+          text: `Sinkronisasi soal tipe "${syncTargetCategory}" ke paket "${targetPkg?.title || ''}" berhasil!`,
+          icon: 'success',
+          timer: 2000,
+          showConfirmButton: false
+        });
+        setShowSyncModal(false);
+      } catch (err) {
+        Swal.fire({
+          title: 'Gagal!',
+          text: 'Terjadi kesalahan saat mensinkronkan soal.',
+          icon: 'error',
+          confirmButtonText: 'OK'
+        });
+      }
     }
   };
 
@@ -743,6 +869,14 @@ export default function DashboardAdmin() {
   };
 
   const selectClass = "w-full px-3.5 py-2.5 rounded-xl bg-slate-50 ring-1 ring-slate-200/60 text-sm font-medium text-slate-800 outline-none focus:ring-2 focus:ring-blue-500 focus:bg-white transition-all duration-200";
+  const getCategoryBadgeVariant = (catName) => {
+    if (!catName) return 'neutral';
+    const name = catName.toUpperCase();
+    if (name === 'TWK') return 'primary';
+    if (name === 'TIU') return 'secondary';
+    if (name === 'TKP') return 'warning';
+    return 'success';
+  };
   const textareaClass = "w-full px-3.5 py-2.5 rounded-xl bg-slate-50 ring-1 ring-slate-200/60 text-sm font-medium text-slate-800 placeholder:text-slate-300 outline-none focus:ring-2 focus:ring-blue-500 focus:bg-white transition-all duration-200";
   const scoreInputClass = "w-14 px-2 py-2.5 bg-slate-50 ring-1 ring-slate-200/60 rounded-xl text-center text-sm font-bold outline-none focus:ring-2 focus:ring-blue-500 transition-all";
 
@@ -756,9 +890,10 @@ export default function DashboardAdmin() {
 
   // Hitung ringkasan metrics
   const totalQuestions = questions ? questions.length : 0;
-  const twkCount = questions ? questions.filter(q => q.category === 'TWK').length : 0;
-  const tiuCount = questions ? questions.filter(q => q.category === 'TIU').length : 0;
-  const tkpCount = questions ? questions.filter(q => q.category === 'TKP').length : 0;
+  const categoryCounts = categories.reduce((acc, cat) => {
+    acc[cat.name.toUpperCase()] = questions ? questions.filter(q => q.category === cat.name.toUpperCase()).length : 0;
+    return acc;
+  }, {});
 
   const totalPackages = packages ? packages.length : 0;
   const pendingVerifications = transactions ? transactions.filter(t => t.status === 'pending').length : 0;
@@ -847,10 +982,17 @@ export default function DashboardAdmin() {
               <div className="space-y-0.5">
                 <p className="text-xs font-bold text-slate-400 uppercase tracking-wider">Total Bank Soal</p>
                 <h3 className="text-2xl font-extrabold text-[#0B1C30]">{totalQuestions} <span className="text-xs font-medium text-slate-500">Soal</span></h3>
-                <div className="flex gap-2 text-[10px] font-bold text-slate-400">
-                  <span className="text-red-650">TWK: {twkCount}</span>
-                  <span className="text-indigo-650">TIU: {tiuCount}</span>
-                  <span className="text-emerald-600">TKP: {tkpCount}</span>
+                <div className="flex flex-wrap gap-2 text-[10px] font-bold text-slate-400">
+                  {categories.map((cat, idx) => {
+                    const name = cat.name.toUpperCase();
+                    const colors = ['text-red-650', 'text-indigo-650', 'text-emerald-600', 'text-amber-600', 'text-purple-650', 'text-pink-650'];
+                    const colorClass = colors[idx % colors.length];
+                    return (
+                      <span key={cat.id} className={colorClass}>
+                        {name}: {categoryCounts[name] || 0}
+                      </span>
+                    );
+                  })}
                 </div>
               </div>
             </Card>
@@ -913,6 +1055,25 @@ export default function DashboardAdmin() {
               >
                 <UploadCloud className="h-4 w-4" />
                 Import Excel
+              </Button>
+              <Button
+                variant="outline"
+                onClick={() => setShowCategoryManager(true)}
+                className="flex items-center gap-2 text-slate-700"
+              >
+                <Layers className="h-4 w-4" />
+                Kelola Tipe Soal
+              </Button>
+              <Button
+                variant="outline"
+                onClick={() => {
+                  setSyncTargetCategory(filterCategory !== 'ALL' ? filterCategory : '');
+                  setShowSyncModal(true);
+                }}
+                className="flex items-center gap-2 text-indigo-700 hover:bg-indigo-50 border-indigo-200"
+              >
+                <Clock className="h-4 w-4" />
+                Sinkronkan ke Try Out
               </Button>
             </div>
             <Button
@@ -990,7 +1151,7 @@ export default function DashboardAdmin() {
                           <tr key={idx} className={`hover:bg-slate-50/30 transition-colors ${!pq.isValid ? 'bg-red-50 text-red-900' : 'text-slate-700'}`}>
                             <td className="px-4 py-3 text-center font-bold text-slate-400">{idx + 1}</td>
                             <td className="px-4 py-3">
-                              <Badge variant={pq.category === 'TWK' ? 'primary' : pq.category === 'TIU' ? 'secondary' : 'warning'}>
+                              <Badge variant={getCategoryBadgeVariant(pq.category)}>
                                 {pq.category || 'N/A'}
                               </Badge>
                             </td>
@@ -1081,9 +1242,7 @@ export default function DashboardAdmin() {
                   <div className="flex flex-wrap gap-1.5 w-full sm:w-auto">
                     {[
                       { key: 'ALL', label: 'SEMUA' },
-                      { key: 'TWK', label: 'TWK' },
-                      { key: 'TIU', label: 'TIU' },
-                      { key: 'TKP', label: 'TKP' }
+                      ...categories.map(c => ({ key: c.name.toUpperCase(), label: c.name.toUpperCase() }))
                     ].map(tab => (
                       <button
                         key={tab.key}
@@ -1117,9 +1276,7 @@ export default function DashboardAdmin() {
                           <tr key={q.id} className="hover:bg-slate-50/50 transition-colors duration-150">
                             <td className="px-5 py-3 text-center text-[10px] font-bold text-slate-400">{q.id}</td>
                             <td className="px-5 py-3">
-                              <Badge variant={
-                                q.category === 'TWK' ? 'primary' : q.category === 'TIU' ? 'secondary' : 'warning'
-                              }>
+                              <Badge variant={getCategoryBadgeVariant(q.category)}>
                                 {q.category}
                               </Badge>
                             </td>
@@ -1196,9 +1353,11 @@ export default function DashboardAdmin() {
                       }}
                       className={selectClass}
                     >
-                      <option value="TWK">TWK — Wawasan Kebangsaan</option>
-                      <option value="TIU">TIU — Inteligensia Umum</option>
-                      <option value="TKP">TKP — Karakteristik Pribadi</option>
+                      {categories.map(cat => (
+                        <option key={cat.id} value={cat.name.toUpperCase()}>
+                          {cat.name.toUpperCase()}
+                        </option>
+                      ))}
                     </select>
                   </div>
 
@@ -1276,7 +1435,9 @@ export default function DashboardAdmin() {
       {/* ─── KONTEN TAB PEMBAYARAN ─── */}
       {activeTab === 'pembayaran' && (
         <div className="animate-fadeIn">
-          <AdminPembayaran />
+          <Suspense fallback={<LoadingSpinner />}>
+            <AdminPembayaran />
+          </Suspense>
         </div>
       )}
 
@@ -1497,7 +1658,7 @@ export default function DashboardAdmin() {
                   <option value="nonaktif">Nonaktif</option>
                 </select>
                 <p className="text-[10px] text-slate-400 mt-1 font-medium leading-relaxed">
-                  * Mengaktifkan banner ini otomatis menonaktifkan banner lain yang sedang aktif.
+                  * Mengaktifkan banner ini akan menampilkannya di running text header (Mendukung beberapa banner aktif sekaligus).
                 </p>
               </div>
 
@@ -1673,7 +1834,7 @@ export default function DashboardAdmin() {
                       <div className="flex-grow space-y-1.5">
                         <div className="flex items-center gap-2">
                           <span className="text-[10px] font-bold text-slate-400">ID: {q.id}</span>
-                          <Badge variant={q.category === 'TWK' ? 'primary' : q.category === 'TIU' ? 'secondary' : 'warning'}>
+                          <Badge variant={getCategoryBadgeVariant(q.category)}>
                             {q.category}
                           </Badge>
                         </div>
@@ -1707,6 +1868,166 @@ export default function DashboardAdmin() {
                 </Button>
               </div>
             </div>
+          </div>
+        </div>
+      )}
+
+      {/* ─── MODAL KELOLA TIPE SOAL (CATEGORY MANAGER) ─── */}
+      {showCategoryManager && (
+        <div className="fixed inset-0 z-50 flex items-center justify-center px-4 animate-fadeIn">
+          <div
+            className="fixed inset-0 bg-slate-950/60 backdrop-blur-sm"
+            onClick={() => setShowCategoryManager(false)}
+          />
+
+          <div className="relative z-10 bg-white rounded-3xl border border-slate-200/80 shadow-premium-lg max-w-md w-full p-6 sm:p-8 space-y-6 animate-scaleUp flex flex-col max-h-[85vh]">
+            <div className="flex items-start justify-between border-b border-slate-100 pb-4">
+              <div>
+                <h3 className="text-lg font-bold text-slate-900">Kelola Tipe Soal (Kategori)</h3>
+                <p className="text-xs text-slate-400 mt-1 font-semibold">
+                  Tambahkan atau hapus tipe soal yang tersedia di platform.
+                </p>
+              </div>
+              <button
+                onClick={() => setShowCategoryManager(false)}
+                className="p-2 rounded-xl hover:bg-slate-100 text-slate-400 hover:text-slate-650 transition-colors"
+              >
+                <X className="h-5 w-5" />
+              </button>
+            </div>
+
+            {/* Form Tambah Tipe Soal */}
+            <form onSubmit={handleAddCategory} className="flex gap-2">
+              <input
+                type="text"
+                placeholder="Contoh: SKB, TIU, TWK, TKP"
+                value={newCategoryName}
+                onChange={(e) => setNewCategoryName(e.target.value)}
+                className="flex-1 px-3.5 py-2.5 rounded-xl bg-slate-50 ring-1 ring-slate-200/60 text-sm font-medium text-slate-800 outline-none focus:ring-2 focus:ring-blue-500 focus:bg-white transition-all duration-200"
+                required
+              />
+              <Button type="submit" variant="primary" className="bg-[#0B1C30] hover:bg-[#102A43] text-white">
+                <Plus className="h-4 w-4 mr-1" />
+                Tambah
+              </Button>
+            </form>
+
+            {/* List Tipe Soal */}
+            <div className="flex-1 overflow-y-auto pr-1 space-y-2.5 max-h-[40vh]">
+              {categories.length === 0 ? (
+                <p className="text-center text-sm text-slate-400 py-6">Belum ada tipe soal terdaftar.</p>
+              ) : (
+                categories.map((cat) => (
+                  <div
+                    key={cat.id}
+                    className="flex items-center justify-between p-3.5 rounded-2xl border border-slate-150 bg-slate-50/30 hover:bg-slate-50 transition-all duration-150"
+                  >
+                    <div className="flex items-center gap-2.5">
+                      <Layers className="h-4 w-4 text-slate-400" />
+                      <span className="text-sm font-bold text-slate-800">{cat.name.toUpperCase()}</span>
+                      <span className="text-[10px] text-slate-400 font-semibold">(ID: {cat.id})</span>
+                    </div>
+                    <button
+                      type="button"
+                      onClick={() => handleDeleteCategory(cat.id, cat.name)}
+                      className="p-1.5 text-red-500 hover:bg-red-50 rounded-lg transition-colors"
+                      title="Hapus"
+                    >
+                      <Trash className="h-3.5 w-3.5" />
+                    </button>
+                  </div>
+                ))
+              )}
+            </div>
+
+            <div className="border-t border-slate-100 pt-4 flex justify-end">
+              <Button
+                variant="outline"
+                onClick={() => setShowCategoryManager(false)}
+              >
+                Tutup
+              </Button>
+            </div>
+          </div>
+        </div>
+      )}
+
+      {/* ─── MODAL SINKRONISASI KE TRY OUT ─── */}
+      {showSyncModal && (
+        <div className="fixed inset-0 z-50 flex items-center justify-center px-4 animate-fadeIn">
+          <div
+            className="fixed inset-0 bg-slate-950/60 backdrop-blur-sm"
+            onClick={() => setShowSyncModal(false)}
+          />
+
+          <div className="relative z-10 bg-white rounded-3xl border border-slate-200/80 shadow-premium-lg max-w-md w-full p-6 sm:p-8 space-y-6 animate-scaleUp flex flex-col">
+            <div className="flex items-start justify-between border-b border-slate-100 pb-4">
+              <div>
+                <h3 className="text-lg font-bold text-slate-900">Sinkronisasi ke Try Out</h3>
+                <p className="text-xs text-slate-400 mt-1 font-semibold">
+                  Petakan semua soal tipe tertentu dari bank soal ke paket try out pilihan.
+                </p>
+              </div>
+              <button
+                onClick={() => setShowSyncModal(false)}
+                className="p-2 rounded-xl hover:bg-slate-100 text-slate-400 hover:text-slate-650 transition-colors"
+              >
+                <X className="h-5 w-5" />
+              </button>
+            </div>
+
+            <form onSubmit={handleSyncSubmit} className="space-y-4">
+              <div>
+                <label className="block text-[10px] font-bold text-slate-400 uppercase tracking-wider mb-1.5">Pilih Tipe Soal</label>
+                <select
+                  value={syncTargetCategory}
+                  onChange={(e) => setSyncTargetCategory(e.target.value)}
+                  className={selectClass}
+                  required
+                >
+                  <option value="">-- Pilih Tipe Soal --</option>
+                  {categories.map(cat => (
+                    <option key={cat.id} value={cat.name.toUpperCase()}>
+                      {cat.name.toUpperCase()}
+                    </option>
+                  ))}
+                </select>
+              </div>
+
+              <div>
+                <label className="block text-[10px] font-bold text-slate-400 uppercase tracking-wider mb-1.5">Pilih Paket Ujian Target</label>
+                <select
+                  value={syncTargetPackageId}
+                  onChange={(e) => setSyncTargetPackageId(e.target.value)}
+                  className={selectClass}
+                  required
+                >
+                  <option value="">-- Pilih Paket Try Out --</option>
+                  {packages.map(pkg => (
+                    <option key={pkg.id} value={pkg.id}>
+                      {pkg.title}
+                    </option>
+                  ))}
+                </select>
+              </div>
+
+              <div className="bg-blue-50/50 rounded-2xl p-4 border border-blue-100 space-y-1.5">
+                <p className="text-xs font-bold text-blue-800 flex items-center gap-1.5">
+                  <AlertCircle className="h-4 w-4" />
+                  Info Sinkronisasi
+                </p>
+                <p className="text-[11px] text-blue-600 font-medium leading-relaxed">
+                  Proses ini akan memperbarui daftar soal dengan tipe yang dipilih pada paket target agar sama persis dengan yang ada di bank soal saat ini. Soal tipe lain pada paket target tidak akan berubah.
+                </p>
+              </div>
+
+              <div className="flex gap-3 pt-3 border-t border-slate-100">
+                <Button type="button" variant="outline" className="flex-1" onClick={() => setShowSyncModal(false)}>Batal</Button>
+                <Button type="submit" variant="primary" className="flex-grow bg-[#0B1C30] hover:bg-[#102A43] text-white">
+                  Mulai Sinkronisasi
+                </Button>
+              </div>
+            </form>
           </div>
         </div>
       )}

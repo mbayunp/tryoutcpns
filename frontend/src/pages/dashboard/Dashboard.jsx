@@ -1,5 +1,6 @@
 import React from 'react';
 import { useNavigate } from 'react-router-dom';
+import { Helmet } from 'react-helmet-async';
 import Swal from 'sweetalert2';
 import { useExamStore } from '../../store/useExamStore';
 import {
@@ -123,7 +124,11 @@ export default function Dashboard() {
   };
 
   return (
-    <div className="max-w-6xl mx-auto space-y-gutter pb-12 font-body-md text-on-surface animate-fadeIn">
+    <>
+      <Helmet>
+        <title>Dashboard Peserta - WILDAN CASN</title>
+      </Helmet>
+      <div className="max-w-6xl mx-auto space-y-gutter pb-12 font-body-md text-on-surface animate-fadeIn">
 
       {/* ═══ DASHBOARD TAB ═══ */}
       {activeTab === 'dashboard' && (
@@ -156,7 +161,7 @@ export default function Dashboard() {
 
           {/* Summary Cards (Bento Style) */}
           <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-gutter animate-fadeIn">
-            <Card className="p-6 border border-slate-200/60 shadow-premium flex items-start gap-4 hover:-translate-y-1 hover:shadow-premium-hover transition-all duration-300 ease-out border-l-4 border-l-[#0B1C30]/80 bg-white">
+            <Card className="p-6 border border-white/40 shadow-premium flex items-start gap-4 hover:-translate-y-1 hover:shadow-premium-hover transition-all duration-300 ease-out border-l-4 border-l-[#0B1C30]/80 bg-white/80 backdrop-blur-md">
               <div className="w-12 h-12 bg-[#0B1C30]/10 rounded-xl flex items-center justify-center text-[#0B1C30] flex-shrink-0">
                 <FileText className="h-5 w-5" />
               </div>
@@ -168,7 +173,7 @@ export default function Dashboard() {
               </div>
             </Card>
 
-            <Card className="p-6 border border-slate-200/60 shadow-premium flex items-start gap-4 hover:-translate-y-1 hover:shadow-premium-hover transition-all duration-300 ease-out border-l-4 border-l-amber-500 bg-white">
+            <Card className="p-6 border border-white/40 shadow-premium flex items-start gap-4 hover:-translate-y-1 hover:shadow-premium-hover transition-all duration-300 ease-out border-l-4 border-l-amber-500 bg-white/80 backdrop-blur-md">
               <div className="w-12 h-12 bg-amber-500/10 rounded-xl flex items-center justify-center text-amber-600 flex-shrink-0">
                 <TrendingUp className="h-5 w-5" />
               </div>
@@ -180,7 +185,7 @@ export default function Dashboard() {
               </div>
             </Card>
 
-            <Card className="p-6 border border-slate-200/60 shadow-premium flex items-start gap-4 hover:-translate-y-1 hover:shadow-premium-hover transition-all duration-300 ease-out border-l-4 border-l-emerald-500 bg-white">
+            <Card className="p-6 border border-white/40 shadow-premium flex items-start gap-4 hover:-translate-y-1 hover:shadow-premium-hover transition-all duration-300 ease-out border-l-4 border-l-emerald-500 bg-white/80 backdrop-blur-md">
               <div className="w-12 h-12 bg-emerald-500/10 rounded-xl flex items-center justify-center text-emerald-600 flex-shrink-0">
                 <Award className="h-5 w-5" />
               </div>
@@ -192,7 +197,7 @@ export default function Dashboard() {
               </div>
             </Card>
 
-            <Card className="p-6 border border-slate-200/60 shadow-premium flex items-start gap-4 hover:-translate-y-1 hover:shadow-premium-hover transition-all duration-300 ease-out border-l-4 border-l-orange-500 bg-white">
+            <Card className="p-6 border border-white/40 shadow-premium flex items-start gap-4 hover:-translate-y-1 hover:shadow-premium-hover transition-all duration-300 ease-out border-l-4 border-l-orange-500 bg-white/80 backdrop-blur-md">
               <div className="w-12 h-12 bg-orange-500/10 rounded-xl flex items-center justify-center text-orange-500 flex-shrink-0 animate-pulse">
                 <Flame className="h-5 w-5 fill-current" />
               </div>
@@ -359,7 +364,7 @@ export default function Dashboard() {
           {packages.map((pkg) => {
             const hasPendingTrx = transactions?.some(t => t.package === pkg.title && t.status === 'pending' && t.email === user?.email);
             return (
-              <Card key={pkg.id} className={`p-6 flex flex-col justify-between space-y-6 bg-white hover:-translate-y-1 hover:shadow-premium-hover transition-all duration-300 border border-slate-200/60 ${pkg.status === 'Terkunci' ? 'opacity-80' : ''}`}>
+              <Card key={pkg.id} className={`p-6 flex flex-col justify-between space-y-6 bg-white transition-transform duration-300 transform-gpu hover:-translate-y-2 hover:shadow-2xl border border-slate-200/60 ${pkg.status === 'Terkunci' ? 'opacity-80' : ''}`}>
                 <div className="space-y-4">
                   <div className="flex justify-between items-center">
                     <Badge variant={pkg.status === 'Terkunci' ? 'neutral' : 'primary'} className="bg-[#0B1C30]/10 text-[#0B1C30] border-0">
@@ -487,9 +492,11 @@ export default function Dashboard() {
         </div>
       )}
 
+      </div> {/* Close max-w-6xl container */}
+
       {/* ─── MODAL PEMBAYARAN QRIS ─── */}
       {selectedLockedPackage && (
-        <div className="fixed inset-0 z-[100] flex items-center justify-center px-4 animate-fadeIn">
+        <div className="fixed inset-0 z-[9999] flex items-center justify-center px-4 animate-fadeIn">
           {/* Overlay background blur */}
           <div
             className="fixed inset-0 bg-slate-900/60 backdrop-blur-sm"
@@ -611,6 +618,6 @@ export default function Dashboard() {
           </div>
         </div>
       )}
-    </div>
+    </>
   );
 }

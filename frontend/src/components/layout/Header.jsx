@@ -45,6 +45,10 @@ export default function Header() {
     return () => window.removeEventListener('scroll', handleScroll);
   }, [location.pathname]);
 
+  const activeAnnouncements = Array.isArray(announcement)
+    ? announcement
+    : (announcement && announcement.is_active ? [announcement] : []);
+
   const isHomePage = location.pathname === '/';
 
   return (
@@ -72,21 +76,28 @@ export default function Header() {
       </style>
 
       {/* Dynamic Announcement Promo Bar */}
-      {announcement && announcement.is_active && (
+      {activeAnnouncements.length > 0 && (
         <div className="bg-slate-900 text-slate-200 text-[11px] sm:text-xs py-2 relative flex items-center font-semibold tracking-wide shadow-sm overflow-hidden w-full border-b border-white/5">
-          <div className="animate-running-text inline-flex items-center gap-2">
-            <Megaphone className="h-3.5 w-3.5 text-blue-400 flex-shrink-0" />
-            <span>{announcement.text}</span>
-            {announcement.link && (
-              <a
-                href={announcement.link}
-                target="_blank"
-                rel="noopener noreferrer"
-                className="underline hover:text-blue-400 font-bold ml-2 transition-colors"
-              >
-                Lihat Selengkapnya &rarr;
-              </a>
-            )}
+          <div className="animate-running-text inline-flex items-center gap-6">
+            {activeAnnouncements.map((ann, index) => (
+              <span key={ann.id} className="inline-flex items-center gap-2">
+                <Megaphone className="h-3.5 w-3.5 text-blue-400 flex-shrink-0" />
+                <span>{ann.text}</span>
+                {ann.link && (
+                  <a
+                    href={ann.link}
+                    target="_blank"
+                    rel="noopener noreferrer"
+                    className="underline hover:text-blue-400 font-bold ml-1 transition-colors"
+                  >
+                    Lihat Selengkapnya &rarr;
+                  </a>
+                )}
+                {index < activeAnnouncements.length - 1 && (
+                  <span className="text-slate-500 font-bold ml-4"></span>
+                )}
+              </span>
+            ))}
           </div>
         </div>
       )}
@@ -122,8 +133,8 @@ export default function Header() {
                     key={item.label}
                     href={isHomePage ? item.href : `/${item.href}`}
                     className={`relative px-3.5 py-2 text-sm font-medium transition-all duration-200 ${isActive
-                        ? 'text-blue-700 font-semibold'
-                        : 'text-slate-500 hover:text-slate-900'
+                      ? 'text-blue-700 font-semibold'
+                      : 'text-slate-500 hover:text-slate-900'
                       } after:absolute after:bottom-1 after:left-1/2 after:h-[2px] after:bg-blue-700 after:transition-all after:duration-300 after:-translate-x-1/2 ${isActive ? 'after:w-6/12' : 'after:w-0 hover:after:w-6/12'
                       }`}
                   >
@@ -170,8 +181,8 @@ export default function Header() {
                     href={isHomePage ? item.href : `/${item.href}`}
                     onClick={() => setIsOpen(false)}
                     className={`block px-3 py-2.5 rounded-lg text-sm font-medium transition-colors ${isActive
-                        ? 'bg-blue-50 text-blue-700 font-semibold'
-                        : 'text-slate-700 hover:bg-slate-50 hover:text-slate-900'
+                      ? 'bg-blue-50 text-blue-700 font-semibold'
+                      : 'text-slate-700 hover:bg-slate-50 hover:text-slate-900'
                       }`}
                   >
                     {item.label}

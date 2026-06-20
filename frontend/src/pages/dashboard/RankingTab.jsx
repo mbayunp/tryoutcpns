@@ -300,8 +300,8 @@ export default function RankingTab() {
                 </tr>
               </thead>
               <tbody className="divide-y divide-slate-100 text-slate-700">
-                {sortedRankings.slice(3).map((item, idx) => {
-                  const currentRank = idx + 4;
+                {sortedRankings.map((item, idx) => {
+                  const currentRank = idx + 1;
                   const isSelf = item.userId === user?.id;
                   
                   return (

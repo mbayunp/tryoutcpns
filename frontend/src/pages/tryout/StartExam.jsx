@@ -1,7 +1,8 @@
 import React, { useState, useEffect, useRef, useCallback } from 'react';
 import { useNavigate, useLocation } from 'react-router-dom';
+import { Helmet } from 'react-helmet-async';
 import { useExamStore } from '../../store/useExamStore';
-import { Clock, Award, ChevronLeft, ChevronRight, AlertCircle, Send, CheckCircle2 } from 'lucide-react';
+import { Clock, Award, ChevronLeft, ChevronRight, AlertCircle, Send, Cloud } from 'lucide-react';
 import Swal from 'sweetalert2';
 
 const formatTimer = (seconds) => {
@@ -29,6 +30,8 @@ export default function StartExam() {
   const [examQuestions, setExamQuestions] = useState([]);
   const [attemptId, setAttemptId] = useState(null);
   const [answers, setAnswers] = useState({});
+  const [isExamInitialized, setIsExamInitialized] = useState(false);
+  const [isCatMode, setIsCatMode] = useState(false);
   const [currentQuestionIndex, setCurrentQuestionIndex] = useState(0);
   const [examTimeLeft, setExamTimeLeft] = useState(currentPkg.duration * 60);
   const [isTimerRunning, setIsTimerRunning] = useState(false);
@@ -103,6 +106,19 @@ export default function StartExam() {
           setExamTimeLeft(currentPkg.duration * 60);
         }
 
+        // Restore cached answers from localStorage
+        const cacheKey = `exam_answers_${attempt.id || pkgId}`;
+        const cachedAnswers = localStorage.getItem(cacheKey);
+        if (cachedAnswers) {
+          try {
+            const parsed = JSON.parse(cachedAnswers);
+            setAnswers(parsed);
+          } catch (e) {
+            console.error('Failed to parse cached answers:', e);
+          }
+        }
+        setIsExamInitialized(true);
+
         setIsTimerRunning(true);
         setLoading(false);
       } catch (err) {
@@ -120,6 +136,14 @@ export default function StartExam() {
     initExam();
   }, [pkgId, fetchQuestions, startExamAttempt, currentPkg.duration, navigate]);
 
+  // Auto-Save Answers to LocalStorage
+  useEffect(() => {
+    if (isExamInitialized && (attemptId || pkgId)) {
+      const cacheKey = `exam_answers_${attemptId || pkgId}`;
+      localStorage.setItem(cacheKey, JSON.stringify(answers));
+    }
+  }, [answers, attemptId, pkgId, isExamInitialized]);
+
   const handleFinishExam = useCallback(async () => {
     setIsTimerRunning(false);
     if (timerRef.current) clearInterval(timerRef.current);
@@ -128,6 +152,10 @@ export default function StartExam() {
       const result = await submitExamAttempt(attemptId, answers);
       sessionStorage.setItem('last-exam-answers', JSON.stringify(answers));
       
+      // Cleanup localStorage cache
+      const cacheKey = `exam_answers_${attemptId || pkgId}`;
+      localStorage.removeItem(cacheKey);
+
       setShowSubmitModal(false);
       navigate('/result', { state: { attemptId: result.attempt_id } });
     } catch (err) {
@@ -140,7 +168,7 @@ export default function StartExam() {
       });
       setIsTimerRunning(true);
     }
-  }, [answers, attemptId, submitExamAttempt, navigate]);
+  }, [answers, attemptId, pkgId, submitExamAttempt, navigate]);
 
   const handleAutoSubmit = useCallback(() => {
     Swal.fire({
@@ -226,11 +254,22 @@ export default function StartExam() {
   const timerUrgency = examTimeLeft < 300 ? 'critical' : examTimeLeft < 900 ? 'warning' : 'normal';
 
   return (
-    <div className="min-h-screen flex flex-col bg-[#F4F6F9] select-none animate-fadeIn">
+    <div className={`min-h-screen flex flex-col select-none transition-colors duration-300 ${
+      isCatMode ? 'bg-[#E5E7EB] font-sans' : 'bg-[#F4F6F9] animate-fadeIn'
+    }`}>
+      <Helmet>
+        <title>Simulasi Ujian Aktif - WILDAN CASN</title>
+      </Helmet>
       {/* ─── ZEN HEADER — Minimal Chrome ─── */}
-      <header className="bg-white border-b border-slate-200/60 py-3.5 px-4 sm:px-6 flex items-center justify-between sticky top-0 z-30 backdrop-blur-xl bg-white/90 relative">
+      <header className={`border-b sticky top-0 z-30 relative transition-all duration-300 ${
+        isCatMode 
+          ? 'bg-[#F3F4F6] border-slate-350 py-2.5 px-4 rounded-none shadow-none text-slate-800' 
+          : 'bg-white/90 border-slate-200/60 py-3.5 px-4 sm:px-6 shadow-sm backdrop-blur-xl'
+      }`}>
         <div className="flex items-center gap-3">
-          <div className="bg-[#0B1C30] text-white p-2 rounded-xl shadow-sm">
+          <div className={`p-2 shadow-sm transition-all duration-300 ${
+            isCatMode ? 'bg-slate-700 text-white rounded-none' : 'bg-[#0B1C30] text-white rounded-xl'
+          }`}>
             <Award className="h-5 w-5" />
           </div>
           <div>
@@ -242,46 +281,73 @@ export default function StartExam() {
             </p>
           </div>
         </div>
-        <div className="flex items-center gap-4 animate-fadeIn">
+        <div className="flex items-center gap-3 sm:gap-4 animate-fadeIn">
+          {/* Toggle Mode CAT BKN */}
+          <div className={`flex items-center gap-2 border px-3 py-1.5 transition-all duration-300 ${
+            isCatMode 
+              ? 'bg-[#E5E7EB] border-slate-350 rounded-none shadow-none' 
+              : 'bg-slate-50 border-slate-200 px-3.5 py-2 rounded-xl shadow-sm'
+          }`}>
+            <span className="text-[10px] sm:text-xs font-extrabold text-slate-700">Mode CAT BKN</span>
+            <button
+              onClick={() => setIsCatMode(!isCatMode)}
+              className={`relative inline-flex h-5 w-9 flex-shrink-0 cursor-pointer rounded-full border-2 border-transparent transition-colors duration-200 ease-in-out focus:outline-none ${
+                isCatMode ? 'bg-slate-700' : 'bg-slate-200'
+              }`}
+            >
+              <span
+                className={`pointer-events-none inline-block h-4 w-4 transform rounded-full bg-white shadow ring-0 transition duration-200 ease-in-out ${
+                  isCatMode ? 'translate-x-4' : 'translate-x-0'
+                }`}
+              />
+            </button>
+          </div>
+
           {/* Timer Box and Auto-save Banner */}
           <div className="flex flex-col items-end gap-1">
-            <div className={`flex items-center justify-center gap-2 px-4 py-2 sm:px-6 sm:py-2.5 rounded-xl border-2 transition-all duration-500 shadow-sm ${
-              timerUrgency === 'critical'
-                ? 'bg-red-50 text-red-600 border-red-350 animate-pulse'
+            <div className={`flex items-center justify-center gap-2 px-3 py-1.5 sm:px-5 sm:py-2 border-2 transition-all duration-350 ${
+              isCatMode 
+                ? 'bg-white text-slate-800 border-slate-350 rounded-none shadow-none' 
+                : timerUrgency === 'critical'
+                ? 'bg-red-50 text-red-600 border-red-350 rounded-xl animate-pulse shadow-sm'
                 : timerUrgency === 'warning'
-                ? 'bg-amber-55/70 text-amber-600 border-amber-250'
-                : 'bg-slate-50 text-[#0B1C30] border-slate-150'
+                ? 'bg-amber-55/70 text-amber-600 border-amber-250 rounded-xl shadow-sm'
+                : 'bg-slate-50 text-[#0B1C30] border-slate-150 rounded-xl shadow-sm'
             }`}>
               <Clock className="h-4 w-4 sm:h-5 sm:w-5" />
-              <span className="text-base sm:text-lg tabular-nums font-extrabold tracking-wider font-mono">
+              <span className="text-sm sm:text-base tabular-nums font-extrabold tracking-wider font-mono">
                 {formatTimer(examTimeLeft)}
               </span>
             </div>
             
             <div className="flex items-center gap-1 text-[9px] font-bold text-emerald-600 animate-pulse">
-              <CheckCircle2 className="h-3 w-3" />
-              <span>Jawaban otomatis tersimpan</span>
+              <Cloud className="h-3.5 w-3.5" />
+              <span>Sistem Auto-Save Aktif</span>
             </div>
           </div>
 
           {/* Toggle nav on mobile */}
           <button
             onClick={() => setShowBottomSheet(true)}
-            className="lg:hidden p-2 rounded-xl hover:bg-slate-100 transition-colors text-slate-500 border border-slate-200 bg-white animate-fadeIn"
+            className={`lg:hidden p-2 hover:bg-slate-100 transition-colors text-slate-500 border border-slate-200 bg-white animate-fadeIn ${
+              isCatMode ? 'rounded-none' : 'rounded-xl'
+            }`}
           >
             <span className="text-xs font-bold">{answeredCount}/{examQuestions.length}</span>
           </button>
         </div>
 
         {/* Visual Progress Timer Line */}
-        <div className="absolute bottom-0 left-0 right-0 w-full h-[4px] bg-slate-100 overflow-hidden">
-          <div
-            className={`h-full transition-all duration-1000 ease-linear ${
-              examTimeLeft < 900 ? 'bg-red-500' : 'bg-emerald-500'
-            }`}
-            style={{ width: `${Math.max(0, Math.min(100, (examTimeLeft / (currentPkg.duration * 60)) * 100))}%` }}
-          />
-        </div>
+        {!isCatMode && (
+          <div className="absolute bottom-0 left-0 right-0 w-full h-[4px] bg-slate-100 overflow-hidden">
+            <div
+              className={`h-full transition-all duration-1000 ease-linear ${
+                examTimeLeft < 900 ? 'bg-red-500' : 'bg-emerald-500'
+              }`}
+              style={{ width: `${Math.max(0, Math.min(100, (examTimeLeft / (currentPkg.duration * 60)) * 100))}%` }}
+            />
+          </div>
+        )}
       </header>
 
       {/* ─── MAIN CONTENT ─── */}
@@ -342,11 +408,19 @@ export default function StartExam() {
           <div 
             onTouchStart={handleTouchStart}
             onTouchEnd={handleTouchEnd}
-            className="bg-white rounded-2xl border-l-4 border-l-[#0B1C30] border border-y-slate-200/60 border-r-slate-200/60 shadow-premium p-6 sm:p-8 touch-pan-y"
+            className={`bg-white border-l-4 touch-pan-y transition-all duration-300 ${
+              isCatMode 
+                ? 'border-l-red-600 border border-slate-350 rounded-none shadow-none p-5 sm:p-6' 
+                : 'border-l-[#0B1C30] border border-y-slate-200/60 border-r-slate-200/60 rounded-2xl shadow-premium p-6 sm:p-8'
+            }`}
           >
             <p className={`${
               fontSize === 'sm' ? 'text-sm' : fontSize === 'lg' ? 'text-lg' : 'text-base'
-            } font-semibold text-slate-800 leading-[1.8] transition-all duration-150`}>
+            } transition-all duration-150 ${
+              isCatMode 
+                ? 'font-[Arial] text-black font-normal leading-normal' 
+                : 'font-semibold text-slate-800 leading-[1.8]'
+            }`}>
               {currentQuestion.question}
             </p>
           </div>
@@ -359,21 +433,31 @@ export default function StartExam() {
                 <button
                   key={opt.key}
                   onClick={() => handleSelectOption(currentQuestion.id, opt.key)}
-                  className={`w-full text-left p-4 rounded-xl flex items-start gap-3 transition-all duration-200 ease-out group border ${
-                    isSelected
-                      ? 'bg-[#0B1C30]/5 border-[#0B1C30] ring-1 ring-[#0B1C30] shadow-sm'
-                      : 'bg-white border-slate-200/60 hover:border-[#0B1C30]/40 hover:shadow-premium'
+                  className={`w-full text-left p-3.5 flex items-start gap-3 transition-all duration-200 ease-out group border ${
+                    isCatMode 
+                      ? isSelected
+                        ? 'bg-blue-50 border-blue-600 rounded-none shadow-none'
+                        : 'bg-white border-slate-350 rounded-none hover:bg-slate-50'
+                      : isSelected
+                        ? 'bg-[#0B1C30]/5 border-[#0B1C30] ring-1 ring-[#0B1C30] shadow-sm rounded-xl'
+                        : 'bg-white border-slate-200/60 hover:border-[#0B1C30]/45 hover:shadow-premium rounded-xl'
                   }`}
                 >
-                  <span className={`h-7 w-7 rounded-lg flex items-center justify-center text-xs font-extrabold flex-shrink-0 transition-all duration-200 ${
-                    isSelected
-                      ? 'bg-[#0B1C30] text-white shadow-sm'
-                      : 'bg-slate-100 text-slate-500 group-hover:bg-slate-200'
+                  <span className={`h-7 w-7 flex items-center justify-center text-xs font-bold flex-shrink-0 transition-all duration-200 ${
+                    isCatMode 
+                      ? isSelected
+                        ? 'bg-blue-600 text-white rounded-none'
+                        : 'bg-slate-200 text-slate-750 rounded-none'
+                      : isSelected
+                        ? 'bg-[#0B1C30] text-white shadow-sm rounded-lg'
+                        : 'bg-slate-100 text-slate-500 group-hover:bg-slate-200 rounded-lg'
                   }`}>
                     {opt.key}
                   </span>
                   <span className={`text-sm leading-relaxed pt-0.5 transition-colors ${
-                    isSelected ? 'font-bold text-slate-900' : 'text-slate-600 font-semibold'
+                    isCatMode 
+                      ? isSelected ? 'font-bold text-black' : 'text-slate-850'
+                      : isSelected ? 'font-bold text-slate-900' : 'text-slate-600 font-semibold'
                   }`}>
                     {opt.text}
                   </span>
@@ -388,10 +472,12 @@ export default function StartExam() {
               <button
                 onClick={() => setCurrentQuestionIndex(prev => Math.max(0, prev - 1))}
                 disabled={currentQuestionIndex === 0}
-                className={`px-5 py-2.5 rounded-xl text-xs font-bold flex items-center gap-1.5 transition-all duration-200 active:scale-[0.97] ${
+                className={`px-5 py-2.5 text-xs font-bold flex items-center gap-1.5 transition-all duration-200 active:scale-[0.97] ${
+                  isCatMode ? 'rounded-none shadow-none border-slate-350' : 'rounded-xl shadow-sm'
+                } ${
                   currentQuestionIndex === 0
-                    ? 'text-slate-350 bg-slate-100 cursor-not-allowed'
-                    : 'text-slate-650 border border-slate-200 hover:border-[#0B1C30]/40 hover:bg-white bg-white shadow-sm'
+                    ? 'text-slate-355 bg-slate-100 cursor-not-allowed'
+                    : 'text-slate-655 border border-slate-200 hover:border-[#0B1C30]/40 hover:bg-white bg-white'
                 }`}
               >
                 <ChevronLeft className="h-4 w-4" />
@@ -401,10 +487,12 @@ export default function StartExam() {
               <button
                 onClick={() => setCurrentQuestionIndex(prev => Math.min(examQuestions.length - 1, prev + 1))}
                 disabled={currentQuestionIndex === examQuestions.length - 1}
-                className={`px-5 py-2.5 rounded-xl text-xs font-bold flex items-center gap-1.5 transition-all duration-200 active:scale-[0.97] ${
+                className={`px-5 py-2.5 text-xs font-bold flex items-center gap-1.5 transition-all duration-200 active:scale-[0.97] ${
+                  isCatMode ? 'rounded-none shadow-none bg-slate-700 hover:bg-slate-800' : 'rounded-xl shadow-md bg-[#0B1C30] hover:bg-[#102A43]'
+                } ${
                   currentQuestionIndex === examQuestions.length - 1
                     ? 'text-slate-300 cursor-not-allowed hidden'
-                    : 'bg-[#0B1C30] text-white hover:bg-[#102A43] shadow-md'
+                    : 'text-white'
                 }`}
               >
                 <span>Selanjutnya</span>
@@ -416,7 +504,9 @@ export default function StartExam() {
               {currentQuestionIndex === examQuestions.length - 1 && (
                 <button
                   onClick={() => setShowSubmitModal(true)}
-                  className="px-5 py-2.5 rounded-xl text-xs font-bold flex items-center gap-2 bg-red-600 hover:bg-red-700 text-white shadow-md transition-all duration-200 active:scale-[0.97]"
+                  className={`px-5 py-2.5 text-xs font-bold flex items-center gap-2 bg-red-600 hover:bg-red-700 text-white transition-all duration-200 active:scale-[0.97] ${
+                    isCatMode ? 'rounded-none shadow-none' : 'rounded-xl shadow-md'
+                  }`}
                 >
                   <Send className="h-4 w-4" />
                   <span>Selesai Ujian</span>
@@ -428,7 +518,11 @@ export default function StartExam() {
 
         {/* ─── NAVIGATION SIDEBAR ─── */}
         <div className="lg:col-span-4 hidden lg:block">
-          <div className="bg-white rounded-2xl border border-slate-200/60 shadow-premium p-5 sticky top-24 space-y-5">
+          <div className={`bg-white border sticky top-24 space-y-5 transition-all duration-300 ${
+            isCatMode 
+              ? 'rounded-none border-slate-350 shadow-none p-4' 
+              : 'rounded-2xl border-slate-200/60 shadow-premium p-5'
+          }`}>
             <div className="flex items-center justify-between">
               <h3 className="text-xs font-bold text-slate-800 tracking-tight">Navigasi Soal</h3>
               <span className="text-[10px] text-slate-400 font-bold">{answeredCount}/{examQuestions.length} terjawab</span>
@@ -444,12 +538,18 @@ export default function StartExam() {
                   <button
                     key={q.id}
                     onClick={() => setCurrentQuestionIndex(idx)}
-                    className={`h-9 rounded-lg text-[11px] font-bold flex items-center justify-center transition-all duration-150 ${
-                      isActive ? 'ring-2 ring-[#0B1C30] scale-110 z-10' : ''
+                    className={`h-9 text-[11px] font-bold flex items-center justify-center transition-all duration-150 ${
+                      isActive 
+                        ? isCatMode 
+                          ? 'ring-2 ring-slate-800 scale-100 z-10' 
+                          : 'ring-2 ring-[#0B1C30] scale-110 z-10' 
+                        : ''
+                    } ${
+                      isCatMode ? 'rounded-none border-slate-350' : 'rounded-lg border-slate-200/60 hover:bg-slate-100'
                     } ${
                       isAnswered
                         ? 'bg-emerald-600 text-white shadow-sm'
-                        : 'bg-slate-50 text-slate-500 border border-slate-200/60 hover:bg-slate-100'
+                        : 'bg-slate-50 text-slate-500 border hover:bg-slate-100'
                     }`}
                   >
                     {idx + 1}

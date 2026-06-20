@@ -10,6 +10,7 @@ export const useExamStore = create(
       packages: [],
       history: [],
       questions: [],
+      categories: [],
       activeTab: 'dashboard',
       transactions: [],
       rankings: [],
@@ -143,6 +144,96 @@ export const useExamStore = create(
           set({ rankings: res.data.data || [] });
         } catch (error) {
           console.error('Failed to fetch rankings:', error);
+        }
+      },
+
+      fetchCategories: async () => {
+        try {
+          const res = await API.get('/categories');
+          set({ categories: res.data.data || [] });
+        } catch (error) {
+          console.error('Failed to fetch categories:', error);
+        }
+      },
+
+      createCategory: async (name) => {
+        try {
+          const res = await API.post('/categories', { name });
+          await get().fetchCategories();
+          return res.data.data;
+        } catch (error) {
+          console.error('Failed to create category:', error);
+          throw error;
+        }
+      },
+
+      deleteCategory: async (id) => {
+        try {
+          await API.delete(`/categories/${id}`);
+          await get().fetchCategories();
+        } catch (error) {
+          console.error('Failed to delete category:', error);
+          throw error;
+        }
+      },
+
+      syncCategoryQuestions: async (packageId, categoryName) => {
+        try {
+          // 1. Fetch questions currently mapped to this package
+          const currentPkgQuestions = await get().getQuestionsForPackage(packageId);
+          
+          // 2. Filter out questions of this category
+          const otherCategoryQuestionIds = currentPkgQuestions
+            .filter(q => q.category?.name.toUpperCase() !== categoryName.toUpperCase())
+            .map(q => q.id);
+            
+          // 3. Get all questions in the bank that belong to this category (using bank = package 1)
+          const allBankQuestions = await get().fetchQuestions(1);
+          const targetCategoryQuestionIds = allBankQuestions
+            .filter(q => q.category.toUpperCase() === categoryName.toUpperCase())
+            .map(q => q.id);
+            
+          // 4. Merge them
+          const mergedQuestionIds = Array.from(new Set([...otherCategoryQuestionIds, ...targetCategoryQuestionIds]));
+          
+          // 5. Update package mapping
+          await get().assignQuestionsToPackage(packageId, mergedQuestionIds);
+          
+          // 6. Also update tryout_id on questions in database for direct association
+          await Promise.all(
+            allBankQuestions
+              .filter(q => q.category.toUpperCase() === categoryName.toUpperCase())
+              .map(async (q) => {
+                const catObj = get().categories.find(c => c.name.toUpperCase() === q.category.toUpperCase());
+                const category_id = catObj ? catObj.id : 1;
+                
+                await API.put(`/questions/${q.id}`, {
+                  tryout_id: packageId,
+                  category_id,
+                  question: q.question,
+                  option_a: q.options.find(o => o.key === 'A')?.text || '',
+                  option_b: q.options.find(o => o.key === 'B')?.text || '',
+                  option_c: q.options.find(o => o.key === 'C')?.text || '',
+                  option_d: q.options.find(o => o.key === 'D')?.text || '',
+                  option_e: q.options.find(o => o.key === 'E')?.text || '',
+                  correct_answer: q.correctAnswer ? q.correctAnswer.toLowerCase() : 'a',
+                  option_weights: q.scores ? {
+                    a: q.scores.A,
+                    b: q.scores.B,
+                    c: q.scores.C,
+                    d: q.scores.D,
+                    e: q.scores.E
+                  } : null
+                });
+              })
+          );
+          
+          // Refresh questions list for the bank and packages
+          await get().fetchQuestions(1);
+          await get().fetchPackages();
+        } catch (error) {
+          console.error('Failed to sync category questions with package:', error);
+          throw error;
         }
       },
 
@@ -344,9 +435,12 @@ export const useExamStore = create(
       // Admin CRUD actions for questions
       addQuestion: async (newQuestion) => {
         try {
+          const catObj = get().categories.find(c => c.name.toUpperCase() === newQuestion.category.toUpperCase());
+          const category_id = catObj ? catObj.id : 1;
+
           const formatted = {
-            tryout_id: 1, // Defaulting to Tryout 1 (Tryout Akbar CPNS 2026)
-            category_id: newQuestion.category === 'TWK' ? 1 : newQuestion.category === 'TIU' ? 2 : 3,
+            tryout_id: newQuestion.tryout_id || 1, // Defaulting to Tryout 1 (Tryout Akbar CPNS 2026)
+            category_id,
             question: newQuestion.question,
             option_a: newQuestion.options.find(o => o.key === 'A')?.text || '',
             option_b: newQuestion.options.find(o => o.key === 'B')?.text || '',
@@ -365,51 +459,56 @@ export const useExamStore = create(
 
           await API.post('/questions', formatted);
           // Refresh question list
-          await get().fetchQuestions(1);
+          await get().fetchQuestions(newQuestion.tryout_id || 1);
         } catch (error) {
           console.error('Failed to add question:', error);
           throw error;
         }
       },
 
-      bulkAddQuestions: async (questionsList) => {
+      bulkAddQuestions: async (questionsList, tryoutId = 1) => {
         try {
-          const formattedQuestions = questionsList.map((newQuestion) => ({
-            category_id: newQuestion.category === 'TWK' ? 1 : newQuestion.category === 'TIU' ? 2 : 3,
-            question: newQuestion.question,
-            option_a: newQuestion.options.find(o => o.key === 'A')?.text || '',
-            option_b: newQuestion.options.find(o => o.key === 'B')?.text || '',
-            option_c: newQuestion.options.find(o => o.key === 'C')?.text || '',
-            option_d: newQuestion.options.find(o => o.key === 'D')?.text || '',
-            option_e: newQuestion.options.find(o => o.key === 'E')?.text || '',
-            correct_answer: newQuestion.correctAnswer ? newQuestion.correctAnswer.toLowerCase() : 'a',
-            option_weights: newQuestion.scores ? {
-              a: newQuestion.scores.A,
-              b: newQuestion.scores.B,
-              c: newQuestion.scores.C,
-              d: newQuestion.scores.D,
-              e: newQuestion.scores.E
-            } : null
-          }));
+          const formattedQuestions = questionsList.map((newQuestion) => {
+            const catObj = get().categories.find(c => c.name.toUpperCase() === newQuestion.category.toUpperCase());
+            const category_id = catObj ? catObj.id : 1;
+
+            return {
+              category_id,
+              question: newQuestion.question,
+              option_a: newQuestion.options.find(o => o.key === 'A')?.text || '',
+              option_b: newQuestion.options.find(o => o.key === 'B')?.text || '',
+              option_c: newQuestion.options.find(o => o.key === 'C')?.text || '',
+              option_d: newQuestion.options.find(o => o.key === 'D')?.text || '',
+              option_e: newQuestion.options.find(o => o.key === 'E')?.text || '',
+              correct_answer: newQuestion.correctAnswer ? newQuestion.correctAnswer.toLowerCase() : 'a',
+              option_weights: newQuestion.scores ? {
+                a: newQuestion.scores.A,
+                b: newQuestion.scores.B,
+                c: newQuestion.scores.C,
+                d: newQuestion.scores.D,
+                e: newQuestion.scores.E
+              } : null
+            };
+          });
 
           await API.post('/questions/bulk', {
-            tryout_id: 1, // Defaulting to Tryout 1
+            tryout_id: tryoutId,
             questions: formattedQuestions
           });
 
           // Refresh question list once at the end
-          await get().fetchQuestions(1);
+          await get().fetchQuestions(tryoutId);
         } catch (error) {
           console.error('Failed to bulk add questions:', error);
           throw error;
         }
       },
 
-      deleteQuestion: async (id) => {
+      deleteQuestion: async (id, tryoutId = 1) => {
         try {
           await API.delete(`/questions/${id}`);
           // Refresh question list
-          await get().fetchQuestions(1);
+          await get().fetchQuestions(tryoutId);
         } catch (error) {
           console.error('Failed to delete question:', error);
           throw error;
@@ -418,9 +517,13 @@ export const useExamStore = create(
 
       updateQuestion: async (updatedQuestion) => {
         try {
+          const catObj = get().categories.find(c => c.name.toUpperCase() === updatedQuestion.category.toUpperCase());
+          const category_id = catObj ? catObj.id : 1;
+          const tryoutId = updatedQuestion.tryout_id || 1;
+
           const formatted = {
-            tryout_id: 1, // Defaulting to Tryout 1
-            category_id: updatedQuestion.category === 'TWK' ? 1 : updatedQuestion.category === 'TIU' ? 2 : 3,
+            tryout_id: tryoutId,
+            category_id,
             question: updatedQuestion.question,
             option_a: updatedQuestion.options.find(o => o.key === 'A')?.text || '',
             option_b: updatedQuestion.options.find(o => o.key === 'B')?.text || '',
@@ -439,7 +542,7 @@ export const useExamStore = create(
 
           await API.put(`/questions/${updatedQuestion.id}`, formatted);
           // Refresh question list
-          await get().fetchQuestions(1);
+          await get().fetchQuestions(tryoutId);
         } catch (error) {
           console.error('Failed to update question:', error);
           throw error;

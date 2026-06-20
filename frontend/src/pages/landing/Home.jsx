@@ -1,6 +1,7 @@
 import React, { useState } from 'react';
 import { useNavigate } from 'react-router-dom';
-import { ArrowRight, Check, Play, Star, ChevronDown, Sparkles, Trophy, Users, BookOpen, ShieldCheck, Heart } from 'lucide-react';
+import { Helmet } from 'react-helmet-async';
+import { ArrowRight, Check, Play, Star, ChevronDown, Sparkles, Trophy, Users, BookOpen } from 'lucide-react';
 import homeImg from '../../components/images/home.png';
 import Reveal from '../../components/common/Reveal';
 
@@ -14,46 +15,49 @@ export default function Home() {
 
   return (
     <div className="min-h-screen bg-slate-50/50 text-slate-900 font-sans selection:bg-blue-500/10 selection:text-blue-700">
+      <Helmet>
+        <title>Tryout Akbar CASN 2026 - WILDAN CASN</title>
+      </Helmet>
 
       {/* ━━━ HERO SECTION ━━━ */}
-      <section id="beranda" className="relative overflow-hidden bg-white border-b border-slate-100 bg-grid-pattern pt-16 pb-16 sm:pt-24 sm:pb-24 lg:pt-32 lg:pb-32">
-        
+      <section id="beranda" className="relative overflow-hidden bg-white border-b border-slate-100 bg-grid-pattern pt-10 pb-12 sm:pt-16 sm:pb-20 lg:pt-14 lg:pb-10 lg:min-h-[calc(100vh-162px)] lg:flex lg:items-center">
+
         {/* Glow Blobs background */}
         <div className="absolute top-[-10%] left-[-10%] w-[300px] sm:w-[500px] h-[300px] sm:h-[500px] rounded-full bg-blue-400/10 blur-[80px] sm:blur-[120px] pointer-events-none animate-blob"></div>
         <div className="absolute bottom-[-10%] right-[-10%] w-[300px] sm:w-[500px] h-[300px] sm:h-[500px] rounded-full bg-indigo-400/10 blur-[80px] sm:blur-[120px] pointer-events-none animate-blob animation-delay-2000"></div>
 
-        <div className="relative max-w-6xl mx-auto px-4 sm:px-6 lg:px-8">
+        <div className="relative max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 w-full">
           <div className="grid lg:grid-cols-12 gap-12 lg:gap-8 items-center">
 
             {/* Left — Copy */}
             <div className="lg:col-span-6 space-y-6 sm:space-y-8 text-center lg:text-left">
               <Reveal direction="up" duration={800} delay={100}>
-                <div className="inline-flex items-center gap-2 text-[10px] sm:text-xs font-bold tracking-widest text-blue-600 bg-blue-50/80 border border-blue-100/50 backdrop-blur-md rounded-full px-4 py-1.5 uppercase shadow-sm mb-4">
+                <div className="inline-flex items-center gap-2 text-[10px] sm:text-xs font-bold tracking-widest text-blue-600 bg-blue-50/80 border border-blue-100/50 backdrop-blur-md rounded-full px-4 py-1.5 uppercase shadow-sm mb-3 lg:mb-2">
                   <Sparkles className="h-3.5 w-3.5 text-blue-500 animate-pulse" />
                   <span>Pendaftaran CASN 2026 Dibuka</span>
                 </div>
 
-                <h1 className="text-3xl sm:text-4xl lg:text-[3.5rem] font-extrabold leading-[1.15] lg:leading-[1.1] tracking-tight text-slate-900">
-                  Simulator Ujian CASN 
+                <h1 className="text-3xl sm:text-4xl lg:text-[3.15rem] font-extrabold leading-[1.15] lg:leading-[1.1] tracking-tight text-slate-900">
+                  Simulator Ujian CASN
                   <br />
                   <span className="text-gradient-blue">100% Persis</span>
                   <br />
                   Sistem CAT BKN Asli
                 </h1>
 
-                <p className="text-sm sm:text-base lg:text-lg text-slate-500 leading-relaxed max-w-md mx-auto lg:mx-0 font-medium mt-4">
+                <p className="text-sm sm:text-base lg:text-base text-slate-500 leading-relaxed max-w-md mx-auto lg:mx-0 font-medium mt-3 lg:mt-3">
                   Kuasai materi TWK, TIU, dan TKP dengan sistem CAT yang identik, pembahasan video oleh mentor ASN, dan perangkingan nasional real-time.
                 </p>
 
-                <div className="flex flex-col sm:flex-row items-center justify-center lg:justify-start gap-4 pt-4">
+                <div className="flex flex-col sm:flex-row items-center justify-center lg:justify-start gap-4 pt-3 lg:pt-2">
                   <button
                     onClick={() => navigate('/login')}
-                    className="group w-full sm:w-auto inline-flex items-center justify-center gap-2.5 bg-slate-900 hover:bg-blue-600 text-white text-xs sm:text-sm font-bold px-8 py-4 rounded-xl transition-all duration-300 active:scale-[0.98] shadow-lg hover:shadow-blue-500/20"
+                    className="group w-full sm:w-auto inline-flex items-center justify-center gap-2.5 bg-slate-900 hover:bg-blue-600 text-white text-xs sm:text-sm font-bold px-8 py-3 sm:py-3.5 rounded-xl transition-all duration-300 active:scale-[0.98] shadow-lg hover:shadow-blue-500/20"
                   >
                     Mulai Ujian Gratis
                     <ArrowRight className="h-4 w-4 transition-transform group-hover:translate-x-1" />
                   </button>
-                  
+
                   <a
                     href="#features"
                     className="group w-full sm:w-auto inline-flex items-center justify-center gap-3 text-xs sm:text-sm font-bold text-slate-600 hover:text-slate-900 transition-colors py-3"
@@ -66,7 +70,7 @@ export default function Home() {
                 </div>
 
                 {/* Social Proof */}
-                <div className="flex flex-col sm:flex-row items-center justify-center lg:justify-start gap-3.5 pt-6 border-t border-slate-100 max-w-sm mx-auto lg:mx-0 mt-6">
+                <div className="flex flex-col sm:flex-row items-center justify-center lg:justify-start gap-3.5 pt-3.5 lg:pt-3 border-t border-slate-100 max-w-sm mx-auto lg:mx-0 mt-4 lg:mt-3">
                   <div className="flex -space-x-2.5">
                     {['bg-blue-600', 'bg-amber-500', 'bg-emerald-500', 'bg-rose-500'].map((bg, i) => (
                       <div key={i} className={`w-8 h-8 rounded-full ${bg} ring-2 ring-white flex items-center justify-center text-[10px] font-extrabold text-white shadow-sm`}>
@@ -84,14 +88,14 @@ export default function Home() {
                 </div>
 
                 {/* ─── MINI QUIZ INTERAKTIF ─── */}
-                <div className="mt-8 border border-slate-200 bg-slate-50/50 backdrop-blur-md p-6 rounded-2xl text-left space-y-4 max-w-md mx-auto lg:mx-0 shadow-sm animate-fadeIn">
+                <div className="mt-6 lg:mt-3.5 border border-slate-200 bg-slate-50/50 backdrop-blur-md p-5 lg:p-3.5 rounded-2xl text-left space-y-3 lg:space-y-2.5 max-w-md mx-auto lg:mx-0 shadow-sm animate-fadeIn">
                   <div className="flex items-center justify-between">
                     <span className="text-[10px] font-extrabold text-blue-600 bg-blue-50 border border-blue-100 px-2.5 py-1 rounded-md uppercase tracking-wider">
                       Coba Simulasi Mini TIU
                     </span>
                     <span className="text-[10px] text-slate-400 font-bold">Deret Geometri</span>
                   </div>
-                  
+
                   <p className="text-xs sm:text-sm font-extrabold text-slate-800 leading-relaxed">
                     Tentukan angka berikutnya dalam deret berikutnya:<br />
                     <span className="font-mono text-blue-600 text-sm">2, 4, 8, 16, ...</span>
@@ -102,7 +106,7 @@ export default function Home() {
                       const textMap = { A: '20', B: '24', C: '32', D: '36', E: '40' };
                       const isSelected = selectedQuizOption === opt;
                       const isCorrect = opt === 'C';
-                      
+
                       let btnClass = 'bg-white border-slate-200 hover:border-slate-350 text-slate-700';
                       if (quizLocked) {
                         if (isCorrect) {
@@ -122,7 +126,7 @@ export default function Home() {
                             setSelectedQuizOption(opt);
                             setQuizLocked(true);
                           }}
-                          className={`h-10 rounded-lg text-xs font-bold transition-all flex flex-col items-center justify-center border cursor-pointer ${btnClass}`}
+                          className={`h-10 lg:h-9 rounded-lg text-xs font-bold transition-all flex flex-col items-center justify-center border cursor-pointer ${btnClass}`}
                         >
                           <span className="text-[9px] text-slate-400 font-semibold mb-0.5 block">{opt}</span>
                           <span>{textMap[opt]}</span>
@@ -171,7 +175,7 @@ export default function Home() {
                 <div className="relative w-full max-w-[450px] lg:max-w-[500px]">
                   {/* Background decorative ring */}
                   <div className="absolute inset-0 bg-gradient-to-tr from-blue-500/5 to-indigo-500/10 rounded-3xl -rotate-2 scale-105 pointer-events-none border border-slate-100"></div>
-                  
+
                   <div className="relative rounded-2xl overflow-hidden border border-slate-200/60 shadow-2xl bg-white p-2 glow-blue">
                     <img
                       src={homeImg}
@@ -214,19 +218,19 @@ export default function Home() {
 
       {/* ━━━ TRUSTED BY / LOGO BAR ━━━ */}
       <section className="bg-slate-900 border-y border-slate-800">
-        <div className="max-w-6xl mx-auto px-4 sm:px-6 lg:px-8 py-5">
+        <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-4 lg:py-3.5">
           <Reveal direction="up" duration={600} delay={100}>
             <div className="grid grid-cols-1 sm:grid-cols-3 gap-4 text-center text-[10px] sm:text-xs font-bold text-slate-400 tracking-widest uppercase">
               <div className="flex items-center justify-center gap-2">
-                <Check className="h-4 w-4 text-blue-400 flex-shrink-0" /> 
+                <Check className="h-4 w-4 text-blue-400 flex-shrink-0" />
                 <span>Sesuai Kisi-Kisi BKN Terbaru</span>
               </div>
               <div className="flex items-center justify-center gap-2 border-y sm:border-y-0 sm:border-x border-slate-800 py-2 sm:py-0">
-                <Check className="h-4 w-4 text-blue-400 flex-shrink-0" /> 
+                <Check className="h-4 w-4 text-blue-400 flex-shrink-0" />
                 <span>Kurikulum Simulasi SKD 2026</span>
               </div>
               <div className="flex items-center justify-center gap-2">
-                <Check className="h-4 w-4 text-blue-400 flex-shrink-0" /> 
+                <Check className="h-4 w-4 text-blue-400 flex-shrink-0" />
                 <span>Modul Soal Terintegrasi</span>
               </div>
             </div>
@@ -242,7 +246,7 @@ export default function Home() {
             <div className="max-w-2xl mb-12 sm:mb-16 space-y-3 sm:space-y-4 text-center lg:text-left">
               <p className="text-xs font-bold text-blue-600 uppercase tracking-widest">Kenapa WILDAN CASN</p>
               <h2 className="text-2xl sm:text-3xl lg:text-4xl font-extrabold tracking-tight text-slate-900 leading-tight">
-                Bukan sekadar bank soal. 
+                Bukan sekadar bank soal.
                 <br />
                 <span className="text-gradient">Ini simulator ujian yang sebenarnya.</span>
               </h2>
@@ -372,11 +376,10 @@ export default function Home() {
             ].map((plan, i) => (
               <Reveal key={i} direction="up" delay={100 * (i + 1)} duration={800}>
                 <div
-                  className={`rounded-3xl p-6 sm:p-8 flex flex-col justify-between transition-all duration-300 h-full ${
-                    plan.highlighted
+                  className={`rounded-3xl p-6 sm:p-8 flex flex-col justify-between transition-transform duration-300 transform-gpu hover:-translate-y-2 hover:shadow-2xl h-full ${plan.highlighted
                       ? 'bg-slate-900 text-white ring-2 ring-blue-600 shadow-2xl relative lg:scale-105 lg:-translate-y-2 z-10'
-                      : 'bg-white ring-1 ring-slate-200/80 hover:ring-slate-300 hover:shadow-premium'
-                  }`}
+                      : 'bg-white ring-1 ring-slate-200/80'
+                    }`}
                 >
                   <div className="relative">
                     {plan.highlighted && (
@@ -388,7 +391,7 @@ export default function Home() {
                     <p className={`text-xs font-bold uppercase tracking-widest mb-2 ${plan.highlighted ? 'text-blue-400' : 'text-blue-600'}`}>
                       {plan.name}
                     </p>
-                    
+
                     <div className="flex items-baseline gap-1.5 mb-3">
                       <span className="text-[10px] font-bold text-slate-400">Rp</span>
                       <span className="text-3xl sm:text-4xl font-extrabold tracking-tight">{plan.price}</span>
@@ -413,11 +416,10 @@ export default function Home() {
 
                   <button
                     onClick={() => navigate('/login')}
-                    className={`w-full py-3.5 rounded-xl text-xs sm:text-sm font-bold transition-all duration-300 active:scale-[0.98] mt-4 ${
-                      plan.highlighted
+                    className={`w-full py-3.5 rounded-xl text-xs sm:text-sm font-bold transition-all duration-300 active:scale-[0.98] mt-4 ${plan.highlighted
                         ? 'bg-blue-600 text-white hover:bg-blue-700 shadow-lg shadow-blue-500/10'
                         : 'bg-slate-900 text-white hover:bg-slate-800 shadow-md'
-                    }`}
+                      }`}
                   >
                     Pilih {plan.name}
                   </button>
@@ -506,7 +508,7 @@ export default function Home() {
 
       {/* ━━━ FINAL CTA SECTION ━━━ */}
       <section className="py-16 sm:py-24 lg:py-28 bg-slate-900 text-white relative overflow-hidden bg-grid-pattern">
-        
+
         {/* Glow decoration */}
         <div className="absolute inset-0 bg-gradient-to-tr from-blue-900/40 to-transparent pointer-events-none" />
 
@@ -518,7 +520,7 @@ export default function Home() {
                 <br />
                 <span className="text-blue-400">sekarang juga.</span>
               </h2>
-              
+
               <p className="text-slate-400 font-medium max-w-md mx-auto leading-relaxed text-xs sm:text-sm">
                 Mulai latihan secara gratis tanpa ikatan. Tingkatkan ke materi premium saat Anda sudah siap untuk serius lulus.
               </p>

@@ -4,11 +4,11 @@ const response = require('../utils/response');
 // Get active announcement (Public)
 const getActiveAnnouncement = async (req, res, next) => {
   try {
-    const announcement = await Announcement.findOne({
+    const announcements = await Announcement.findAll({
       where: { is_active: true },
       order: [['updated_at', 'DESC']]
     });
-    return response.success(res, announcement, 'Active announcement retrieved successfully');
+    return response.success(res, announcements, 'Active announcements retrieved successfully');
   } catch (err) {
     next(err);
   }
@@ -46,11 +46,6 @@ const createAnnouncement = async (req, res, next) => {
     if (!text) {
       return response.error(res, 'Text is required', 400);
     }
-    
-    // If setting this one to active, we might want to deactivate others
-    if (is_active === true) {
-      await Announcement.update({ is_active: false }, { where: { is_active: true } });
-    }
 
     const newAnnouncement = await Announcement.create({
       text,
@@ -73,11 +68,6 @@ const updateAnnouncement = async (req, res, next) => {
     const announcement = await Announcement.findByPk(id);
     if (!announcement) {
       return response.error(res, 'Announcement not found', 404);
-    }
-
-    if (is_active === true) {
-      // Deactivate others
-      await Announcement.update({ is_active: false }, { where: { is_active: true } });
     }
 
     if (text !== undefined) announcement.text = text;
