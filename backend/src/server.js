@@ -30,6 +30,14 @@ const startServer = async () => {
       }
     }
 
+    // JWT Production Protection validation
+    if (process.env.NODE_ENV === 'production') {
+      if (!process.env.JWT_SECRET || process.env.JWT_SECRET === 'supersecretcpnstryoutkey') {
+        console.error('FATAL ERROR: JWT_SECRET is not configured or uses default insecure key in production!');
+        process.exit(1);
+      }
+    }
+
     // Start listening
     app.listen(PORT, () => {
       console.log(`Server is running in ${env.NODE_ENV} mode on port ${PORT}`);
