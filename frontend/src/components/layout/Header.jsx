@@ -22,7 +22,7 @@ export default function Header() {
 
       // ScrollSpy Logic (only on Homepage)
       if (location.pathname === '/') {
-        const sections = ['beranda', 'features', 'programs', 'testimonials'];
+        const sections = ['beranda', 'features', 'kelebihan', 'testimonials'];
         const scrollPosition = window.scrollY + 200; // Offset for better detection
 
         for (const sectionId of sections) {
@@ -124,7 +124,7 @@ export default function Header() {
               {[
                 { label: 'Beranda', href: '#beranda' },
                 { label: 'Fitur', href: '#features' },
-                { label: 'Paket', href: '#programs' },
+                { label: 'Kelebihan', href: '#kelebihan' },
                 { label: 'Testimoni', href: '#testimonials' }
               ].map((item) => {
                 const isActive = isHomePage && activeSection === item.href.substring(1);
@@ -147,7 +147,7 @@ export default function Header() {
             {/* Actions */}
             <div className="hidden md:flex items-center space-x-3">
               <Button variant="ghost" size="sm" onClick={() => navigate('/login')}>
-                Masuk
+                Login
               </Button>
               <Button variant="primary" size="sm" onClick={() => navigate('/register')}>
                 Daftar Gratis
@@ -171,7 +171,7 @@ export default function Header() {
               {[
                 { label: 'Beranda', href: '#beranda' },
                 { label: 'Fitur', href: '#features' },
-                { label: 'Paket', href: '#programs' },
+                { label: 'Kelebihan', href: '#kelebihan' },
                 { label: 'Testimoni', href: '#testimonials' }
               ].map((item) => {
                 const isActive = isHomePage && activeSection === item.href.substring(1);
@@ -191,7 +191,7 @@ export default function Header() {
               })}
               <div className="pt-3 mt-2 border-t border-slate-100 flex flex-col space-y-2">
                 <Button variant="outline" className="w-full" onClick={() => { setIsOpen(false); navigate('/login'); }}>
-                  Masuk
+                  Login
                 </Button>
                 <Button variant="primary" className="w-full" onClick={() => { setIsOpen(false); navigate('/register'); }}>
                   Daftar Gratis

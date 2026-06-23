@@ -148,7 +148,7 @@ export default function Footer() {
             <ul className="space-y-2.5 text-sm">
               <li><a href={isHomePage ? '#beranda' : '/#beranda'} className="hover:text-white transition-colors duration-200">Beranda</a></li>
               <li><a href={isHomePage ? '#features' : '/#features'} className="hover:text-white transition-colors duration-200">Fitur</a></li>
-              <li><a href={isHomePage ? '#programs' : '/#programs'} className="hover:text-white transition-colors duration-200">Paket</a></li>
+              <li><a href={isHomePage ? '#kelebihan' : '/#kelebihan'} className="hover:text-white transition-colors duration-200">Kelebihan</a></li>
               <li><a href={isHomePage ? '#faq' : '/#faq'} className="hover:text-white transition-colors duration-200">FAQ</a></li>
             </ul>
           </div>
