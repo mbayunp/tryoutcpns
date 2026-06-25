@@ -17,7 +17,27 @@ const tryoutValidation = validate([
   body('status')
     .optional()
     .isIn(['active', 'inactive'])
-    .withMessage('Status must be active or inactive')
+    .withMessage('Status must be active or inactive'),
+  body('category')
+    .optional()
+    .isIn(['Tryout', 'Kelas Online', 'E-Book', 'Bundling'])
+    .withMessage('Category must be one of: Tryout, Kelas Online, E-Book, Bundling'),
+  body('image_url')
+    .optional({ nullable: true })
+    .isString()
+    .withMessage('Image URL must be a string'),
+  body('original_price')
+    .optional({ nullable: true })
+    .isInt({ min: 0 })
+    .withMessage('Original price must be a non-negative integer'),
+  body('discount_percentage')
+    .optional({ nullable: true })
+    .isInt({ min: 0, max: 100 })
+    .withMessage('Discount percentage must be an integer between 0 and 100'),
+  body('price')
+    .optional({ nullable: true })
+    .isInt({ min: 0 })
+    .withMessage('Price must be a non-negative integer')
 ]);
 
 const startValidation = validate([

@@ -72,24 +72,66 @@ const seed = async () => {
     // 3. Seed Sample Tryouts
     console.log('Seeding Sample Tryouts...');
     const [sampleTryout] = await Tryout.findOrCreate({
-      where: { title: 'Tryout Akbar CPNS 2026' },
+      where: { title: 'BONUS DARI BUKU SKD Wildan CANS 2026' },
       defaults: {
-        title: 'Tryout Akbar CPNS 2026',
-        description: 'Paket simulasi ujian CPNS SKD yang terdiri dari TWK, TIU, dan TKP.',
-        duration: 100, // 100 minutes
+        title: 'BONUS DARI BUKU SKD Wildan CANS 2026',
+        description: 'PAKET INI KHUSUS UNTUK PEMILIK BUKU Wildan CANS SKD CPNS & KEDINASAN 2026.',
+        duration: 100,
         total_questions: 4,
-        status: 'active'
+        status: 'active',
+        category: 'Tryout',
+        image_url: 'https://images.unsplash.com/photo-1513258496099-48168024aec0?w=800',
+        original_price: 9999999,
+        discount_percentage: 0,
+        price: 9999999
       }
     });
 
     const [premiumTryout] = await Tryout.findOrCreate({
-      where: { title: 'Tryout Premium Mandiri CAT 2026' },
+      where: { title: 'KELAS ZOOM/YOUTUBE SKD 2026 PART 2' },
       defaults: {
-        title: 'Tryout Premium Mandiri CAT 2026',
-        description: 'Paket tryout premium eksklusif dengan soal paling update kisi-kisi BKN 2026.',
-        duration: 120, // 120 minutes
+        title: 'KELAS ZOOM/YOUTUBE SKD 2026 PART 2',
+        description: 'Join kelas online melalui website dan terintegrasi ke Zoom & youtube Wildan CANS. (Start 13 Juni 2026)',
+        duration: 120,
         total_questions: 3,
-        status: 'inactive' // Locked package
+        status: 'inactive',
+        category: 'Kelas Online',
+        image_url: 'https://images.unsplash.com/photo-1516321318423-f06f85e504b3?w=800',
+        original_price: 300000,
+        discount_percentage: 17,
+        price: 250000
+      }
+    });
+
+    const [tryout3] = await Tryout.findOrCreate({
+      where: { title: 'BONUS DARI BUKU SKD Wildan CANS 2025' },
+      defaults: {
+        title: 'BONUS DARI BUKU SKD Wildan CANS 2025',
+        description: 'PAKET INI KHUSUS UNTUK PEMILIK BUKU Wildan CANS SKD CPNS & KEDINASAN 2025.',
+        duration: 100,
+        total_questions: 1,
+        status: 'active',
+        category: 'E-Book',
+        image_url: 'https://images.unsplash.com/photo-1506880018603-83d5b814b5a6?w=800',
+        original_price: 9999999,
+        discount_percentage: 0,
+        price: 9999999
+      }
+    });
+
+    const [tryout4] = await Tryout.findOrCreate({
+      where: { title: 'BUNDLING 3 TO SKD 2026 (PART 30, 31, 32)' },
+      defaults: {
+        title: 'BUNDLING 3 TO SKD 2026 (PART 30, 31, 32)',
+        description: 'KEJAR SKD BUAT PEJUANG ASN! ✨ Berisi 3 Paket Try Out dengan soal HOTS berdasarkan pengalaman peserta SKD.',
+        duration: 120,
+        total_questions: 1,
+        status: 'inactive',
+        category: 'Bundling',
+        image_url: 'https://images.unsplash.com/photo-1610116306796-6fea9f4fae38?w=800',
+        original_price: 60000,
+        discount_percentage: 75,
+        price: 15000
       }
     });
 
@@ -99,6 +141,8 @@ const seed = async () => {
     // Clean old questions
     await Question.destroy({ where: { tryout_id: sampleTryout.id } });
     await Question.destroy({ where: { tryout_id: premiumTryout.id } });
+    await Question.destroy({ where: { tryout_id: tryout3.id } });
+    await Question.destroy({ where: { tryout_id: tryout4.id } });
 
     // ─── TRYOUT 1 (ACTIVE / SAMPLE) QUESTIONS ───
     
@@ -343,6 +387,34 @@ const seed = async () => {
       option_weights: { a: 1, b: 3, c: 5, d: 2, e: 4 }
     });
 
+    // Seed questions for tryout3
+    await Question.create({
+      tryout_id: tryout3.id,
+      category_id: twkCat.id,
+      question: 'Apa nama lambang sila ke-3 dalam Pancasila?',
+      option_a: 'Bintang',
+      option_b: 'Rantai',
+      option_c: 'Pohon Beringin',
+      option_d: 'Kepala Banteng',
+      option_e: 'Padi dan Kapas',
+      correct_answer: 'c',
+      option_weights: null
+    });
+
+    // Seed questions for tryout4
+    await Question.create({
+      tryout_id: tryout4.id,
+      category_id: tiuCat.id,
+      question: 'Jika x = 5 dan y = 3, maka nilai dari 2x + 3y adalah...',
+      option_a: '15',
+      option_b: '19',
+      option_c: '20',
+      option_d: '25',
+      option_e: '30',
+      correct_answer: 'b',
+      option_weights: null
+    });
+
     // Update total_questions cache
     const count1 = await Question.count({ where: { tryout_id: sampleTryout.id } });
     sampleTryout.total_questions = count1;
@@ -352,7 +424,15 @@ const seed = async () => {
     premiumTryout.total_questions = count2;
     await premiumTryout.save();
 
-    console.log('Sample and Premium Questions seeded successfully.');
+    const count3 = await Question.count({ where: { tryout_id: tryout3.id } });
+    tryout3.total_questions = count3;
+    await tryout3.save();
+
+    const count4 = await Question.count({ where: { tryout_id: tryout4.id } });
+    tryout4.total_questions = count4;
+    await tryout4.save();
+
+    console.log('All packages and questions seeded successfully.');
     console.log('Seeding completed successfully!');
     process.exit(0);
   } catch (error) {

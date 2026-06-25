@@ -222,9 +222,35 @@ const submitTryout = async (userId, attemptId, submittedAnswers = []) => {
   }
 };
 
+const getMyPackages = async (userId) => {
+  const { Transaction } = require('../models');
+  const transactions = await Transaction.findAll({
+    where: {
+      user_id: userId,
+      status: 'success'
+    },
+    include: [{
+      model: Tryout,
+      as: 'tryout'
+    }],
+    order: [['created_at', 'DESC']]
+  });
+
+  // Extract unique tryouts from transactions
+  const tryoutsMap = new Map();
+  transactions.forEach(t => {
+    if (t.tryout) {
+      tryoutsMap.set(t.tryout.id, t.tryout);
+    }
+  });
+
+  return Array.from(tryoutsMap.values());
+};
+
 module.exports = {
   getTryouts,
   getTryoutById,
   startTryout,
-  submitTryout
+  submitTryout,
+  getMyPackages
 };

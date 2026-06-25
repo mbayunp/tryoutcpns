@@ -19,6 +19,8 @@ import RefundPolicy from '../pages/public/RefundPolicy';
 import HelpCenter from '../pages/public/HelpCenter';
 
 const DashboardAdmin = React.lazy(() => import('../pages/admin/DashboardAdmin'));
+const PackageDetail = React.lazy(() => import('../pages/PackageDetail'));
+const Analytics = React.lazy(() => import('../pages/admin/Analytics'));
 
 export default function AppRoutes() {
   return (
@@ -43,9 +45,19 @@ export default function AppRoutes() {
       <Route element={<DashboardLayout />}>
         <Route path="/dashboard" element={<Dashboard />} />
         <Route path="/result" element={<Result />} />
+        <Route path="/paket/:id" element={
+          <Suspense fallback={<LoadingSpinner />}>
+            <PackageDetail />
+          </Suspense>
+        } />
         <Route path="/admin" element={
           <Suspense fallback={<LoadingSpinner />}>
             <DashboardAdmin />
+          </Suspense>
+        } />
+        <Route path="/admin/analytics" element={
+          <Suspense fallback={<LoadingSpinner />}>
+            <Analytics />
           </Suspense>
         } />
       </Route>

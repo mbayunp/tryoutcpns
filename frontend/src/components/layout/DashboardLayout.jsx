@@ -1,6 +1,7 @@
 import React, { useState, useEffect, useRef } from 'react';
 import { Outlet, useNavigate, useLocation, Link } from 'react-router-dom';
 import { useExamStore } from '../../store/useExamStore';
+import Swal from 'sweetalert2';
 import {
   LayoutDashboard,
   FileText,
@@ -16,7 +17,11 @@ import {
   Bell,
   Megaphone,
   Clock,
-  ExternalLink
+  ExternalLink,
+  Package,
+  ChevronDown,
+  ChevronUp,
+  TrendingUp
 } from 'lucide-react';
 
 export default function DashboardLayout() {
@@ -25,6 +30,13 @@ export default function DashboardLayout() {
   const { user, logout, activeTab, setActiveTab, notifications, fetchNotifications } = useExamStore();
   const [mobileOpen, setMobileOpen] = useState(false);
   const [isSidebarCollapsed, setIsSidebarCollapsed] = useState(false);
+  const [isPaketOpen, setIsPaketOpen] = useState(false);
+
+  useEffect(() => {
+    if (activeTab && (activeTab === 'paket' || activeTab.startsWith('paket-'))) {
+      setIsPaketOpen(true);
+    }
+  }, [activeTab]);
 
   // Notification dropdown states
   const [showNotifications, setShowNotifications] = useState(false);
@@ -122,14 +134,45 @@ export default function DashboardLayout() {
     navigate('/admin');
   };
 
+  const handleAnalyticsClick = () => {
+    setMobileOpen(false);
+    navigate('/admin/analytics');
+  };
+
   const handleLogoutClick = () => {
-    logout();
-    navigate('/');
+    Swal.fire({
+      title: 'Keluar Aplikasi',
+      text: 'Apakah Anda yakin ingin keluar?',
+      icon: 'warning',
+      showCancelButton: true,
+      confirmButtonText: 'Ya, Keluar',
+      cancelButtonText: 'Batal',
+      confirmButtonColor: '#8C0C14',
+      cancelButtonColor: '#6B7280'
+    }).then((result) => {
+      if (result.isConfirmed) {
+        logout();
+        navigate('/');
+      }
+    });
   };
 
   const menuItems = [
     { id: 'dashboard', name: 'Dashboard', icon: <LayoutDashboard className="h-[18px] w-[18px]" /> },
-    { id: 'tryout', name: 'Try Out', icon: <FileText className="h-[18px] w-[18px]" /> },
+    { 
+      id: 'paket', 
+      name: 'Paket', 
+      icon: <Package className="h-[18px] w-[18px]" />,
+      isCollapsible: true,
+      children: [
+        { id: 'paket', name: 'Semua Produk' },
+        { id: 'paket-tryout', name: 'Tryout' },
+        { id: 'paket-kelas-online', name: 'Kelas Online' },
+        { id: 'paket-ebook', name: 'E-Book' },
+        { id: 'paket-bundling', name: 'Bundling' },
+      ]
+    },
+    { id: 'paket-saya', name: 'Paket Saya', icon: <FileText className="h-[18px] w-[18px]" /> },
     { id: 'riwayat', name: 'Riwayat', icon: <History className="h-[18px] w-[18px]" /> },
     { id: 'ranking', name: 'Ranking', icon: <Trophy className="h-[18px] w-[18px]" /> },
     { id: 'profil', name: 'Profil', icon: <UserIcon className="h-[18px] w-[18px]" /> },
@@ -143,7 +186,7 @@ export default function DashboardLayout() {
           {/* Brand Logo & Collapse toggle */}
           <div className={`px-5 flex items-center ${collapsed ? 'justify-center' : 'justify-between'}`}>
             {!collapsed ? (
-              <Link to="/" className="flex items-center gap-2.5 group">
+              <Link to="/dashboard" className="flex items-center gap-2.5 group">
                 <div className="bg-white p-1 rounded-xl border border-slate-100 shadow-sm">
                   <img src="/logo.jpg" alt="Logo WILDAN CASN" className="h-6 w-6 object-cover rounded-md" />
                 </div>
@@ -152,7 +195,7 @@ export default function DashboardLayout() {
                 </span>
               </Link>
             ) : (
-              <Link to="/" className="bg-white p-1 rounded-xl border border-slate-100 shadow-sm block">
+              <Link to="/dashboard" className="bg-white p-1 rounded-xl border border-slate-100 shadow-sm block">
                 <img src="/logo.jpg" alt="Logo WILDAN CASN" className="h-6 w-6 object-cover rounded-md" />
               </Link>
             )}
@@ -203,6 +246,62 @@ export default function DashboardLayout() {
               <p className="text-[10px] font-bold text-slate-400 uppercase tracking-widest px-3 mb-2">Menu</p>
             )}
             {menuItems.map((item) => {
+              if (item.isCollapsible) {
+                const isChildActive = activeTab && activeTab.startsWith('paket-') && activeTab !== 'paket-saya';
+                return (
+                  <div key={item.id} className="space-y-1">
+                    <button
+                      onClick={() => {
+                        if (collapsed) {
+                          setIsSidebarCollapsed(false);
+                          setIsPaketOpen(true);
+                        } else {
+                          setIsPaketOpen(!isPaketOpen);
+                        }
+                      }}
+                      className={`w-full flex items-center justify-between ${collapsed ? 'justify-center' : 'gap-2.5 px-3'} py-2.5 rounded-xl text-[13px] font-semibold transition-all duration-200 ${
+                        isChildActive || activeTab === 'paket'
+                          ? 'bg-[#0B1C30]/5 text-[#0B1C30]'
+                          : 'text-slate-500 hover:bg-slate-50 hover:text-[#0B1C30]'
+                      }`}
+                      title={collapsed ? item.name : undefined}
+                    >
+                      <div className="flex items-center gap-2.5">
+                        <div className="flex-shrink-0">{item.icon}</div>
+                        {!collapsed && <span className="whitespace-nowrap">{item.name}</span>}
+                      </div>
+                      {!collapsed && (
+                        <div className="flex-shrink-0">
+                          {isPaketOpen ? <ChevronUp className="h-4 w-4" /> : <ChevronDown className="h-4 w-4" />}
+                        </div>
+                      )}
+                    </button>
+                    
+                    {isPaketOpen && !collapsed && (
+                      <div className="pl-6 space-y-0.5 animate-fadeIn">
+                        {item.children.map((child) => {
+                          const isSubActive = activeTab === child.id;
+                          return (
+                            <button
+                              key={child.id}
+                              onClick={() => handleTabClick(child.id)}
+                              className={`w-full flex items-center gap-2 px-3 py-2 rounded-lg text-[12.5px] font-semibold transition-all duration-200 ${
+                                isSubActive
+                                  ? 'bg-[#0B1C30] text-white shadow-sm'
+                                  : 'text-slate-500 hover:bg-slate-50 hover:text-[#0B1C30]'
+                              }`}
+                            >
+                              <span className="w-1.5 h-1.5 rounded-full bg-current opacity-60"></span>
+                              <span className="whitespace-nowrap">{child.name}</span>
+                            </button>
+                          );
+                        })}
+                      </div>
+                    )}
+                  </div>
+                );
+              }
+
               const isDashboardRoute = location.pathname === '/dashboard';
               const isActive = isDashboardRoute && activeTab === item.id;
               return (
@@ -239,6 +338,18 @@ export default function DashboardLayout() {
                 >
                   <div className="flex-shrink-0"><ShieldAlert className="h-[18px] w-[18px]" /></div>
                   {!collapsed && <span className="whitespace-nowrap">Kelola Soal</span>}
+                </button>
+                <button
+                  onClick={handleAnalyticsClick}
+                  className={`w-full flex items-center ${collapsed ? 'justify-center' : 'gap-2.5 px-3'} py-2.5 rounded-xl text-[13px] font-semibold transition-all duration-200 mt-1 ${
+                    location.pathname === '/admin/analytics'
+                      ? 'bg-[#0B1C30] text-white shadow-premium'
+                      : 'text-slate-500 hover:bg-slate-50 hover:text-[#0B1C30]'
+                  }`}
+                  title={collapsed ? 'Keuangan & Analisis' : undefined}
+                >
+                  <div className="flex-shrink-0"><TrendingUp className="h-[18px] w-[18px]" /></div>
+                  {!collapsed && <span className="whitespace-nowrap">Keuangan & Analisis</span>}
                 </button>
               </>
             )}
@@ -289,18 +400,17 @@ export default function DashboardLayout() {
         {/* Unified Header / Topbar */}
         <header className="bg-white border-b border-slate-200/60 px-4 sm:px-6 py-3.5 flex items-center justify-between sticky top-0 z-40 shadow-[0_2px_8px_rgba(0,0,0,0.015)]">
           {/* Left: Menu trigger on Mobile, Search bar on Desktop */}
-          <div className="flex items-center gap-3">
+          <div className="flex items-center gap-3 w-full max-w-xs sm:max-w-sm md:max-w-md">
             <button
               onClick={() => setMobileOpen(true)}
-              className="md:hidden p-2 text-slate-550 hover:bg-slate-100 rounded-xl transition-colors"
+              className="md:hidden p-2 text-slate-550 hover:bg-slate-100 rounded-xl transition-colors flex-shrink-0"
             >
               <Menu className="h-5 w-5" />
             </button>
-            <span className="font-extrabold text-sm text-slate-900 tracking-tight flex md:hidden items-center gap-1.5">
+            <span className="font-extrabold text-sm text-slate-900 tracking-tight flex md:hidden items-center gap-1.5 mr-2 flex-shrink-0">
               <img src="/logo.jpg" alt="Logo" className="h-5 w-5 object-cover rounded-md" />
               <span>WILDAN<span className="text-[#0B1C30]"> CASN</span></span>
             </span>
-
           </div>
 
           {/* Right: Notification bell & User details */}

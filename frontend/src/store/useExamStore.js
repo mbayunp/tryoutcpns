@@ -17,8 +17,10 @@ export const useExamStore = create(
       announcement: null,
       announcements: [],
       notifications: [],
+      searchQuery: '',
 
       // Actions
+      setSearchQuery: (query) => set({ searchQuery: query }),
       login: async (email, password) => {
         try {
           const res = await API.post('/auth/login', { email, password });
@@ -78,6 +80,49 @@ export const useExamStore = create(
         set({ user: null, token: null, packages: [], history: [], questions: [] });
       },
 
+      updateEmail: async (newEmail) => {
+        try {
+          const res = await API.put('/user/email', { email: newEmail });
+          const updatedUser = res.data.data;
+          
+          const userWithAvatar = {
+            ...updatedUser,
+            avatar: updatedUser.avatar || '/images/icon.png'
+          };
+          
+          set({ user: userWithAvatar });
+          return userWithAvatar;
+        } catch (error) {
+          const message = error.response?.data?.message || 'Gagal memperbarui email.';
+          throw new Error(message);
+        }
+      },
+
+      updateAvatar: async (avatarFile) => {
+        try {
+          const formData = new FormData();
+          formData.append('avatar', avatarFile);
+          
+          const res = await API.put('/user/avatar', formData, {
+            headers: {
+              'Content-Type': 'multipart/form-data'
+            }
+          });
+          
+          const updatedUser = res.data.data;
+          const userWithAvatar = {
+            ...updatedUser,
+            avatar: updatedUser.avatar || '/images/icon.png'
+          };
+          
+          set({ user: userWithAvatar });
+          return userWithAvatar;
+        } catch (error) {
+          const message = error.response?.data?.message || 'Gagal memperbarui foto profil.';
+          throw new Error(message);
+        }
+      },
+
       setActiveTab: (tab) => set({ activeTab: tab }),
 
       fetchTransactions: async () => {
@@ -107,7 +152,12 @@ export const useExamStore = create(
               duration: pkg.duration,
               totalQuestions: pkg.total_questions,
               status: (pkg.status === 'active' || isPurchased) ? 'Aktif' : 'Terkunci',
-              attempts: 0
+              attempts: 0,
+              category: pkg.category || 'Tryout',
+              imageUrl: pkg.image_url,
+              originalPrice: pkg.original_price || 0,
+              discountPercentage: pkg.discount_percentage || 0,
+              price: pkg.price || 0
             };
           });
           set({ packages: mapped });
@@ -555,7 +605,12 @@ export const useExamStore = create(
             title: pkgData.title,
             description: pkgData.description,
             duration: parseInt(pkgData.duration),
-            status: pkgData.status === 'Aktif' ? 'active' : 'inactive'
+            status: pkgData.status === 'Aktif' ? 'active' : 'inactive',
+            category: pkgData.category || 'Tryout',
+            image_url: pkgData.imageUrl || null,
+            original_price: pkgData.originalPrice ? parseInt(pkgData.originalPrice) : 0,
+            discount_percentage: pkgData.discountPercentage ? parseInt(pkgData.discountPercentage) : 0,
+            price: pkgData.price ? parseInt(pkgData.price) : 0
           };
           await API.post('/tryouts', formatted);
           await get().fetchPackages();
@@ -571,7 +626,12 @@ export const useExamStore = create(
             title: updatedPkg.title,
             description: updatedPkg.description,
             duration: parseInt(updatedPkg.duration),
-            status: updatedPkg.status === 'Aktif' ? 'active' : 'inactive'
+            status: updatedPkg.status === 'Aktif' ? 'active' : 'inactive',
+            category: updatedPkg.category || 'Tryout',
+            image_url: updatedPkg.imageUrl || null,
+            original_price: updatedPkg.originalPrice ? parseInt(updatedPkg.originalPrice) : 0,
+            discount_percentage: updatedPkg.discountPercentage ? parseInt(updatedPkg.discountPercentage) : 0,
+            price: updatedPkg.price ? parseInt(updatedPkg.price) : 0
           };
           await API.put(`/tryouts/${updatedPkg.id}`, formatted);
           await get().fetchPackages();

@@ -9,6 +9,7 @@ router.use(authMiddleware);
 
 // Candidate / User Tryout Flow
 router.get('/', tryoutController.getTryouts);
+router.get('/my-packages', tryoutController.getMyPackages);
 router.get('/:id', tryoutController.getTryoutById);
 router.post('/start', startValidation, tryoutController.startTryout);
 router.post('/submit', submitValidation, tryoutController.submitTryout);

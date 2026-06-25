@@ -46,40 +46,50 @@ const submitTryout = async (req, res, next) => {
 // Admin CRUD Operations
 const createTryout = async (req, res, next) => {
   try {
-    const { title, description, duration, status } = req.body;
+    const { title, description, duration, status, category, image_url, original_price, discount_percentage, price } = req.body;
     const newTryout = await Tryout.create({
       title,
       description,
       duration,
-      status: status || 'active'
+      status: status || 'active',
+      category: category || 'Tryout',
+      image_url,
+      original_price: original_price !== undefined ? original_price : 0,
+      discount_percentage: discount_percentage !== undefined ? discount_percentage : 0,
+      price: price !== undefined ? price : 0
     });
     return response.success(res, newTryout, 'Tryout created successfully', 201);
   } catch (err) {
     next(err);
   }
-};
-
-const updateTryout = async (req, res, next) => {
-  try {
-    const { id } = req.params;
-    const { title, description, duration, status } = req.body;
-
-    const tryout = await Tryout.findByPk(id);
-    if (!tryout) {
-      return response.error(res, 'Tryout not found', 404);
-    }
-
-    if (title !== undefined) tryout.title = title;
-    if (description !== undefined) tryout.description = description;
-    if (duration !== undefined) tryout.duration = duration;
-    if (status !== undefined) tryout.status = status;
-
-    await tryout.save();
-    return response.success(res, tryout, 'Tryout updated successfully');
-  } catch (err) {
-    next(err);
-  }
-};
+ };
+ 
+ const updateTryout = async (req, res, next) => {
+   try {
+     const { id } = req.params;
+     const { title, description, duration, status, category, image_url, original_price, discount_percentage, price } = req.body;
+ 
+     const tryout = await Tryout.findByPk(id);
+     if (!tryout) {
+       return response.error(res, 'Tryout not found', 404);
+     }
+ 
+     if (title !== undefined) tryout.title = title;
+     if (description !== undefined) tryout.description = description;
+     if (duration !== undefined) tryout.duration = duration;
+     if (status !== undefined) tryout.status = status;
+     if (category !== undefined) tryout.category = category;
+     if (image_url !== undefined) tryout.image_url = image_url;
+     if (original_price !== undefined) tryout.original_price = original_price;
+     if (discount_percentage !== undefined) tryout.discount_percentage = discount_percentage;
+     if (price !== undefined) tryout.price = price;
+ 
+     await tryout.save();
+     return response.success(res, tryout, 'Tryout updated successfully');
+   } catch (err) {
+     next(err);
+   }
+ };
 
 const deleteTryout = async (req, res, next) => {
   try {
@@ -320,6 +330,15 @@ const saveAttemptResult = async (req, res, next) => {
   }
 };
 
+const getMyPackages = async (req, res, next) => {
+  try {
+    const tryouts = await tryoutService.getMyPackages(req.user.id);
+    return response.success(res, tryouts, 'Purchased packages retrieved successfully');
+  } catch (err) {
+    next(err);
+  }
+};
+
 module.exports = {
   getTryouts,
   getTryoutById,
@@ -330,5 +349,6 @@ module.exports = {
   deleteTryout,
   assignQuestionsToPackage,
   getQuestionsForPackage,
-  saveAttemptResult
+  saveAttemptResult,
+  getMyPackages
 };

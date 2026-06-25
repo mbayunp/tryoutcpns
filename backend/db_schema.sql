@@ -17,6 +17,8 @@ CREATE TABLE IF NOT EXISTS `users` (
   `role` ENUM('admin', 'user') DEFAULT 'user',
   `is_active` BOOLEAN DEFAULT TRUE,
   `phone_number` VARCHAR(20) DEFAULT NULL,
+  `registration_number` VARCHAR(100) DEFAULT NULL UNIQUE,
+  `avatar` VARCHAR(500) DEFAULT NULL,
   `created_at` DATETIME NOT NULL DEFAULT CURRENT_TIMESTAMP,
   `updated_at` DATETIME NOT NULL DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
@@ -41,6 +43,11 @@ CREATE TABLE IF NOT EXISTS `tryouts` (
   `duration` INT NOT NULL COMMENT 'duration in minutes',
   `total_questions` INT DEFAULT 0,
   `status` ENUM('active', 'inactive') DEFAULT 'active',
+  `category` ENUM('Tryout', 'Kelas Online', 'E-Book', 'Bundling') NOT NULL DEFAULT 'Tryout',
+  `image_url` LONGTEXT DEFAULT NULL,
+  `original_price` INT DEFAULT 0,
+  `discount_percentage` INT DEFAULT 0,
+  `price` INT DEFAULT 0,
   `created_at` DATETIME NOT NULL DEFAULT CURRENT_TIMESTAMP,
   `updated_at` DATETIME NOT NULL DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;

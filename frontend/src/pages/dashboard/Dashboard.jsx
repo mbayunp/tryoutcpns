@@ -7,25 +7,31 @@ import {
   FileText,
   TrendingUp,
   History as HistoryIcon,
-  Lock,
   ArrowRight,
   Clock,
   PlusCircle,
   Award,
   X,
   MessageCircle,
-  Flame // <-- Ditambahkan untuk Daily Streak
+  Flame,
+  Package,
+  Search
 } from 'lucide-react';
+
 import { AreaChart, Area, XAxis, YAxis, CartesianGrid, Tooltip, ResponsiveContainer } from 'recharts';
 import Card from '../../components/common/Card';
 import Badge from '../../components/common/Badge';
-import Button from '../../components/common/Button';
 import HistoryTab from './HistoryTab';
 import RankingTab from './RankingTab';
 
+const formatRupiah = (num) => {
+  if (num === undefined || num === null) return 'Rp 0';
+  return 'Rp ' + num.toString().replace(/\B(?=(\d{3})+(?!\d))/g, ".");
+};
+
 export default function Dashboard() {
   const navigate = useNavigate();
-  const { user, packages, history, activeTab, setActiveTab, fetchPackages, fetchHistory, createPendingTransaction, transactions } = useExamStore();
+  const { user, packages, history, activeTab, setActiveTab, fetchPackages, fetchHistory, createPendingTransaction, transactions, searchQuery, setSearchQuery, updateEmail, updateAvatar } = useExamStore();
   const [selectedLockedPackage, setSelectedLockedPackage] = React.useState(null);
   const [proofFile, setProofFile] = React.useState(null);
   const [proofFilePreview, setProofFilePreview] = React.useState('');
@@ -40,12 +46,136 @@ export default function Dashboard() {
   const averageScore = history.length > 0 ? Math.round(history.reduce((sum, h) => sum + h.score, 0) / history.length) : 0;
   const totalAttempts = history.length;
 
+  const [isEditingEmail, setIsEditingEmail] = React.useState(false);
+  const [emailInput, setEmailInput] = React.useState('');
+  const [isSubmittingEmail, setIsSubmittingEmail] = React.useState(false);
+  const [isSubmittingAvatar, setIsSubmittingAvatar] = React.useState(false);
+
+  React.useEffect(() => {
+    if (user?.email) {
+      setEmailInput(user.email);
+    }
+  }, [user]);
+
+  const handleAvatarChange = async (e) => {
+    const file = e.target.files[0];
+    if (!file) return;
+
+    if (file.size > 2 * 1024 * 1024) {
+      Swal.fire({
+        title: 'File Terlalu Besar',
+        text: 'Ukuran foto profil tidak boleh melebihi 2MB!',
+        icon: 'warning',
+        confirmButtonColor: '#8C0C14'
+      });
+      return;
+    }
+
+    if (!file.type.startsWith('image/')) {
+      Swal.fire({
+        title: 'Format Tidak Valid',
+        text: 'File yang diunggah harus berupa gambar!',
+        icon: 'warning',
+        confirmButtonColor: '#8C0C14'
+      });
+      return;
+    }
+
+    setIsSubmittingAvatar(true);
+    try {
+      await updateAvatar(file);
+      Swal.fire({
+        title: 'Berhasil!',
+        text: 'Foto profil berhasil diperbarui.',
+        icon: 'success',
+        timer: 2000,
+        showConfirmButton: false
+      });
+    } catch (err) {
+      Swal.fire({
+        title: 'Gagal!',
+        text: err.message || 'Gagal mengunggah foto profil.',
+        icon: 'error',
+        confirmButtonColor: '#8C0C14'
+      });
+    } finally {
+      setIsSubmittingAvatar(false);
+    }
+  };
+
+  const handleEmailSave = async () => {
+    if (!emailInput.trim()) {
+      Swal.fire({
+        title: 'Peringatan',
+        text: 'Email tidak boleh kosong!',
+        icon: 'warning',
+        confirmButtonColor: '#8C0C14'
+      });
+      return;
+    }
+
+    const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
+    if (!emailRegex.test(emailInput)) {
+      Swal.fire({
+        title: 'Peringatan',
+        text: 'Format email tidak valid!',
+        icon: 'warning',
+        confirmButtonColor: '#8C0C14'
+      });
+      return;
+    }
+
+    setIsSubmittingEmail(true);
+    try {
+      await updateEmail(emailInput);
+      setIsEditingEmail(false);
+      Swal.fire({
+        title: 'Berhasil!',
+        text: 'Alamat email berhasil diperbarui.',
+        icon: 'success',
+        timer: 2000,
+        showConfirmButton: false
+      });
+    } catch (err) {
+      Swal.fire({
+        title: 'Gagal!',
+        text: err.message || 'Gagal memperbarui email.',
+        icon: 'error',
+        confirmButtonColor: '#8C0C14'
+      });
+    } finally {
+      setIsSubmittingEmail(false);
+    }
+  };
+
+  const handleEmailCancel = () => {
+    setEmailInput(user?.email || '');
+    setIsEditingEmail(false);
+  };
+
   const handleStartExam = (pkg) => {
     if (pkg.status === 'Terkunci') {
       setSelectedLockedPackage(pkg);
       return;
     }
-    navigate('/exam', { state: { packageId: pkg.id } });
+    
+    Swal.fire({
+      title: 'Mulai Ujian?',
+      text: 'Apakah Anda yakin ingin memulai ujian sekarang? Waktu akan mulai berjalan.',
+      icon: 'question',
+      showCancelButton: true,
+      confirmButtonText: 'Mulai Ujian',
+      cancelButtonText: 'Batal',
+      confirmButtonColor: '#8C0C14',
+      cancelButtonColor: '#6B7280',
+      customClass: {
+        popup: 'rounded-2xl font-body-md'
+      }
+    }).then((result) => {
+      if (result.isConfirmed) {
+        navigate('/exam', { state: { packageId: pkg.id } });
+      }
+    });
   };
 
   const handleFileChange = (e) => {
@@ -355,70 +485,276 @@ export default function Dashboard() {
               </button>
             </Card>
           </div>
+
+          {/* Rekomendasi Untukmu! */}
+          <div className="space-y-6 pt-8 border-t border-slate-250/20 animate-fadeIn">
+            <div className="flex justify-between items-center">
+              <h2 className="text-xl font-extrabold text-[#0B1C30] tracking-tight">Rekomendasi Untukmu!</h2>
+              <button
+                onClick={() => setActiveTab('paket-tryout')}
+                className="text-[#8C0C14] hover:text-[#6D080E] font-bold text-sm flex items-center gap-1 hover:underline transition-colors border-0 bg-transparent cursor-pointer"
+              >
+                Lainnya <span className="text-xs">→</span>
+              </button>
+            </div>
+
+            <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-6">
+              {packages.slice(0, 4).map((pkg) => (
+                <div key={pkg.id} className="bg-white border border-slate-100 rounded-2xl shadow-sm hover:shadow-xl transition-all duration-300 flex flex-col justify-between overflow-hidden group">
+                  {/* Package Cover Image */}
+                  <div className="relative aspect-video w-full overflow-hidden bg-slate-100 flex-shrink-0">
+                    {pkg.imageUrl ? (
+                      <img src={pkg.imageUrl} alt={pkg.title} className="h-full w-full object-cover group-hover:scale-105 transition-transform duration-500" />
+                    ) : (
+                      <div className="h-full w-full bg-gradient-to-br from-[#0B1C30] to-[#1E3E66] flex items-center justify-center text-white">
+                        <Package className="h-10 w-10 opacity-45" />
+                      </div>
+                    )}
+                  </div>
+
+                  {/* Card Content Body */}
+                  <div className="p-5 flex-1 flex flex-col justify-between">
+                    <div className="space-y-2">
+                      <h4 className="font-extrabold text-[15px] text-slate-800 tracking-tight leading-snug group-hover:text-[#8C0C14] transition-colors line-clamp-2">
+                        {pkg.title}
+                      </h4>
+                      <p className="text-xs text-slate-400 font-medium leading-relaxed line-clamp-2">
+                        {pkg.description || 'Simulasi lengkap sesuai standar CAT BKN terbaru. Dilengkapi pembahasan lengkap.'}
+                      </p>
+                    </div>
+
+                    <div className="mt-5 space-y-4">
+                      {/* Price Section */}
+                      <div className="flex items-center justify-between pt-3 border-t border-slate-50">
+                        <div className="flex items-center gap-1.5 min-w-0">
+                          {pkg.discountPercentage > 0 && (
+                            <>
+                              <span className="bg-[#E6F4EA] text-[#137333] font-bold px-1.5 py-0.5 rounded text-[10px] flex-shrink-0">
+                                {pkg.discountPercentage}%
+                              </span>
+                              <span className="text-[11px] text-slate-400 line-through truncate font-medium">
+                                {formatRupiah(pkg.originalPrice)}
+                              </span>
+                            </>
+                          )}
+                        </div>
+                        <span className="text-[#8C0C14] font-extrabold text-base whitespace-nowrap">
+                          {formatRupiah(pkg.price)}
+                        </span>
+                      </div>
+
+                      {/* CTA Button */}
+                      <button
+                        onClick={() => navigate(`/paket/${pkg.id}`)}
+                        className="w-full py-2.5 bg-[#8C0C14] hover:bg-[#6D080E] active:scale-[0.98] text-white rounded-full font-bold text-xs shadow-md shadow-red-900/10 hover:shadow-lg transition-all flex items-center justify-center gap-1 border-0"
+                      >
+                        Selengkapnya
+                      </button>
+                    </div>
+                  </div>
+                </div>
+              ))}
+            </div>
+          </div>
         </>
       )}
 
-      {/* ═══ TRY OUT LIST TAB ═══ */}
-      {activeTab === 'tryout' && (
-        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
-          {packages.map((pkg) => {
-            const hasPendingTrx = transactions?.some(t => t.package === pkg.title && t.status === 'pending' && t.email === user?.email);
-            return (
-              <Card key={pkg.id} className={`p-6 flex flex-col justify-between space-y-6 bg-white transition-transform duration-300 transform-gpu hover:-translate-y-2 hover:shadow-2xl border border-slate-200/60 ${pkg.status === 'Terkunci' ? 'opacity-80' : ''}`}>
-                <div className="space-y-4">
-                  <div className="flex justify-between items-center">
-                    <Badge variant={pkg.status === 'Terkunci' ? 'neutral' : 'primary'} className="bg-[#0B1C30]/10 text-[#0B1C30] border-0">
-                      SKD CAT
-                    </Badge>
-                    {pkg.status === 'Terkunci' && (
-                      hasPendingTrx ? (
-                        <span className="text-[10px] font-extrabold text-amber-600 bg-amber-50 px-2 py-1 rounded-md border border-amber-200 flex items-center gap-1">
-                          <Clock className="h-3 w-3 animate-spin" /> Pending
-                        </span>
-                      ) : (
-                        <Lock className="h-4 w-4 text-slate-400" />
-                      )
-                    )}
-                  </div>
-                  <h4 className="text-base font-bold text-slate-800 leading-snug group-hover:text-[#0B1C30]">{pkg.title}</h4>
-                  <p className="text-xs text-slate-400 leading-relaxed font-medium">
-                    Simulasi lengkap TWK, TIU, dan TKP sesuai standar CAT BKN terbaru. Dilengkapi pembahasan lengkap.
+      {/* ═══ TRY OUT / PAKET LIST TAB ═══ */}
+      {(activeTab === 'tryout' || activeTab === 'paket' || activeTab.startsWith('paket-')) && (() => {
+        const filteredPackages = packages.filter((pkg) => {
+          // Search query filter
+          const matchesSearch = searchQuery
+            ? pkg.title.toLowerCase().includes(searchQuery.toLowerCase()) ||
+              pkg.description?.toLowerCase().includes(searchQuery.toLowerCase())
+            : true;
+
+          if (!matchesSearch) return false;
+
+          // "Paket Saya" tab - show only purchased packages
+          if (activeTab === 'paket-saya') {
+            const isPurchased = (transactions || []).some(
+              (t) => t.package === pkg.title && t.status === 'success' && t.email === user?.email
+            );
+            return isPurchased;
+          }
+
+          // Category sub-menus
+          if (activeTab === 'paket-tryout') {
+            return pkg.category === 'Tryout';
+          }
+          if (activeTab === 'paket-kelas-online') {
+            return pkg.category === 'Kelas Online';
+          }
+          if (activeTab === 'paket-ebook') {
+            return pkg.category === 'E-Book';
+          }
+          if (activeTab === 'paket-bundling') {
+            return pkg.category === 'Bundling';
+          }
+
+          // Fallback 'tryout' activeTab shows everything
+          return true;
+        });
+
+        return (
+          <div className="space-y-6">
+            {/* Search Bar Input */}
+            <div className="relative max-w-md">
+              <div className="absolute inset-y-0 left-0 pl-3.5 flex items-center pointer-events-none text-slate-400">
+                <Search className="h-4.5 w-4.5" />
+              </div>
+              <input
+                type="text"
+                value={searchQuery}
+                onChange={(e) => setSearchQuery(e.target.value)}
+                placeholder="Cari paket belajar..."
+                className="w-full pl-9 pr-4 py-2 bg-white border border-slate-200 rounded-xl text-xs font-semibold text-slate-700 focus:outline-none focus:ring-2 focus:ring-[#0B1C30]/20 focus:border-[#0B1C30] transition-all shadow-sm"
+              />
+            </div>
+
+            {(() => {
+              const categories = [
+                { key: 'Tryout', title: 'Paket Tryout' },
+                { key: 'Kelas Online', title: 'Kelas Online Bimbingan' },
+                { key: 'E-Book', title: 'E-Book & Modul Belajar' },
+                { key: 'Bundling', title: 'Paket Bundling Hemat' }
+              ];
+
+              const categorizedData = categories.map(cat => {
+                const items = filteredPackages.filter(pkg => pkg.category === cat.key);
+                return { ...cat, items };
+              }).filter(group => group.items.length > 0);
+
+              const renderPackagesGrid = (packagesList) => (
+                <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-6">
+                  {packagesList.map((pkg) => {
+                    const hasPendingTrx = transactions?.some(t => t.package === pkg.title && t.status === 'pending' && t.email === user?.email);
+                    const isPurchasedTab = activeTab === 'paket-saya';
+
+                    return (
+                      <div key={pkg.id} className={`bg-white border border-slate-100 rounded-2xl shadow-sm hover:shadow-xl transition-all duration-300 flex flex-col justify-between overflow-hidden group ${pkg.status === 'Terkunci' ? 'opacity-95' : ''}`}>
+                        {/* Package Cover Image */}
+                        <div className="relative aspect-video w-full overflow-hidden bg-slate-100 flex-shrink-0">
+                          {pkg.imageUrl ? (
+                            <img src={pkg.imageUrl} alt={pkg.title} className="h-full w-full object-cover group-hover:scale-105 transition-transform duration-500" />
+                          ) : (
+                            <div className="h-full w-full bg-gradient-to-br from-[#0B1C30] to-[#1E3E66] flex items-center justify-center text-white">
+                              <Package className="h-10 w-10 opacity-45" />
+                            </div>
+                          )}
+                          {/* Status overlays for pending or locked state */}
+                          {pkg.status === 'Terkunci' && hasPendingTrx && (
+                            <div className="absolute top-2 right-2 bg-amber-500 text-white font-extrabold text-[9px] px-2 py-0.5 rounded shadow flex items-center gap-1">
+                              <Clock className="h-2.5 w-2.5 animate-spin" /> Pending Verification
+                            </div>
+                          )}
+                        </div>
+
+                        {/* Card Content Body */}
+                        <div className="p-5 flex-1 flex flex-col justify-between">
+                          <div className="space-y-2">
+                            <h4 className="font-extrabold text-[15px] text-slate-800 tracking-tight leading-snug group-hover:text-[#8C0C14] transition-colors line-clamp-2">
+                              {pkg.title}
+                            </h4>
+                            <p className="text-xs text-slate-400 font-medium leading-relaxed line-clamp-2">
+                              {pkg.description || 'Simulasi lengkap sesuai standar CAT BKN terbaru. Dilengkapi pembahasan lengkap.'}
+                            </p>
+                          </div>
+
+                          <div className="mt-5 space-y-4">
+                            {/* Duration and Questions Count info row */}
+                            <div className="flex justify-between text-[11px] text-slate-400 font-bold pt-2 border-t border-slate-50">
+                              <span className="flex items-center gap-1"><Clock className="h-3.5 w-3.5 text-slate-400" />{pkg.duration} Min</span>
+                              <span className="flex items-center gap-1"><FileText className="h-3.5 w-3.5 text-slate-400" />{pkg.totalQuestions} Soal</span>
+                            </div>
+
+                            {/* Price Section */}
+                            <div className="flex items-center justify-between pt-3 border-t border-slate-50">
+                              <div className="flex items-center gap-1.5 min-w-0">
+                                {pkg.discountPercentage > 0 && (
+                                  <>
+                                    <span className="bg-[#E6F4EA] text-[#137333] font-bold px-1.5 py-0.5 rounded text-[10px] flex-shrink-0">
+                                      {pkg.discountPercentage}%
+                                    </span>
+                                    <span className="text-[11px] text-slate-400 line-through truncate font-medium">
+                                      {formatRupiah(pkg.originalPrice)}
+                                    </span>
+                                  </>
+                                )}
+                              </div>
+                              <span className="text-[#8C0C14] font-extrabold text-base whitespace-nowrap">
+                                {formatRupiah(pkg.price)}
+                              </span>
+                            </div>
+
+                            {/* CTA Button */}
+                            {isPurchasedTab ? (
+                              <button
+                                onClick={() => {
+                                  if (!hasPendingTrx) handleStartExam(pkg);
+                                }}
+                                disabled={hasPendingTrx && pkg.status === 'Terkunci'}
+                                className={`w-full py-2.5 rounded-full font-bold text-xs shadow-md transition-all flex items-center justify-center gap-1 border-0 ${
+                                  hasPendingTrx && pkg.status === 'Terkunci'
+                                    ? 'bg-amber-100 text-amber-700 cursor-not-allowed shadow-none'
+                                    : 'bg-[#8C0C14] hover:bg-[#6D080E] text-white hover:shadow-lg active:scale-[0.98]'
+                                }`}
+                              >
+                                {hasPendingTrx && pkg.status === 'Terkunci' ? (
+                                  <span className="flex items-center gap-1"><Clock className="h-3.5 w-3.5 animate-pulse" />Verifikasi...</span>
+                                ) : (
+                                  <span className="flex items-center gap-1">Mulai Ujian <ArrowRight className="h-3.5 w-3.5" /></span>
+                                )}
+                              </button>
+                            ) : (
+                              <button
+                                onClick={() => navigate(`/paket/${pkg.id}`)}
+                                className="w-full py-2.5 bg-[#8C0C14] hover:bg-[#6D080E] active:scale-[0.98] text-white rounded-full font-bold text-xs shadow-md shadow-red-900/10 hover:shadow-lg transition-all flex items-center justify-center gap-1 border-0"
+                              >
+                                Selengkapnya
+                              </button>
+                            )}
+                          </div>
+                        </div>
+                      </div>
+                    );
+                  })}
+                </div>
+              );
+
+              if (filteredPackages.length > 0) {
+                if (activeTab === 'paket') {
+                  return (
+                    <div className="space-y-10">
+                      {categorizedData.map((group) => (
+                        <div key={group.key} className="space-y-4">
+                          <div className="border-b border-slate-200/60 pb-2 mt-8 mb-4">
+                            <h3 className="text-lg md:text-xl font-extrabold text-[#0B1C30] tracking-tight">
+                              {group.title}
+                            </h3>
+                          </div>
+                          {renderPackagesGrid(group.items)}
+                        </div>
+                      ))}
+                    </div>
+                  );
+                }
+                return renderPackagesGrid(filteredPackages);
+              }
+
+              return (
+                <div className="text-center py-16 bg-white rounded-2xl border border-slate-200 shadow-premium">
+                  <FileText className="h-10 w-10 mx-auto text-slate-350 mb-3" />
+                  <h3 className="text-base font-bold text-slate-800">Tidak ada paket belajar</h3>
+                  <p className="text-xs text-slate-400 mt-1">
+                    {searchQuery ? `Tidak ada paket yang cocok dengan pencarian "${searchQuery}"` : 'Kategori ini belum memiliki paket belajar.'}
                   </p>
                 </div>
-
-                <div className="space-y-4">
-                  <div className="flex justify-between text-xs text-slate-400 font-bold pt-4 border-t border-slate-100">
-                    <span className="flex items-center gap-1.5"><Clock className="h-4 w-4 text-[#0B1C30]" />{pkg.duration} Min</span>
-                    <span className="flex items-center gap-1.5"><FileText className="h-4 w-4 text-[#0B1C30]" />{pkg.totalQuestions} Soal</span>
-                  </div>
-
-                  <Button
-                    variant={pkg.status === 'Terkunci' ? 'outline' : 'primary'}
-                    className={`w-full py-3 shadow-sm ${pkg.status === 'Terkunci'
-                      ? (hasPendingTrx ? 'bg-amber-50/70 border-amber-200 text-amber-700 cursor-not-allowed shadow-none' : 'border-slate-200 text-slate-500')
-                      : 'bg-[#0B1C30] hover:bg-[#102A43] text-white border-0'
-                      }`}
-                    onClick={() => {
-                      if (!hasPendingTrx) handleStartExam(pkg);
-                    }}
-                    disabled={hasPendingTrx}
-                  >
-                    {pkg.status === 'Terkunci' ? (
-                      hasPendingTrx ? (
-                        <span className="flex items-center justify-center gap-1.5"><Clock className="h-4 w-4 animate-pulse" />Menunggu Verifikasi</span>
-                      ) : (
-                        <span className="flex items-center justify-center gap-1.5"><Lock className="h-4 w-4" />Buka Akses</span>
-                      )
-                    ) : (
-                      <span className="flex items-center justify-center gap-1.5">Mulai Ujian<ArrowRight className="h-4 w-4" /></span>
-                    )}
-                  </Button>
-                </div>
-              </Card>
-            );
-          })}
-        </div>
-      )}
+              );
+            })()}
+          </div>
+        );
+      })()}
 
       {/* ═══ HISTORY TABLE TAB (Terpisah) ═══ */}
       {activeTab === 'riwayat' && (
@@ -432,7 +768,7 @@ export default function Dashboard() {
 
       {/* ═══ PROFILE TAB ═══ */}
       {activeTab === 'profil' && (
-        <div className="grid grid-cols-1 lg:grid-cols-3 gap-6 items-start">
+        <div className="grid grid-cols-1 lg:grid-cols-3 gap-6 items-start animate-fadeIn">
           {/* Left Avatar Card */}
           <Card className="p-6 border border-slate-200/60 shadow-premium bg-white flex flex-col items-center text-center space-y-4">
             <div className="relative">
@@ -451,6 +787,24 @@ export default function Dashboard() {
               <Badge className="bg-[#0B1C30]/10 text-[#0B1C30] border-0 text-[10px] font-bold uppercase">
                 {user?.role === 'admin' ? 'Administrator' : 'Premium Member'}
               </Badge>
+            </div>
+
+            {/* Avatar upload file triggers */}
+            <div className="w-full pt-1">
+              <input
+                type="file"
+                id="avatar-file-upload"
+                accept="image/*"
+                onChange={handleAvatarChange}
+                className="hidden"
+                disabled={isSubmittingAvatar}
+              />
+              <label
+                htmlFor="avatar-file-upload"
+                className="inline-flex items-center gap-1.5 px-4 py-2 bg-slate-100 hover:bg-slate-200 text-slate-700 font-bold text-xs rounded-xl shadow-sm transition-colors cursor-pointer active:scale-[0.98]"
+              >
+                {isSubmittingAvatar ? 'Memproses...' : 'Edit Foto'}
+              </label>
             </div>
 
             <div className="w-full pt-4 border-t border-slate-100 grid grid-cols-2 gap-4 text-center">
@@ -473,20 +827,72 @@ export default function Dashboard() {
             </div>
 
             <div className="grid grid-cols-1 sm:grid-cols-2 gap-6">
-              {[
-                { label: 'Nama Lengkap', value: user?.name, desc: 'Nama resmi sesuai kartu identitas' },
-                { label: 'Alamat Email', value: user?.email, desc: 'Digunakan untuk login & notifikasi' },
-                { label: 'Tipe Keanggotaan', value: user?.role === 'admin' ? 'Administrator System' : 'Premium Tryout Member', desc: 'Hak akses paket simulasi' },
-                { label: 'No. Registrasi Akun', value: 'SKD-2026-9012', desc: 'Nomor pendaftaran platform' }
-              ].map((f) => (
-                <div key={f.label} className="space-y-1.5">
-                  <label className="block text-[10px] font-bold text-slate-400 uppercase tracking-wider">{f.label}</label>
-                  <div className="px-4 py-3 bg-slate-50/80 rounded-xl border border-slate-200/50 text-sm font-bold text-slate-800">
-                    {f.value}
-                  </div>
-                  <p className="text-[10px] text-slate-400 font-medium">{f.desc}</p>
+              {/* Nama Lengkap */}
+              <div className="space-y-1.5">
+                <label className="block text-[10px] font-bold text-slate-400 uppercase tracking-wider">Nama Lengkap</label>
+                <div className="px-4 py-3 bg-slate-50/80 rounded-xl border border-slate-200/50 text-sm font-bold text-slate-800">
+                  {user?.name}
                 </div>
-              ))}
+                <p className="text-[10px] text-slate-400 font-medium">Nama resmi sesuai kartu identitas</p>
+              </div>
+
+              {/* Alamat Email */}
+              <div className="space-y-1.5">
+                <label className="block text-[10px] font-bold text-slate-400 uppercase tracking-wider">Alamat Email</label>
+                {isEditingEmail ? (
+                  <div className="flex gap-2">
+                    <input
+                      type="email"
+                      value={emailInput}
+                      onChange={(e) => setEmailInput(e.target.value)}
+                      className="flex-1 px-4 py-2.5 rounded-xl bg-white border border-slate-300 text-sm font-bold text-slate-800 outline-none focus:ring-2 focus:ring-[#0B1C30]/20 focus:border-[#0B1C30] transition-all"
+                      required
+                    />
+                    <button
+                      onClick={handleEmailSave}
+                      disabled={isSubmittingEmail}
+                      className="px-3.5 py-2.5 bg-emerald-600 hover:bg-emerald-700 text-white rounded-xl font-bold text-xs transition-colors cursor-pointer border-0 shadow-sm active:scale-95"
+                    >
+                      {isSubmittingEmail ? 'Simpan...' : 'Simpan'}
+                    </button>
+                    <button
+                      onClick={handleEmailCancel}
+                      className="px-3.5 py-2.5 bg-slate-200 hover:bg-slate-300 text-slate-700 rounded-xl font-bold text-xs transition-colors cursor-pointer border-0 shadow-sm"
+                    >
+                      Batal
+                    </button>
+                  </div>
+                ) : (
+                  <div className="flex items-center justify-between px-4 py-3 bg-slate-50/80 rounded-xl border border-slate-200/50">
+                    <span className="text-sm font-bold text-slate-800">{user?.email}</span>
+                    <button
+                      onClick={() => setIsEditingEmail(true)}
+                      className="text-[11px] font-bold text-[#8C0C14] hover:text-[#6D080E] bg-transparent border-0 cursor-pointer transition-colors"
+                    >
+                      Edit
+                    </button>
+                  </div>
+                )}
+                <p className="text-[10px] text-slate-400 font-medium">Digunakan untuk login & notifikasi</p>
+              </div>
+
+              {/* Tipe Keanggotaan */}
+              <div className="space-y-1.5">
+                <label className="block text-[10px] font-bold text-slate-400 uppercase tracking-wider">Tipe Keanggotaan</label>
+                <div className="px-4 py-3 bg-slate-50/80 rounded-xl border border-slate-200/50 text-sm font-bold text-slate-800">
+                  {user?.role === 'admin' ? 'Administrator System' : 'Premium Tryout Member'}
+                </div>
+                <p className="text-[10px] text-slate-400 font-medium">Hak akses paket simulasi</p>
+              </div>
+
+              {/* No. Registrasi Akun */}
+              <div className="space-y-1.5">
+                <label className="block text-[10px] font-bold text-slate-400 uppercase tracking-wider">No. Registrasi Akun</label>
+                <div className="px-4 py-3 bg-slate-50/80 rounded-xl border border-slate-200/50 text-sm font-bold text-slate-800">
+                  {user?.registration_number || 'Belum Ada'}
+                </div>
+                <p className="text-[10px] text-slate-400 font-medium">Nomor pendaftaran platform</p>
+              </div>
             </div>
           </Card>
         </div>

@@ -29,6 +29,19 @@ const register = async (userData) => {
   const salt = await bcrypt.genSalt(10);
   const hashedPassword = await bcrypt.hash(password, salt);
 
+  // Generate unique registration_number in format: SKD-{YYYY}-{random_suffix}
+  let registration_number = '';
+  let isUnique = false;
+  const currentYear = new Date().getFullYear();
+  while (!isUnique) {
+    const randomSuffix = Math.floor(1000 + Math.random() * 9000); // 4-digit number
+    registration_number = `SKD-${currentYear}-${randomSuffix}`;
+    const check = await User.findOne({ where: { registration_number } });
+    if (!check) {
+      isUnique = true;
+    }
+  }
+
   // Create user
   const newUser = await User.create({
     name,
@@ -36,6 +49,7 @@ const register = async (userData) => {
     password: hashedPassword,
     role: role || 'user',
     phone_number,
+    registration_number,
     is_active: true
   });
 
@@ -62,6 +76,23 @@ const login = async (email, password) => {
     throw error;
   }
 
+  // Generate registration number dynamically if not present
+  if (!user.registration_number) {
+    let registration_number = '';
+    let isUnique = false;
+    const currentYear = new Date().getFullYear();
+    while (!isUnique) {
+      const randomSuffix = Math.floor(1000 + Math.random() * 9000);
+      registration_number = `SKD-${currentYear}-${randomSuffix}`;
+      const check = await User.findOne({ where: { registration_number } });
+      if (!check) {
+        isUnique = true;
+      }
+    }
+    user.registration_number = registration_number;
+    await user.save();
+  }
+
   // Generate token
   const token = jwt.sign(
     { id: user.id, email: user.email, role: user.role },
@@ -86,6 +117,23 @@ const profile = async (userId) => {
     throw error;
   }
 
+  // Generate registration number dynamically if not present
+  if (!user.registration_number) {
+    let registration_number = '';
+    let isUnique = false;
+    const currentYear = new Date().getFullYear();
+    while (!isUnique) {
+      const randomSuffix = Math.floor(1000 + Math.random() * 9000);
+      registration_number = `SKD-${currentYear}-${randomSuffix}`;
+      const check = await User.findOne({ where: { registration_number } });
+      if (!check) {
+        isUnique = true;
+      }
+    }
+    user.registration_number = registration_number;
+    await user.save();
+  }
+  
   const userResponse = user.toJSON();
   delete userResponse.password;
 

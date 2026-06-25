@@ -27,6 +27,30 @@ const Tryout = sequelize.define('Tryout', {
     type: DataTypes.ENUM('active', 'inactive'),
     defaultValue: 'active',
   },
+  category: {
+    type: DataTypes.ENUM('Tryout', 'Kelas Online', 'E-Book', 'Bundling'),
+    allowNull: false,
+    defaultValue: 'Tryout',
+  },
+  image_url: {
+    type: DataTypes.TEXT('long'),
+    allowNull: true,
+  },
+  original_price: {
+    type: DataTypes.INTEGER,
+    allowNull: true,
+    defaultValue: 0,
+  },
+  discount_percentage: {
+    type: DataTypes.INTEGER,
+    allowNull: true,
+    defaultValue: 0,
+  },
+  price: {
+    type: DataTypes.INTEGER,
+    allowNull: true,
+    defaultValue: 0,
+  },
 }, {
   tableName: 'tryouts',
 });
