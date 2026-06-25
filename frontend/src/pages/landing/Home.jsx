@@ -63,34 +63,6 @@ export default function Home() {
                   >
                     Login
                   </button>
-
-                  <a
-                    href="#features"
-                    className="group w-full md:w-auto h-12 inline-flex items-center justify-center gap-3 text-sm font-bold text-slate-655 hover:text-slate-950 transition-colors py-3"
-                  >
-                    <span className="w-10 h-10 rounded-full border border-slate-200/80 bg-white flex items-center justify-center shadow-sm group-hover:border-blue-500/30 group-hover:bg-blue-50/50 transition-all duration-200 flex-shrink-0">
-                      <Play className="h-3.5 w-3.5 text-slate-600 group-hover:text-blue-700 fill-current" />
-                    </span>
-                    <span>Lihat Fitur</span>
-                  </a>
-                </div>
-
-                {/* Social Proof */}
-                <div className="flex flex-col sm:flex-row items-center justify-center lg:justify-start gap-3.5 pt-3.5 lg:pt-3 border-t border-slate-100 max-w-sm mx-auto lg:mx-0 mt-4 lg:mt-3">
-                  <div className="flex -space-x-2.5">
-                    {['bg-blue-600', 'bg-amber-500', 'bg-emerald-500', 'bg-rose-500'].map((bg, i) => (
-                      <div key={i} className={`w-8 h-8 rounded-full ${bg} ring-2 ring-white flex items-center justify-center text-[10px] font-extrabold text-white shadow-sm`}>
-                        {['WK', 'AP', 'RN', 'DS'][i]}
-                      </div>
-                    ))}
-                  </div>
-                  <div className="text-center sm:text-left">
-                    <p className="text-xs sm:text-sm font-bold text-slate-700">4.9★ <span className="text-[11px] sm:text-xs text-slate-400 font-medium">dari 12,800+ Peserta</span></p>
-                    <p className="text-[10px] sm:text-[11px] text-emerald-600 font-bold flex items-center justify-center sm:justify-start gap-1">
-                      <span className="w-1.5 h-1.5 rounded-full bg-emerald-500 animate-pulse"></span>
-                      <span>Telah Lolos SKD CASN</span>
-                    </p>
-                  </div>
                 </div>
               </Reveal>
             </div>
@@ -123,28 +95,6 @@ export default function Home() {
               </Reveal>
             </div>
           </div>
-        </div>
-      </section>
-
-      {/* ━━━ TRUSTED BY / LOGO BAR ━━━ */}
-      <section className="bg-slate-900 border-y border-slate-800">
-        <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-4 lg:py-3.5">
-          <Reveal direction="up" duration={600} delay={100}>
-            <div className="grid grid-cols-1 sm:grid-cols-3 gap-4 text-center text-[10px] sm:text-xs font-bold text-slate-400 tracking-widest uppercase">
-              <div className="flex items-center justify-center gap-2">
-                <Check className="h-4 w-4 text-blue-400 flex-shrink-0" />
-                <span>Sesuai Kisi-Kisi BKN Terbaru</span>
-              </div>
-              <div className="flex items-center justify-center gap-2 border-y sm:border-y-0 sm:border-x border-slate-800 py-2 sm:py-0">
-                <Check className="h-4 w-4 text-blue-400 flex-shrink-0" />
-                <span>Kurikulum Simulasi SKD 2026</span>
-              </div>
-              <div className="flex items-center justify-center gap-2">
-                <Check className="h-4 w-4 text-blue-400 flex-shrink-0" />
-                <span>Modul Soal Terintegrasi</span>
-              </div>
-            </div>
-          </Reveal>
         </div>
       </section>
 
@@ -229,13 +179,13 @@ export default function Home() {
             {[
               {
                 icon: <Trophy className="h-6 w-6 text-blue-600" />,
-                title: 'Simulasi CAT 1:1 BKN',
-                desc: 'Tampilan antarmuka, timer hitung mundur, tata letak soal, navigasi lembar jawaban, hingga tombol ragu-ragu dibuat persis 100% seperti ujian asli.'
+                title: 'Simulasi CAT BKN',
+                desc: 'Tampilan antarmuka, timer hitung mundur, tata letak soal, navigasi lembar jawaban, hingga tombol ragu-ragu dibuat persis seperti ujian asli.'
               },
               {
                 icon: <Users className="h-6 w-6 text-indigo-600" />,
                 title: 'Live Ranking Nasional',
-                desc: 'Ketahui nilai kelulusan Anda secara real-time. Skor Anda akan disandingkan dengan puluhan ribu peserta lainnya se-Indonesia per sub-kategori.'
+                desc: 'Ketahui nilai kelulusan Anda secara real-time. Skor Anda akan disandingkan dengan peserta lainnya per sub-kategori.'
               },
               {
                 icon: <BookOpen className="h-6 w-6 text-emerald-600" />,
@@ -264,7 +214,6 @@ export default function Home() {
 
             <div className="space-y-4 sm:space-y-6 text-center lg:text-left">
               <Reveal direction="right" duration={800}>
-                <p className="text-xs font-bold text-blue-600 uppercase tracking-widest">Cara Kerja</p>
                 <h2 className="text-2xl sm:text-3xl lg:text-4xl font-extrabold text-slate-900 tracking-tight leading-tight">
                   Tiga langkah
                   <br />
