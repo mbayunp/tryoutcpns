@@ -13,6 +13,7 @@ import {
 import Card from '../../components/common/Card';
 import Badge from '../../components/common/Badge';
 import { useExamStore } from '../../store/useExamStore';
+import { Helmet } from 'react-helmet-async';
 
 export default function AdminPembayaran() {
     const { transactions, updateTransactionStatus, fetchTransactions } = useExamStore();
@@ -142,9 +143,22 @@ export default function AdminPembayaran() {
     };
 
     return (
-        <div className="space-y-6">
-            {/* Header & Stats */}
-            <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
+        <>
+            <Helmet>
+                <title>Verifikasi Pembayaran - WILDAN CASN</title>
+            </Helmet>
+            <div className="max-w-7xl mx-auto space-y-6 pb-12 font-sans">
+                {/* Header Title */}
+                <div className="space-y-4">
+                    <div>
+                        <h2 className="text-2xl font-extrabold tracking-tight text-slate-900">Verifikasi Pembayaran</h2>
+                        <p className="text-sm text-slate-500">Verifikasi transaksi pembayaran tryout premium dan bundling peserta.</p>
+                    </div>
+                </div>
+
+                <div className="space-y-6 animate-fadeIn">
+                    {/* Header & Stats */}
+                    <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
                 <Card className="p-6 border border-slate-200/60 shadow-premium flex items-center gap-4 bg-white hover:-translate-y-0.5 transition-all">
                     <div className="w-12 h-12 bg-amber-500/10 rounded-xl flex items-center justify-center text-amber-600">
                         <Clock className="h-6 w-6" />
@@ -219,7 +233,7 @@ export default function AdminPembayaran() {
 
                 {/* Data Table */}
                 <div className="overflow-x-auto">
-                    <table className="w-full text-left border-collapse">
+                    <table className="w-full text-left border-collapse hidden md:table">
                         <thead>
                             <tr className="bg-slate-50 text-[11px] font-bold uppercase text-slate-400 tracking-wider border-b border-slate-200/60">
                                 <th className="px-6 py-4">ID & Tanggal</th>
@@ -277,7 +291,7 @@ export default function AdminPembayaran() {
                                                 <div className="flex items-center justify-center gap-2">
                                                     <button
                                                         onClick={() => handleApprove(trx.id)}
-                                                        className="p-2 bg-emerald-50 text-emerald-600 hover:bg-emerald-500 hover:text-white rounded-lg transition-colors ring-1 ring-emerald-200 hover:ring-emerald-500 tooltip-trigger"
+                                                        className="p-2 bg-emerald-50 text-emerald-600 hover:bg-emerald-500 hover:text-white rounded-lg transition-colors ring-1 ring-emerald-200 hover:ring-emerald-500 playbook-trigger"
                                                         title="Verifikasi Pembayaran"
                                                     >
                                                         <CheckCircle2 className="h-4 w-4" />
@@ -309,7 +323,93 @@ export default function AdminPembayaran() {
                         </tbody>
                     </table>
                 </div>
+
+                {/* Mobile Card List View */}
+                <div className="block md:hidden divide-y divide-slate-100 bg-white">
+                    {filteredTransactions.length > 0 ? (
+                        filteredTransactions.map((trx) => (
+                            <div key={trx.id} className="p-4 space-y-3">
+                                <div className="flex justify-between items-start">
+                                    <div>
+                                        <div className="font-bold text-slate-800 text-sm">{trx.id}</div>
+                                        <div className="text-xs text-slate-400 font-medium mt-0.5">{trx.date}</div>
+                                    </div>
+                                    <Badge variant={
+                                        trx.status === 'success' ? 'success' :
+                                            trx.status === 'pending' ? 'warning' : 'danger'
+                                    }>
+                                        {trx.status === 'success' ? 'BERHASIL' :
+                                            trx.status === 'pending' ? 'PENDING' : 'GAGAL'}
+                                    </Badge>
+                                </div>
+
+                                <div className="text-xs text-slate-650 space-y-1">
+                                    <div>
+                                        <span className="font-semibold text-slate-400">Nama:</span> <span className="font-bold text-slate-700">{trx.userName}</span>
+                                    </div>
+                                    <div>
+                                        <span className="font-semibold text-slate-400">Email:</span> <span className="font-medium text-slate-600">{trx.email}</span>
+                                    </div>
+                                    <div>
+                                        <span className="font-semibold text-slate-400">Paket:</span> <span className="font-bold text-blue-600">{trx.package}</span>
+                                    </div>
+                                    <div>
+                                        <span className="font-semibold text-slate-400">Nominal:</span> <span className="font-extrabold text-slate-700">{trx.amount}</span>
+                                    </div>
+                                </div>
+
+                                <div className="flex items-center justify-between pt-2 border-t border-slate-50">
+                                    <button
+                                        type="button"
+                                        onClick={() => Swal.fire({
+                                            title: 'Bukti Transfer Pembayaran',
+                                            text: `Transaksi ID: ${trx.id} (${trx.userName})`,
+                                            imageUrl: trx.proofImage || 'https://placehold.co/600x400?text=Bukti+Transfer',
+                                            imageWidth: 400,
+                                            imageAlt: 'Bukti Transfer',
+                                            confirmButtonText: 'Tutup',
+                                            confirmButtonColor: '#0B1C35'
+                                        })}
+                                        className="px-3 py-2 bg-blue-50 text-blue-600 hover:bg-blue-100 hover:text-blue-800 rounded-lg text-xs font-bold transition-all border-0 cursor-pointer"
+                                    >
+                                        Lihat Bukti
+                                    </button>
+
+                                    <div>
+                                        {trx.status === 'pending' ? (
+                                            <div className="flex items-center gap-2">
+                                                <button
+                                                    onClick={() => handleApprove(trx.id)}
+                                                    className="px-3 py-2 bg-emerald-50 text-emerald-600 hover:bg-emerald-500 hover:text-white rounded-lg text-xs font-bold transition-colors ring-1 ring-emerald-200 hover:ring-emerald-500 flex items-center gap-1"
+                                                >
+                                                    <CheckCircle2 className="h-3.5 w-3.5" />
+                                                    <span>Setujui</span>
+                                                </button>
+                                                <button
+                                                    onClick={() => handleReject(trx.id)}
+                                                    className="px-3 py-2 bg-red-50 text-red-600 hover:bg-red-500 hover:text-white rounded-lg text-xs font-bold transition-colors ring-1 ring-red-200 hover:ring-red-500 flex items-center gap-1"
+                                                >
+                                                    <XCircle className="h-3.5 w-3.5" />
+                                                    <span>Tolak</span>
+                                                </button>
+                                            </div>
+                                        ) : (
+                                            <span className="text-xs text-slate-400 font-semibold italic">Selesai</span>
+                                        )}
+                                    </div>
+                                </div>
+                            </div>
+                        ))
+                    ) : (
+                        <div className="py-8 px-4 text-center text-slate-400">
+                            <Receipt className="h-8 w-8 mx-auto mb-2 opacity-50" />
+                            <p className="font-semibold text-xs">Tidak ada data transaksi ditemukan.</p>
+                        </div>
+                    )}
+                </div>
             </Card>
-        </div>
+            </div>
+            </div>
+        </>
     );
 }

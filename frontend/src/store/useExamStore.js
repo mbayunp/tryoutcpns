@@ -11,7 +11,6 @@ export const useExamStore = create(
       history: [],
       questions: [],
       categories: [],
-      activeTab: 'dashboard',
       transactions: [],
       rankings: [],
       announcement: null,
@@ -122,8 +121,6 @@ export const useExamStore = create(
           throw new Error(message);
         }
       },
-
-      setActiveTab: (tab) => set({ activeTab: tab }),
 
       fetchTransactions: async () => {
         try {
@@ -651,12 +648,13 @@ export const useExamStore = create(
         }
       },
 
-      createPendingTransaction: async (tryoutId, amount, proofImage) => {
+      createPendingTransaction: async (tryoutId, amount, proofImage, referralCode) => {
         try {
           await API.post('/transactions', {
             tryout_id: tryoutId,
             amount: amount,
-            proof_image: proofImage || null
+            proof_image: proofImage || null,
+            referral_code: referralCode || null
           });
           await get().fetchPackages();
         } catch (error) {
@@ -672,6 +670,17 @@ export const useExamStore = create(
           await get().fetchPackages();
         } catch (error) {
           console.error('Failed to update transaction status:', error);
+        }
+      },
+
+      validateReferralCode: async (code) => {
+        try {
+          const res = await API.post('/referrals/validate', { code });
+          return res.data.data;
+        } catch (error) {
+          console.error('Failed to validate referral code:', error);
+          const errorMsg = error.response?.data?.message || 'Kode referal tidak valid atau sudah tidak aktif';
+          throw new Error(errorMsg);
         }
       }
     }),

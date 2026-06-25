@@ -10,10 +10,17 @@ const startServer = async () => {
     await sequelize.authenticate();
     console.log('Database connection has been established successfully.');
 
-    // Sync database schema (in dev mode we can use alter: true or force: false)
-    // Synchronize structures with safety
+    // Add referral_code column to transactions safely
+    try {
+      await sequelize.query("ALTER TABLE `transactions` ADD COLUMN `referral_code` VARCHAR(50) DEFAULT NULL;");
+      console.log('Added referral_code column to transactions table.');
+    } catch (err) {
+      // Ignore if column already exists
+    }
+
+    // Sync database schema
     const syncOptions = {
-      alter: env.NODE_ENV === 'development',
+      alter: false,
       force: false
     };
     
@@ -21,13 +28,7 @@ const startServer = async () => {
       await sequelize.sync(syncOptions);
       console.log('Database schemas synchronized successfully.');
     } catch (syncError) {
-      if (syncOptions.alter) {
-        console.warn('Database sync with alter failed, trying without alter:', syncError.message);
-        await sequelize.sync({ force: false, alter: false });
-        console.log('Database schemas synchronized successfully (fallback).');
-      } else {
-        throw syncError;
-      }
+      throw syncError;
     }
 
     // JWT Production Protection validation

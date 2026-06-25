@@ -97,7 +97,7 @@ export default function Analytics() {
   if (loading) {
     return (
       <div className="flex flex-col items-center justify-center py-32 space-y-4">
-        <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-[#8C0C14]"></div>
+        <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-[#0B1C30]"></div>
         <p className="text-sm font-bold text-slate-500">Memuat analisis keuangan...</p>
       </div>
     );

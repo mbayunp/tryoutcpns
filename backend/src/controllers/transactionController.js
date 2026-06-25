@@ -13,7 +13,7 @@ const getTransactions = async (req, res, next) => {
 
 const createTransaction = async (req, res, next) => {
   try {
-    const { tryout_id, amount, proof_image, proofImage } = req.body;
+    const { tryout_id, amount, proof_image, proofImage, referral_code, referralCode } = req.body;
     if (!tryout_id) {
       return response.error(res, 'tryout_id is required', 400);
     }
@@ -21,7 +21,8 @@ const createTransaction = async (req, res, next) => {
       req.user.id,
       tryout_id,
       amount,
-      proof_image || proofImage
+      proof_image || proofImage,
+      referral_code || referralCode
     );
     return response.success(res, transaction, 'Transaction created successfully', 201);
   } catch (err) {

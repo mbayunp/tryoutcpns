@@ -30,6 +30,10 @@ const Transaction = sequelize.define('Transaction', {
     type: DataTypes.TEXT('long'),
     allowNull: true,
   },
+  referral_code: {
+    type: DataTypes.STRING(50),
+    allowNull: true,
+  },
 }, {
   tableName: 'transactions',
 });

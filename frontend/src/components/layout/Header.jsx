@@ -8,6 +8,8 @@ export default function Header() {
   const [isOpen, setIsOpen] = useState(false);
   const [isScrolled, setIsScrolled] = useState(false);
   const [activeSection, setActiveSection] = useState('beranda');
+  const [currentAnnouncementIndex, setCurrentAnnouncementIndex] = useState(0);
+  const [isBannerVisible, setIsBannerVisible] = useState(true);
   const navigate = useNavigate();
   const location = useLocation();
   const { announcement, fetchActiveAnnouncement } = useExamStore();
@@ -49,56 +51,56 @@ export default function Header() {
     ? announcement
     : (announcement && announcement.is_active ? [announcement] : []);
 
+  useEffect(() => {
+    if (activeAnnouncements.length <= 1) return;
+    const interval = setInterval(() => {
+      setCurrentAnnouncementIndex((prev) => (prev + 1) % activeAnnouncements.length);
+    }, 5000);
+    return () => clearInterval(interval);
+  }, [activeAnnouncements.length]);
+
   const isHomePage = location.pathname === '/';
 
   return (
     <header className="fixed top-0 left-0 w-full z-50 transition-all duration-300">
 
-      {/* ─── INJECT CUSTOM CSS UNTUK RUNNING TEXT ─── */}
+      {/* ─── INJECT CUSTOM CSS UNTUK FADE TRANSITION ─── */}
       <style>
         {`
-          @keyframes runningText {
-            0% { transform: translateX(100vw); }
-            100% { transform: translateX(-100%); }
+          .announcement-fade {
+            animation: announcementFade 0.5s ease-in-out forwards;
           }
-          .animate-running-text {
-            display: inline-block;
-            white-space: nowrap;
-            /* Ubah angka 25s menjadi lebih besar untuk memperlambat, atau lebih kecil untuk mempercepat */
-            animation: runningText 25s linear infinite;
-            will-change: transform;
-          }
-          /* Pause animasi saat user hover agar link mudah diklik */
-          .animate-running-text:hover {
-            animation-play-state: paused;
+          @keyframes announcementFade {
+            from { opacity: 0; transform: translateY(2px); }
+            to { opacity: 1; transform: translateY(0); }
           }
         `}
       </style>
 
       {/* Dynamic Announcement Promo Bar */}
-      {activeAnnouncements.length > 0 && (
-        <div className="bg-slate-900 text-slate-200 text-[11px] sm:text-xs py-2 relative flex items-center font-semibold tracking-wide shadow-sm overflow-hidden w-full border-b border-white/5">
-          <div className="animate-running-text inline-flex items-center gap-6">
-            {activeAnnouncements.map((ann, index) => (
-              <span key={ann.id} className="inline-flex items-center gap-2">
-                <Megaphone className="h-3.5 w-3.5 text-blue-400 flex-shrink-0" />
-                <span>{ann.text}</span>
-                {ann.link && (
-                  <a
-                    href={ann.link}
-                    target="_blank"
-                    rel="noopener noreferrer"
-                    className="underline hover:text-blue-400 font-bold ml-1 transition-colors"
-                  >
-                    Lihat Selengkapnya &rarr;
-                  </a>
-                )}
-                {index < activeAnnouncements.length - 1 && (
-                  <span className="text-slate-500 font-bold ml-4"></span>
-                )}
-              </span>
-            ))}
+      {isBannerVisible && activeAnnouncements.length > 0 && (
+        <div className="bg-slate-900 text-slate-200 text-[11px] sm:text-xs py-2 relative flex items-center justify-center font-semibold tracking-wide shadow-sm w-full border-b border-white/5 px-10">
+          <div key={currentAnnouncementIndex} className="announcement-fade inline-flex items-center justify-center gap-2 text-center">
+            <Megaphone className="h-3.5 w-3.5 text-blue-400 flex-shrink-0" />
+            <span>{activeAnnouncements[currentAnnouncementIndex].text}</span>
+            {activeAnnouncements[currentAnnouncementIndex].link && (
+              <a
+                href={activeAnnouncements[currentAnnouncementIndex].link}
+                target="_blank"
+                rel="noopener noreferrer"
+                className="underline hover:text-blue-400 font-bold ml-1 transition-colors"
+              >
+                Lihat Selengkapnya &rarr;
+              </a>
+            )}
           </div>
+          <button
+            onClick={() => setIsBannerVisible(false)}
+            className="absolute right-4 hover:text-white transition-colors p-1"
+            title="Tutup Pengumuman"
+          >
+            <X className="h-3.5 w-3.5" />
+          </button>
         </div>
       )}
 

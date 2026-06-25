@@ -14,6 +14,7 @@ const Transaction = require('./transaction');
 const Payment = require('./payment');
 const Video = require('./video');
 const Announcement = require('./announcement');
+const ReferralCode = require('./referralCode');
 
 // Associations
 // 1. User <-> Attempt
@@ -83,7 +84,8 @@ const db = {
   Video,
   PackageQuestion,
   AttemptAnswer,
-  Announcement
+  Announcement,
+  ReferralCode
 };
 
 module.exports = db;

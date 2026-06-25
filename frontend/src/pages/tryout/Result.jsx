@@ -20,7 +20,7 @@ export default function Result() {
   const location = useLocation();
   
   // Ambil data langsung dari store sebagai cadangan (Fallback)
-  const { setActiveTab, fetchHistory, questions: storeQuestions, history: storeHistory } = useExamStore();
+  const { fetchHistory, questions: storeQuestions, history: storeHistory } = useExamStore();
 
   const [loading, setLoading] = useState(true);
   const [attempt, setAttempt] = useState(null);
@@ -116,7 +116,6 @@ export default function Result() {
   }, [attemptId, fetchHistory, storeQuestions, storeHistory]);
 
   const handleBackToDashboard = () => {
-    setActiveTab('dashboard');
     navigate('/dashboard');
   };
 

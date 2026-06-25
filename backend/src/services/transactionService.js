@@ -1,6 +1,10 @@
-const { Transaction, User, Tryout, Announcement } = require('../models');
+const { Transaction, User, Tryout, Announcement, ReferralCode } = require('../models');
 
-const createTransaction = async (userId, tryoutId, amount, proofImage) => {
+const formatRupiah = (num) => {
+  return 'Rp ' + num.toString().replace(/\B(?=(\d{3})+(?!\d))/g, ".");
+};
+
+const createTransaction = async (userId, tryoutId, amount, proofImage, referralCode) => {
   // Check if tryout exists
   const tryout = await Tryout.findByPk(tryoutId);
   if (!tryout) {
@@ -8,6 +12,34 @@ const createTransaction = async (userId, tryoutId, amount, proofImage) => {
     error.statusCode = 404;
     throw error;
   }
+
+  let finalAmount = tryout.price || 0;
+  let appliedCode = null;
+
+  if (referralCode) {
+    const ref = await ReferralCode.findOne({
+      where: {
+        code: referralCode.trim(),
+        is_active: true
+      }
+    });
+    if (!ref) {
+      const error = new Error('Referral code is invalid or inactive');
+      error.statusCode = 400;
+      throw error;
+    }
+
+    // Discount Stacking: Referral discount applies to tryout.price (already discounted price)
+    finalAmount = Math.round(finalAmount - (finalAmount * ref.discount_percentage / 100));
+    appliedCode = ref.code;
+
+    // Increment usage count
+    ref.usage_count = (ref.usage_count || 0) + 1;
+    await ref.save();
+  }
+
+  // Use backend calculated amount formatted as Rupiah
+  const finalAmountStr = formatRupiah(finalAmount);
 
   // Generate transaction ID similar to the frontend's TRX-XXXXXX format
   // We append a random digit to minimize any collisions
@@ -18,10 +50,11 @@ const createTransaction = async (userId, tryoutId, amount, proofImage) => {
     id: transactionId,
     user_id: userId,
     tryout_id: tryoutId,
-    amount: amount || 'Rp 199.000',
+    amount: finalAmountStr,
     status: 'pending',
     payment_method: 'Manual Bank Transfer',
-    proof_image: proofImage || null
+    proof_image: proofImage || null,
+    referral_code: appliedCode
   });
 
   return transaction;

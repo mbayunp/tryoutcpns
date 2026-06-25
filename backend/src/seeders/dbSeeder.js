@@ -1,5 +1,5 @@
 const bcrypt = require('bcryptjs');
-const { sequelize, User, Category, Tryout, Question } = require('../models');
+const { sequelize, User, Category, Tryout, Question, ReferralCode } = require('../models');
 
 const seed = async () => {
   try {
@@ -8,7 +8,13 @@ const seed = async () => {
     console.log('Database connected. Starting seeding...');
 
     // Synchronize models
-    await sequelize.sync({ alter: true });
+    try {
+      await sequelize.query("ALTER TABLE `transactions` ADD COLUMN `referral_code` VARCHAR(50) DEFAULT NULL;");
+      console.log('Added referral_code column to transactions table.');
+    } catch (err) {
+      console.log('referral_code column already exists or table not ready.');
+    }
+    await sequelize.sync();
 
     // 1. Seed Categories
     console.log('Seeding Categories...');
@@ -431,6 +437,28 @@ const seed = async () => {
     const count4 = await Question.count({ where: { tryout_id: tryout4.id } });
     tryout4.total_questions = count4;
     await tryout4.save();
+
+    console.log('Seeding Referral Codes...');
+    await ReferralCode.findOrCreate({
+      where: { code: 'WILDANCASN10' },
+      defaults: {
+        code: 'WILDANCASN10',
+        discount_percentage: 10,
+        is_active: true,
+        usage_count: 0
+      }
+    });
+
+    await ReferralCode.findOrCreate({
+      where: { code: 'LULUS10' },
+      defaults: {
+        code: 'LULUS10',
+        discount_percentage: 10,
+        is_active: true,
+        usage_count: 0
+      }
+    });
+    console.log('Referral Codes seeded.');
 
     console.log('All packages and questions seeded successfully.');
     console.log('Seeding completed successfully!');

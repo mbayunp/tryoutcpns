@@ -8,7 +8,6 @@ import {
   History,
   User as UserIcon,
   Trophy,
-  ShieldAlert,
   LogOut,
   Menu,
   X,
@@ -21,22 +20,26 @@ import {
   Package,
   ChevronDown,
   ChevronUp,
-  TrendingUp
+  TrendingUp,
+  Ticket,
+  Receipt
 } from 'lucide-react';
 
 export default function DashboardLayout() {
   const navigate = useNavigate();
   const location = useLocation();
-  const { user, logout, activeTab, setActiveTab, notifications, fetchNotifications } = useExamStore();
+  const { user, logout, notifications, fetchNotifications } = useExamStore();
   const [mobileOpen, setMobileOpen] = useState(false);
   const [isSidebarCollapsed, setIsSidebarCollapsed] = useState(false);
-  const [isPaketOpen, setIsPaketOpen] = useState(false);
+  const [isPaketOpen, setIsPaketOpen] = useState(() => {
+    return location.pathname.startsWith('/dashboard/paket') || location.pathname === '/dashboard/paket-saya';
+  });
 
   useEffect(() => {
-    if (activeTab && (activeTab === 'paket' || activeTab.startsWith('paket-'))) {
+    if (location.pathname.startsWith('/dashboard/paket') || location.pathname === '/dashboard/paket-saya') {
       setIsPaketOpen(true);
     }
-  }, [activeTab]);
+  }, [location.pathname]);
 
   // Notification dropdown states
   const [showNotifications, setShowNotifications] = useState(false);
@@ -124,19 +127,63 @@ export default function DashboardLayout() {
   if (!user) return null;
 
   const handleTabClick = (tabId) => {
-    setActiveTab(tabId);
     setMobileOpen(false);
-    navigate('/dashboard');
+    if (tabId === 'dashboard') {
+      navigate('/dashboard');
+    } else if (tabId === 'paket') {
+      navigate('/dashboard/paket');
+    } else if (tabId === 'paket-tryout') {
+      navigate('/dashboard/paket?cat=Tryout');
+    } else if (tabId === 'paket-kelas-online') {
+      navigate('/dashboard/paket?cat=Kelas Online');
+    } else if (tabId === 'paket-ebook') {
+      navigate('/dashboard/paket?cat=E-Book');
+    } else if (tabId === 'paket-bundling') {
+      navigate('/dashboard/paket?cat=Bundling');
+    } else if (tabId === 'paket-saya') {
+      navigate('/dashboard/paket-saya');
+    } else if (tabId === 'riwayat') {
+      navigate('/dashboard/riwayat');
+    } else if (tabId === 'ranking') {
+      navigate('/dashboard/ranking');
+    } else if (tabId === 'profil') {
+      navigate('/dashboard/profil');
+    }
   };
 
   const handleAdminClick = () => {
     setMobileOpen(false);
-    navigate('/admin');
+    navigate('/admin/dashboard');
+  };
+
+  const handleSoalClick = () => {
+    setMobileOpen(false);
+    navigate('/admin/soal');
+  };
+
+  const handlePaketClick = () => {
+    setMobileOpen(false);
+    navigate('/admin/paket');
+  };
+
+  const handlePembayaranClick = () => {
+    setMobileOpen(false);
+    navigate('/admin/pembayaran');
+  };
+
+  const handleBannerClick = () => {
+    setMobileOpen(false);
+    navigate('/admin/banner');
   };
 
   const handleAnalyticsClick = () => {
     setMobileOpen(false);
     navigate('/admin/analytics');
+  };
+
+  const handleReferralClick = () => {
+    setMobileOpen(false);
+    navigate('/admin/referral');
   };
 
   const handleLogoutClick = () => {
@@ -247,7 +294,7 @@ export default function DashboardLayout() {
             )}
             {menuItems.map((item) => {
               if (item.isCollapsible) {
-                const isChildActive = activeTab && activeTab.startsWith('paket-') && activeTab !== 'paket-saya';
+                const isChildActive = location.pathname === '/dashboard/paket';
                 return (
                   <div key={item.id} className="space-y-1">
                     <button
@@ -260,7 +307,7 @@ export default function DashboardLayout() {
                         }
                       }}
                       className={`w-full flex items-center justify-between ${collapsed ? 'justify-center' : 'gap-2.5 px-3'} py-2.5 rounded-xl text-[13px] font-semibold transition-all duration-200 ${
-                        isChildActive || activeTab === 'paket'
+                        isChildActive
                           ? 'bg-[#0B1C30]/5 text-[#0B1C30]'
                           : 'text-slate-500 hover:bg-slate-50 hover:text-[#0B1C30]'
                       }`}
@@ -280,13 +327,26 @@ export default function DashboardLayout() {
                     {isPaketOpen && !collapsed && (
                       <div className="pl-6 space-y-0.5 animate-fadeIn">
                         {item.children.map((child) => {
-                          const isSubActive = activeTab === child.id;
+                          const params = new URLSearchParams(location.search);
+                          const cat = params.get('cat');
+                          const isSubActive = child.id === 'paket' 
+                            ? location.pathname === '/dashboard/paket' && !cat
+                            : location.pathname === '/dashboard/paket' && cat === child.id.replace('paket-', '').split('-').map(w => w.charAt(0).toUpperCase() + w.slice(1)).join(' ');
+                          
+                          // Handle special case naming differences
+                          let matchesSub = isSubActive;
+                          if (child.id === 'paket-kelas-online') {
+                            matchesSub = location.pathname === '/dashboard/paket' && cat === 'Kelas Online';
+                          } else if (child.id === 'paket-ebook') {
+                            matchesSub = location.pathname === '/dashboard/paket' && cat === 'E-Book';
+                          }
+
                           return (
                             <button
                               key={child.id}
                               onClick={() => handleTabClick(child.id)}
                               className={`w-full flex items-center gap-2 px-3 py-2 rounded-lg text-[12.5px] font-semibold transition-all duration-200 ${
-                                isSubActive
+                                matchesSub
                                   ? 'bg-[#0B1C30] text-white shadow-sm'
                                   : 'text-slate-500 hover:bg-slate-50 hover:text-[#0B1C30]'
                               }`}
@@ -302,8 +362,12 @@ export default function DashboardLayout() {
                 );
               }
 
-              const isDashboardRoute = location.pathname === '/dashboard';
-              const isActive = isDashboardRoute && activeTab === item.id;
+              const isActive = item.id === 'dashboard' 
+                ? location.pathname === '/dashboard'
+                : item.id === 'paket-saya'
+                ? location.pathname === '/dashboard/paket-saya'
+                : location.pathname === `/dashboard/${item.id}`;
+
               return (
                 <button
                   key={item.id}
@@ -330,14 +394,74 @@ export default function DashboardLayout() {
                 <button
                   onClick={handleAdminClick}
                   className={`w-full flex items-center ${collapsed ? 'justify-center' : 'gap-2.5 px-3'} py-2.5 rounded-xl text-[13px] font-semibold transition-all duration-200 ${
-                    location.pathname === '/admin'
+                    (location.pathname === '/admin' || location.pathname === '/admin/dashboard')
                       ? 'bg-[#0B1C30] text-white shadow-premium'
                       : 'text-slate-500 hover:bg-slate-50 hover:text-[#0B1C30]'
                   }`}
-                  title={collapsed ? 'Kelola Soal' : undefined}
+                  title={collapsed ? 'Dashboard Overview' : undefined}
                 >
-                  <div className="flex-shrink-0"><ShieldAlert className="h-[18px] w-[18px]" /></div>
-                  {!collapsed && <span className="whitespace-nowrap">Kelola Soal</span>}
+                  <div className="flex-shrink-0"><LayoutDashboard className="h-[18px] w-[18px]" /></div>
+                  {!collapsed && <span className="whitespace-nowrap">Dashboard Overview</span>}
+                </button>
+                <button
+                  onClick={handlePaketClick}
+                  className={`w-full flex items-center ${collapsed ? 'justify-center' : 'gap-2.5 px-3'} py-2.5 rounded-xl text-[13px] font-semibold transition-all duration-200 mt-1 ${
+                    (location.pathname === '/admin/paket' || location.pathname === '/admin/kelola-paket')
+                      ? 'bg-[#0B1C30] text-white shadow-premium'
+                      : 'text-slate-500 hover:bg-slate-50 hover:text-[#0B1C30]'
+                  }`}
+                  title={collapsed ? 'Kelola Paket' : undefined}
+                >
+                  <div className="flex-shrink-0"><Package className="h-[18px] w-[18px]" /></div>
+                  {!collapsed && <span className="whitespace-nowrap">Kelola Paket</span>}
+                </button>
+                <button
+                  onClick={handleSoalClick}
+                  className={`w-full flex items-center ${collapsed ? 'justify-center' : 'gap-2.5 px-3'} py-2.5 rounded-xl text-[13px] font-semibold transition-all duration-200 mt-1 ${
+                    location.pathname === '/admin/soal'
+                      ? 'bg-[#0B1C30] text-white shadow-premium'
+                      : 'text-slate-500 hover:bg-slate-50 hover:text-[#0B1C30]'
+                  }`}
+                  title={collapsed ? 'Bank Soal' : undefined}
+                >
+                  <div className="flex-shrink-0"><FileText className="h-[18px] w-[18px]" /></div>
+                  {!collapsed && <span className="whitespace-nowrap">Bank Soal</span>}
+                </button>
+                <button
+                  onClick={handlePembayaranClick}
+                  className={`w-full flex items-center ${collapsed ? 'justify-center' : 'gap-2.5 px-3'} py-2.5 rounded-xl text-[13px] font-semibold transition-all duration-200 mt-1 ${
+                    location.pathname === '/admin/pembayaran'
+                      ? 'bg-[#0B1C30] text-white shadow-premium'
+                      : 'text-slate-500 hover:bg-slate-50 hover:text-[#0B1C30]'
+                  }`}
+                  title={collapsed ? 'Verifikasi Bayar' : undefined}
+                >
+                  <div className="flex-shrink-0"><Receipt className="h-[18px] w-[18px]" /></div>
+                  {!collapsed && <span className="whitespace-nowrap">Verifikasi Bayar</span>}
+                </button>
+                <button
+                  onClick={handleBannerClick}
+                  className={`w-full flex items-center ${collapsed ? 'justify-center' : 'gap-2.5 px-3'} py-2.5 rounded-xl text-[13px] font-semibold transition-all duration-200 mt-1 ${
+                    location.pathname === '/admin/banner'
+                      ? 'bg-[#0B1C30] text-white shadow-premium'
+                      : 'text-slate-500 hover:bg-slate-50 hover:text-[#0B1C30]'
+                  }`}
+                  title={collapsed ? 'Kelola Banner' : undefined}
+                >
+                  <div className="flex-shrink-0"><Megaphone className="h-[18px] w-[18px]" /></div>
+                  {!collapsed && <span className="whitespace-nowrap">Kelola Banner</span>}
+                </button>
+                <button
+                  onClick={handleReferralClick}
+                  className={`w-full flex items-center ${collapsed ? 'justify-center' : 'gap-2.5 px-3'} py-2.5 rounded-xl text-[13px] font-semibold transition-all duration-200 mt-1 ${
+                    (location.pathname === '/admin/referral' || location.pathname === '/admin/referal')
+                      ? 'bg-[#0B1C30] text-white shadow-premium'
+                      : 'text-slate-500 hover:bg-slate-50 hover:text-[#0B1C30]'
+                  }`}
+                  title={collapsed ? 'Kelola Referal' : undefined}
+                >
+                  <div className="flex-shrink-0"><Ticket className="h-[18px] w-[18px]" /></div>
+                  {!collapsed && <span className="whitespace-nowrap">Kelola Referal</span>}
                 </button>
                 <button
                   onClick={handleAnalyticsClick}
@@ -433,7 +557,7 @@ export default function DashboardLayout() {
 
               {/* Notification Dropdown Panel */}
               {showNotifications && (
-                <div className="absolute right-0 top-full mt-3 w-[340px] sm:w-[420px] bg-white border border-slate-200/80 rounded-2xl shadow-2xl z-50 overflow-hidden animate-in fade-in slide-in-from-top-3 duration-200">
+                <div className="absolute right-[-54px] sm:right-0 top-full mt-3 w-[calc(100vw-32px)] sm:w-[420px] bg-white border border-slate-200/80 rounded-2xl shadow-2xl z-50 overflow-hidden animate-in fade-in slide-in-from-top-3 duration-200">
                   {/* Header */}
                   <div className="px-5 py-4 border-b border-slate-100 flex items-center justify-between bg-slate-50/50">
                     <div>

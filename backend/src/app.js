@@ -16,6 +16,7 @@ const attemptRoutes = require('./routes/attemptRoutes');
 const announcementRoutes = require('./routes/announcementRoutes');
 const analyticsRoutes = require('./routes/analyticsRoutes');
 const userRoutes = require('./routes/userRoutes');
+const referralRoutes = require('./routes/referralRoutes');
 
 const app = express();
 
@@ -42,6 +43,8 @@ app.use('/api/tryouts', tryoutRoutes);
 app.use('/api/packages', tryoutRoutes);
 app.use('/api/results', resultRoutes);
 app.use('/api/transactions', transactionRoutes);
+app.use('/api/referrals', referralRoutes);
+app.use('/api/admin/referrals', referralRoutes);
 app.use('/api/attempts', attemptRoutes);
 app.use('/api/announcements', announcementRoutes);
 app.use('/api/admin/analytics', analyticsRoutes);
