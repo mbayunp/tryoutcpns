@@ -28,7 +28,7 @@ import {
 export default function DashboardLayout() {
   const navigate = useNavigate();
   const location = useLocation();
-  const { user, logout, notifications, fetchNotifications } = useExamStore();
+  const { user, logout, notifications, fetchNotifications, activeProgram, adminActiveProgram, setAdminActiveProgram } = useExamStore();
   const [mobileOpen, setMobileOpen] = useState(false);
   const [isSidebarCollapsed, setIsSidebarCollapsed] = useState(false);
   const [isPaketOpen, setIsPaketOpen] = useState(() => {
@@ -121,10 +121,20 @@ export default function DashboardLayout() {
   useEffect(() => {
     if (!user) {
       navigate('/login');
+    } else if (!activeProgram && location.pathname !== '/program-selection') {
+      navigate('/program-selection');
     }
-  }, [user, navigate]);
-
+  }, [user, activeProgram, location.pathname, navigate]);
+ 
   if (!user) return null;
+  
+  if (location.pathname === '/program-selection') {
+    return (
+      <div className="min-h-screen bg-slate-950 flex flex-col justify-center items-center">
+        <Outlet />
+      </div>
+    );
+  }
 
   const handleTabClick = (tabId) => {
     setMobileOpen(false);
@@ -634,6 +644,34 @@ export default function DashboardLayout() {
                 </div>
               )}
             </div>
+
+            {/* Admin Program Switcher */}
+            {location.pathname.startsWith('/admin') && (
+              <div className="relative z-10 mr-1 animate-fadeIn">
+                <select
+                  value={adminActiveProgram}
+                  onChange={(e) => setAdminActiveProgram(e.target.value)}
+                  className="px-3.5 py-2.5 rounded-xl text-xs font-bold bg-slate-50 border border-slate-200 focus:border-[#0B1C30] outline-none text-slate-800 transition-all duration-200 cursor-pointer hover:bg-slate-100 shadow-sm"
+                >
+                  <option value="">🌐 Semua Program</option>
+                  <option value="SKD">🏛️ Program SKD</option>
+                  <option value="PPPK">🏢 Program PPPK</option>
+                  <option value="PPG">🎓 Program PPG</option>
+                </select>
+              </div>
+            )}
+
+            {/* Active Program Badge */}
+            {!location.pathname.startsWith('/admin') && activeProgram && (
+              <button
+                onClick={() => navigate('/program-selection')}
+                className="inline-flex items-center gap-1.5 px-3 py-1.5 rounded-full text-xs font-bold bg-[#0B1C30]/5 text-[#0B1C30] border border-[#0B1C30]/10 hover:bg-[#0B1C30]/10 transition-all duration-200 cursor-pointer mr-1 animate-fadeIn"
+                title="Ganti Program Belajar"
+              >
+                <span className="w-2 h-2 rounded-full bg-emerald-500 animate-pulse"></span>
+                Portal {activeProgram}
+              </button>
+            )}
 
             {/* Profile Avatar & Details block (Desktop) */}
             <div className="flex items-center gap-2.5 sm:gap-3 pl-2 sm:pl-3.5 border-l border-slate-200">

@@ -27,16 +27,17 @@ export default function AdminSoal() {
     announcements,
     fetchAnnouncements,
     transactions,
-    fetchTransactions
+    fetchTransactions,
+    adminActiveProgram
   } = useExamStore();
 
   useEffect(() => {
     fetchQuestions(1);
-    fetchPackages();
-    fetchAnnouncements();
-    fetchTransactions();
-    fetchCategories();
-  }, [fetchQuestions, fetchPackages, fetchAnnouncements, fetchTransactions, fetchCategories]);
+    fetchPackages(adminActiveProgram);
+    fetchAnnouncements(adminActiveProgram);
+    fetchTransactions(adminActiveProgram);
+    fetchCategories(adminActiveProgram);
+  }, [fetchQuestions, fetchPackages, fetchAnnouncements, fetchTransactions, fetchCategories, adminActiveProgram]);
 
   // State for Bank Soal
   const [showManualForm, setShowManualForm] = useState(false);
@@ -309,7 +310,8 @@ export default function AdminSoal() {
     const matchesSearch = q.question.toLowerCase().includes(searchQuery.toLowerCase()) ||
       String(q.id).includes(searchQuery);
     const matchesCategory = filterCategory === 'ALL' || q.category === filterCategory;
-    return matchesSearch && matchesCategory;
+    const matchesProgram = !adminActiveProgram || q.program_type === adminActiveProgram;
+    return matchesSearch && matchesCategory && matchesProgram;
   });
 
   const getCategoryBadgeVariant = (catName) => {

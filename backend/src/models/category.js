@@ -12,6 +12,11 @@ const Category = sequelize.define('Category', {
     allowNull: false,
     unique: true,
   },
+  program_type: {
+    type: DataTypes.ENUM('PPG', 'PPPK', 'SKD'),
+    allowNull: false,
+    defaultValue: 'SKD'
+  },
 }, {
   tableName: 'categories',
 });

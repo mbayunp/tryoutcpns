@@ -16,13 +16,11 @@ export default function AdminPaket() {
     questions,
     fetchQuestions,
     assignQuestionsToPackage,
-    getQuestionsForPackage
+    getQuestionsForPackage,
+    adminActiveProgram
   } = useExamStore();
 
-  useEffect(() => {
-    fetchPackages();
-    fetchQuestions(1);
-  }, [fetchPackages, fetchQuestions]);
+  const [pkgProgramType, setPkgProgramType] = useState('SKD');
 
   // CRUD state for Packages
   const [isEditingPkg, setIsEditingPkg] = useState(false);
@@ -36,6 +34,17 @@ export default function AdminPaket() {
   const [pkgStatus, setPkgStatus] = useState('Aktif');
   const [pkgCategory, setPkgCategory] = useState('Tryout');
   const [pkgImageUrl, setPkgImageUrl] = useState('');
+
+  useEffect(() => {
+    fetchPackages(adminActiveProgram);
+    fetchQuestions(1);
+  }, [fetchPackages, fetchQuestions, adminActiveProgram]);
+
+  useEffect(() => {
+    if (!isEditingPkg) {
+      setPkgProgramType(adminActiveProgram || 'SKD');
+    }
+  }, [adminActiveProgram, isEditingPkg]);
 
   // Modal for question assignment mapping
   const [showQuestionModal, setShowQuestionModal] = useState(false);
@@ -66,6 +75,7 @@ export default function AdminPaket() {
     setPkgStatus('Aktif');
     setPkgCategory('Tryout');
     setPkgImageUrl('');
+    setPkgProgramType(adminActiveProgram || 'SKD');
   };
 
   const handleEditPkgClick = (pkg) => {
@@ -80,6 +90,7 @@ export default function AdminPaket() {
     setPkgStatus(pkg.status);
     setPkgCategory(pkg.category || 'Tryout');
     setPkgImageUrl(pkg.imageUrl || '');
+    setPkgProgramType(pkg.program_type || 'SKD');
   };
 
   const handlePkgImageChange = (e) => {
@@ -116,7 +127,8 @@ export default function AdminPaket() {
       imageUrl: pkgImageUrl,
       originalPrice: parseInt(pkgOriginalPrice, 10) || 0,
       discountPercentage: parseInt(pkgDiscountPercentage, 10) || 0,
-      price: parseInt(pkgPrice, 10) || 0
+      price: parseInt(pkgPrice, 10) || 0,
+      program_type: pkgProgramType
     };
 
     try {
@@ -390,6 +402,26 @@ export default function AdminPaket() {
                 <option value="Aktif">Aktif (Gratis)</option>
                 <option value="Terkunci">Terkunci (Premium)</option>
               </select>
+            </div>
+ 
+            <div>
+              <label className="block text-[10px] font-bold text-slate-400 uppercase tracking-wider mb-1.5">Target Program</label>
+              <select
+                value={pkgProgramType}
+                onChange={(e) => setPkgProgramType(e.target.value)}
+                className={selectClass}
+                disabled={!!adminActiveProgram}
+                required
+              >
+                <option value="SKD">SKD CPNS</option>
+                <option value="PPPK">PPPK</option>
+                <option value="PPG">PPG</option>
+              </select>
+              {!!adminActiveProgram && (
+                <p className="text-[10px] text-slate-450 mt-1 font-semibold">
+                  Terkunci ke program filter aktif.
+                </p>
+              )}
             </div>
 
             <div className="flex gap-2.5 pt-1">

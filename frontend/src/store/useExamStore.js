@@ -17,8 +17,12 @@ export const useExamStore = create(
       announcements: [],
       notifications: [],
       searchQuery: '',
+      activeProgram: null,
+      adminActiveProgram: '',
 
       // Actions
+      setActiveProgram: (program) => set({ activeProgram: program }),
+      setAdminActiveProgram: (program) => set({ adminActiveProgram: program }),
       setSearchQuery: (query) => set({ searchQuery: query }),
       login: async (email, password) => {
         try {
@@ -131,12 +135,18 @@ export const useExamStore = create(
         }
       },
 
-      fetchPackages: async () => {
+      fetchPackages: async (programType = null) => {
         try {
           // Fetch transactions first to get purchase status
           await get().fetchTransactions();
           
-          const res = await API.get('/tryouts');
+          const params = {};
+          const activeProg = programType !== null ? programType : get().activeProgram;
+          if (activeProg) {
+            params.program_type = activeProg;
+          }
+          
+          const res = await API.get('/tryouts', { params });
           const data = res.data.data;
           const mapped = data.map((pkg) => {
             const isPurchased = (get().transactions || []).some(
@@ -194,9 +204,14 @@ export const useExamStore = create(
         }
       },
 
-      fetchCategories: async () => {
+      fetchCategories: async (programType = null) => {
         try {
-          const res = await API.get('/categories');
+          const params = {};
+          const activeProg = programType !== null ? programType : get().activeProgram;
+          if (activeProg) {
+            params.program_type = activeProg;
+          }
+          const res = await API.get('/categories', { params });
           set({ categories: res.data.data || [] });
         } catch (error) {
           console.error('Failed to fetch categories:', error);
@@ -284,27 +299,42 @@ export const useExamStore = create(
         }
       },
 
-      fetchActiveAnnouncement: async () => {
+      fetchActiveAnnouncement: async (programType = null) => {
         try {
-          const res = await API.get('/announcements/active');
+          const params = {};
+          const activeProg = programType !== null ? programType : get().activeProgram;
+          if (activeProg) {
+            params.program_type = activeProg;
+          }
+          const res = await API.get('/announcements/active', { params });
           set({ announcement: res.data.data });
         } catch (error) {
           console.error('Failed to fetch active announcement:', error);
         }
       },
 
-      fetchAnnouncements: async () => {
+      fetchAnnouncements: async (programType = null) => {
         try {
-          const res = await API.get('/announcements');
+          const params = {};
+          const activeProg = programType !== null ? programType : get().activeProgram;
+          if (activeProg) {
+            params.program_type = activeProg;
+          }
+          const res = await API.get('/announcements', { params });
           set({ announcements: res.data.data || [] });
         } catch (error) {
           console.error('Failed to fetch announcements:', error);
         }
       },
 
-      fetchNotifications: async () => {
+      fetchNotifications: async (programType = null) => {
         try {
-          const res = await API.get('/announcements/notifications');
+          const params = {};
+          const activeProg = programType !== null ? programType : get().activeProgram;
+          if (activeProg) {
+            params.program_type = activeProg;
+          }
+          const res = await API.get('/announcements/notifications', { params });
           set({ notifications: res.data.data || [] });
         } catch (error) {
           console.error('Failed to fetch notifications:', error);
@@ -379,7 +409,8 @@ export const useExamStore = create(
               options,
               correctAnswer: q.correct_answer ? q.correct_answer.toUpperCase() : '',
               explanation: generatedExplanation,
-              scores
+              scores,
+              program_type: q.program_type
             };
           });
 
@@ -501,7 +532,8 @@ export const useExamStore = create(
               c: newQuestion.scores.C,
               d: newQuestion.scores.D,
               e: newQuestion.scores.E
-            } : null
+            } : null,
+            program_type: newQuestion.program_type
           };
 
           await API.post('/questions', formatted);
@@ -540,7 +572,8 @@ export const useExamStore = create(
 
           await API.post('/questions/bulk', {
             tryout_id: tryoutId,
-            questions: formattedQuestions
+            questions: formattedQuestions,
+            program_type: get().adminActiveProgram || 'SKD'
           });
 
           // Refresh question list once at the end
@@ -584,7 +617,8 @@ export const useExamStore = create(
               c: updatedQuestion.scores.C,
               d: updatedQuestion.scores.D,
               e: updatedQuestion.scores.E
-            } : null
+            } : null,
+            program_type: updatedQuestion.program_type
           };
 
           await API.put(`/questions/${updatedQuestion.id}`, formatted);
@@ -607,7 +641,8 @@ export const useExamStore = create(
             image_url: pkgData.imageUrl || null,
             original_price: pkgData.originalPrice ? parseInt(pkgData.originalPrice) : 0,
             discount_percentage: pkgData.discountPercentage ? parseInt(pkgData.discountPercentage) : 0,
-            price: pkgData.price ? parseInt(pkgData.price) : 0
+            price: pkgData.price ? parseInt(pkgData.price) : 0,
+            program_type: pkgData.program_type
           };
           await API.post('/tryouts', formatted);
           await get().fetchPackages();
@@ -628,7 +663,8 @@ export const useExamStore = create(
             image_url: updatedPkg.imageUrl || null,
             original_price: updatedPkg.originalPrice ? parseInt(updatedPkg.originalPrice) : 0,
             discount_percentage: updatedPkg.discountPercentage ? parseInt(updatedPkg.discountPercentage) : 0,
-            price: updatedPkg.price ? parseInt(updatedPkg.price) : 0
+            price: updatedPkg.price ? parseInt(updatedPkg.price) : 0,
+            program_type: updatedPkg.program_type
           };
           await API.put(`/tryouts/${updatedPkg.id}`, formatted);
           await get().fetchPackages();
@@ -686,7 +722,7 @@ export const useExamStore = create(
     }),
     {
       name: 'cpns-tryout-storage',
-      partialize: (state) => ({ user: state.user, token: state.token, transactions: state.transactions }),
+      partialize: (state) => ({ user: state.user, token: state.token, transactions: state.transactions, activeProgram: state.activeProgram, adminActiveProgram: state.adminActiveProgram }),
     }
   )
 );

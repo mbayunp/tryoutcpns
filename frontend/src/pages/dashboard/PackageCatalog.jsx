@@ -31,7 +31,8 @@ export default function PackageCatalog({ showOnlyPurchased = false }) {
     transactions,
     searchQuery,
     setSearchQuery,
-    validateReferralCode
+    validateReferralCode,
+    activeProgram
   } = useExamStore();
 
   const [selectedLockedPackage, setSelectedLockedPackage] = useState(null);
@@ -45,7 +46,7 @@ export default function PackageCatalog({ showOnlyPurchased = false }) {
 
   useEffect(() => {
     fetchPackages();
-  }, [fetchPackages]);
+  }, [fetchPackages, activeProgram]);
 
   const handleStartExam = (pkg) => {
     if (pkg.status === 'Terkunci') {

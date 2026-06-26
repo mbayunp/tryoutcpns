@@ -51,6 +51,11 @@ const Tryout = sequelize.define('Tryout', {
     allowNull: true,
     defaultValue: 0,
   },
+  program_type: {
+    type: DataTypes.ENUM('PPG', 'PPPK', 'SKD'),
+    allowNull: false,
+    defaultValue: 'SKD'
+  },
 }, {
   tableName: 'tryouts',
 });

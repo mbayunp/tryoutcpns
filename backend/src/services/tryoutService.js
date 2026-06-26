@@ -1,9 +1,14 @@
 const { sequelize, Tryout, Question, Category, Attempt, Answer } = require('../models');
 const { calculateTotalScore } = require('../utils/scoreCalculator');
 
-const getTryouts = async (isAdmin = false) => {
+const getTryouts = async (isAdmin = false, programType = null) => {
+  const whereClause = {};
+  if (programType) {
+    whereClause.program_type = programType;
+  }
   // Return all tryouts for everyone so users can see and purchase locked premium tryouts
   return await Tryout.findAll({
+    where: whereClause,
     order: [['created_at', 'DESC']]
   });
 };

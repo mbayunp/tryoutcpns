@@ -34,7 +34,7 @@ const formatRupiah = (num) => {
 };
 
 export default function Analytics() {
-  const { transactions, fetchTransactions } = useExamStore();
+  const { transactions, fetchTransactions, adminActiveProgram } = useExamStore();
   const [analytics, setAnalytics] = useState(null);
   const [loading, setLoading] = useState(true);
   const [searchTerm, setSearchTerm] = useState('');
@@ -44,9 +44,13 @@ export default function Analytics() {
     const fetchAnalyticsData = async () => {
       try {
         setLoading(true);
+        const params = {};
+        if (adminActiveProgram) {
+          params.program_type = adminActiveProgram;
+        }
         const [resAnalytics] = await Promise.all([
-          API.get('/admin/analytics'),
-          fetchTransactions()
+          API.get('/admin/analytics', { params }),
+          fetchTransactions(adminActiveProgram)
         ]);
         setAnalytics(resAnalytics.data.data);
       } catch (err) {
@@ -57,7 +61,7 @@ export default function Analytics() {
     };
 
     fetchAnalyticsData();
-  }, [fetchTransactions]);
+  }, [fetchTransactions, adminActiveProgram]);
 
   const exportToExcel = () => {
     if (!transactions || transactions.length === 0) {

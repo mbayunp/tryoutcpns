@@ -36,7 +36,7 @@ export default function Login() {
       if (loggedUser.role === 'admin') {
         navigate('/admin');
       } else {
-        navigate('/dashboard');
+        navigate('/program-selection');
       }
     } catch (err) {
       Swal.close();
@@ -138,7 +138,7 @@ export default function Login() {
       if (loggedUser.role === 'admin') {
         navigate('/admin');
       } else {
-        navigate('/dashboard');
+        navigate('/program-selection');
       }
     } catch (err) {
       setError(err.message || 'Login gagal. Email atau kata sandi tidak valid.');

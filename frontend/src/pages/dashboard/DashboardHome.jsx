@@ -22,12 +22,12 @@ const formatRupiah = (num) => {
 
 export default function DashboardHome() {
   const navigate = useNavigate();
-  const { user, packages, history, fetchPackages, fetchHistory } = useExamStore();
+  const { user, packages, history, fetchPackages, fetchHistory, activeProgram } = useExamStore();
 
   useEffect(() => {
     fetchPackages();
     fetchHistory();
-  }, [fetchPackages, fetchHistory]);
+  }, [fetchPackages, fetchHistory, activeProgram]);
 
   const highestScore = history.length > 0 ? Math.max(...history.map(h => h.score)) : 0;
   const averageScore = history.length > 0 ? Math.round(history.reduce((sum, h) => sum + h.score, 0) / history.length) : 0;

@@ -3,7 +3,14 @@ const response = require('../utils/response');
 
 const getAllCategories = async (req, res, next) => {
   try {
-    const categories = await Category.findAll({ order: [['id', 'ASC']] });
+    const whereClause = {};
+    if (req.query.program_type) {
+      whereClause.program_type = req.query.program_type;
+    }
+    const categories = await Category.findAll({
+      where: whereClause,
+      order: [['id', 'ASC']]
+    });
     return response.success(res, categories, 'Categories retrieved successfully');
   } catch (err) {
     next(err);
@@ -12,13 +19,13 @@ const getAllCategories = async (req, res, next) => {
 
 const createCategory = async (req, res, next) => {
   try {
-    const { name } = req.body;
+    const { name, program_type } = req.body;
     // Check duplication
     const existing = await Category.findOne({ where: { name } });
     if (existing) {
       return response.error(res, 'Category name already exists', 400);
     }
-    const category = await Category.create({ name });
+    const category = await Category.create({ name, program_type: program_type || 'SKD' });
     return response.success(res, category, 'Category created successfully', 201);
   } catch (err) {
     next(err);
@@ -28,7 +35,7 @@ const createCategory = async (req, res, next) => {
 const updateCategory = async (req, res, next) => {
   try {
     const { id } = req.params;
-    const { name } = req.body;
+    const { name, program_type } = req.body;
 
     const category = await Category.findByPk(id);
     if (!category) {
@@ -42,6 +49,10 @@ const updateCategory = async (req, res, next) => {
         return response.error(res, 'Category name already exists', 400);
       }
       category.name = name;
+    }
+
+    if (program_type !== undefined) {
+      category.program_type = program_type;
     }
 
     await category.save();

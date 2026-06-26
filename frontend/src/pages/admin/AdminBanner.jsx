@@ -12,12 +12,11 @@ export default function AdminBanner() {
     fetchAnnouncements,
     createAnnouncement,
     updateAnnouncement,
-    deleteAnnouncement
+    deleteAnnouncement,
+    adminActiveProgram
   } = useExamStore();
 
-  useEffect(() => {
-    fetchAnnouncements();
-  }, [fetchAnnouncements]);
+  const [bannerProgramType, setBannerProgramType] = useState('SKD');
 
   // CRUD state for Announcements / Banners
   const [isEditingBanner, setIsEditingBanner] = useState(false);
@@ -26,12 +25,23 @@ export default function AdminBanner() {
   const [bannerLink, setBannerLink] = useState('');
   const [bannerIsActive, setBannerIsActive] = useState(true);
 
+  useEffect(() => {
+    fetchAnnouncements(adminActiveProgram);
+  }, [fetchAnnouncements, adminActiveProgram]);
+
+  useEffect(() => {
+    if (!isEditingBanner) {
+      setBannerProgramType(adminActiveProgram || 'SKD');
+    }
+  }, [adminActiveProgram, isEditingBanner]);
+
   const resetBannerForm = () => {
     setIsEditingBanner(false);
     setEditingBannerId(null);
     setBannerText('');
     setBannerLink('');
     setBannerIsActive(true);
+    setBannerProgramType(adminActiveProgram || 'SKD');
   };
 
   const handleEditBannerClick = (ann) => {
@@ -40,6 +50,7 @@ export default function AdminBanner() {
     setBannerText(ann.text);
     setBannerLink(ann.link || '');
     setBannerIsActive(ann.is_active);
+    setBannerProgramType(ann.program_type || 'SKD');
   };
 
   const handleBannerSubmit = async (e) => {
@@ -58,7 +69,8 @@ export default function AdminBanner() {
     const bannerData = {
       text: bannerText,
       link: bannerLink || null,
-      is_active: bannerIsActive
+      is_active: bannerIsActive,
+      program_type: bannerProgramType
     };
 
     try {
@@ -189,6 +201,26 @@ export default function AdminBanner() {
               <p className="text-[10px] text-slate-400 mt-1 font-medium leading-relaxed">
                 * Mengaktifkan banner ini akan menampilkannya di running text header (Mendukung beberapa banner aktif sekaligus).
               </p>
+            </div>
+ 
+            <div>
+              <label className="block text-[10px] font-bold text-slate-400 uppercase tracking-wider mb-1.5">Target Program</label>
+              <select
+                value={bannerProgramType}
+                onChange={(e) => setBannerProgramType(e.target.value)}
+                className={selectClass}
+                disabled={!!adminActiveProgram}
+                required
+              >
+                <option value="SKD">SKD CPNS</option>
+                <option value="PPPK">PPPK</option>
+                <option value="PPG">PPG</option>
+              </select>
+              {!!adminActiveProgram && (
+                <p className="text-[10px] text-slate-450 mt-1 font-semibold">
+                  Terkunci ke program filter aktif.
+                </p>
+              )}
             </div>
 
             <div className="flex gap-2.5 pt-1">

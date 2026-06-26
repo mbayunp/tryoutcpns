@@ -20,17 +20,17 @@ const seed = async () => {
     console.log('Seeding Categories...');
     const [twkCat] = await Category.findOrCreate({
       where: { name: 'TWK' },
-      defaults: { name: 'TWK' }
+      defaults: { name: 'TWK', program_type: 'SKD' }
     });
 
     const [tiuCat] = await Category.findOrCreate({
       where: { name: 'TIU' },
-      defaults: { name: 'TIU' }
+      defaults: { name: 'TIU', program_type: 'SKD' }
     });
 
     const [tkpCat] = await Category.findOrCreate({
       where: { name: 'TKP' },
-      defaults: { name: 'TKP' }
+      defaults: { name: 'TKP', program_type: 'SKD' }
     });
 
     console.log('Categories seeded: TWK, TIU, TKP.');
@@ -89,7 +89,8 @@ const seed = async () => {
         image_url: 'https://images.unsplash.com/photo-1513258496099-48168024aec0?w=800',
         original_price: 9999999,
         discount_percentage: 0,
-        price: 9999999
+        price: 9999999,
+        program_type: 'SKD'
       }
     });
 
@@ -105,7 +106,8 @@ const seed = async () => {
         image_url: 'https://images.unsplash.com/photo-1516321318423-f06f85e504b3?w=800',
         original_price: 300000,
         discount_percentage: 17,
-        price: 250000
+        price: 250000,
+        program_type: 'SKD'
       }
     });
 
@@ -121,7 +123,8 @@ const seed = async () => {
         image_url: 'https://images.unsplash.com/photo-1506880018603-83d5b814b5a6?w=800',
         original_price: 9999999,
         discount_percentage: 0,
-        price: 9999999
+        price: 9999999,
+        program_type: 'SKD'
       }
     });
 
@@ -137,7 +140,8 @@ const seed = async () => {
         image_url: 'https://images.unsplash.com/photo-1610116306796-6fea9f4fae38?w=800',
         original_price: 60000,
         discount_percentage: 75,
-        price: 15000
+        price: 15000,
+        program_type: 'SKD'
       }
     });
 

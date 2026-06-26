@@ -23,6 +23,11 @@ const Announcement = sequelize.define('Announcement', {
     type: DataTypes.INTEGER,
     allowNull: true,
   },
+  program_type: {
+    type: DataTypes.ENUM('PPG', 'PPPK', 'SKD'),
+    allowNull: false,
+    defaultValue: 'SKD'
+  },
 }, {
   tableName: 'announcements',
 });

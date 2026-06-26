@@ -27,23 +27,30 @@ export default function DashboardAdmin() {
     transactions,
     fetchTransactions,
     categories,
-    fetchCategories
+    fetchCategories,
+    adminActiveProgram
   } = useExamStore();
 
   const navigate = useNavigate();
 
   useEffect(() => {
     fetchQuestions(1);
-    fetchPackages();
-    fetchAnnouncements();
-    fetchTransactions();
-    fetchCategories();
-  }, [fetchQuestions, fetchPackages, fetchAnnouncements, fetchTransactions, fetchCategories]);
+    fetchPackages(adminActiveProgram);
+    fetchAnnouncements(adminActiveProgram);
+    fetchTransactions(adminActiveProgram);
+    fetchCategories(adminActiveProgram);
+  }, [fetchQuestions, fetchPackages, fetchAnnouncements, fetchTransactions, fetchCategories, adminActiveProgram]);
 
   // Calculations
-  const totalQuestions = questions ? questions.length : 0;
+  const filteredQuestions = questions ? (
+    adminActiveProgram
+      ? questions.filter(q => q.program_type === adminActiveProgram)
+      : questions
+  ) : [];
+
+  const totalQuestions = filteredQuestions.length;
   const categoryCounts = categories.reduce((acc, cat) => {
-    acc[cat.name.toUpperCase()] = questions ? questions.filter(q => q.category === cat.name.toUpperCase()).length : 0;
+    acc[cat.name.toUpperCase()] = filteredQuestions.filter(q => q.category === cat.name.toUpperCase()).length;
     return acc;
   }, {});
 

@@ -5,7 +5,7 @@ const response = require('../utils/response');
 const getTryouts = async (req, res, next) => {
   try {
     const isAdmin = req.user.role === 'admin';
-    const tryouts = await tryoutService.getTryouts(isAdmin);
+    const tryouts = await tryoutService.getTryouts(isAdmin, req.query.program_type);
     return response.success(res, tryouts, 'Tryouts retrieved successfully');
   } catch (err) {
     next(err);
@@ -46,7 +46,7 @@ const submitTryout = async (req, res, next) => {
 // Admin CRUD Operations
 const createTryout = async (req, res, next) => {
   try {
-    const { title, description, duration, status, category, image_url, original_price, discount_percentage, price } = req.body;
+    const { title, description, duration, status, category, image_url, original_price, discount_percentage, price, program_type } = req.body;
     const newTryout = await Tryout.create({
       title,
       description,
@@ -56,7 +56,8 @@ const createTryout = async (req, res, next) => {
       image_url,
       original_price: original_price !== undefined ? original_price : 0,
       discount_percentage: discount_percentage !== undefined ? discount_percentage : 0,
-      price: price !== undefined ? price : 0
+      price: price !== undefined ? price : 0,
+      program_type: program_type || 'SKD'
     });
     return response.success(res, newTryout, 'Tryout created successfully', 201);
   } catch (err) {
@@ -67,7 +68,7 @@ const createTryout = async (req, res, next) => {
  const updateTryout = async (req, res, next) => {
    try {
      const { id } = req.params;
-     const { title, description, duration, status, category, image_url, original_price, discount_percentage, price } = req.body;
+     const { title, description, duration, status, category, image_url, original_price, discount_percentage, price, program_type } = req.body;
  
      const tryout = await Tryout.findByPk(id);
      if (!tryout) {
@@ -83,6 +84,7 @@ const createTryout = async (req, res, next) => {
      if (original_price !== undefined) tryout.original_price = original_price;
      if (discount_percentage !== undefined) tryout.discount_percentage = discount_percentage;
      if (price !== undefined) tryout.price = price;
+     if (program_type !== undefined) tryout.program_type = program_type;
  
      await tryout.save();
      return response.success(res, tryout, 'Tryout updated successfully');

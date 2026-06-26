@@ -81,8 +81,8 @@ export default function Register() {
     setLoading(true);
     try {
       await register(name, email, password, phoneNumber);
-      // Automatically logs in and routes to dashboard
-      navigate('/dashboard');
+      // Automatically logs in and routes to program selection
+      navigate('/program-selection');
     } catch (err) {
       setError(err.message || 'Registrasi gagal. Email mungkin sudah digunakan.');
     } finally {

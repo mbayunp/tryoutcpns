@@ -24,6 +24,11 @@ const Package = sequelize.define('Package', {
     type: DataTypes.BOOLEAN,
     defaultValue: true,
   },
+  program_type: {
+    type: DataTypes.ENUM('PPG', 'PPPK', 'SKD'),
+    allowNull: false,
+    defaultValue: 'SKD'
+  },
 }, {
   tableName: 'packages',
 });

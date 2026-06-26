@@ -32,6 +32,7 @@ const PackageCatalog = React.lazy(() => import('../pages/dashboard/PackageCatalo
 const UserProfile = React.lazy(() => import('../pages/dashboard/UserProfile'));
 const HistoryTab = React.lazy(() => import('../pages/dashboard/HistoryTab'));
 const RankingTab = React.lazy(() => import('../pages/dashboard/RankingTab'));
+const ProgramSelection = React.lazy(() => import('../pages/dashboard/ProgramSelection'));
 
 export default function AppRoutes() {
   return (
@@ -52,8 +53,12 @@ export default function AppRoutes() {
         <Route path="/forgot-password" element={<ForgotPassword />} />
       </Route>
 
-      {/* Protected Dashboard Layout */}
       <Route element={<DashboardLayout />}>
+        <Route path="/program-selection" element={
+          <Suspense fallback={<LoadingSpinner />}>
+            <ProgramSelection />
+          </Suspense>
+        } />
         <Route path="/dashboard" element={
           <Suspense fallback={<LoadingSpinner />}>
             <DashboardHome />

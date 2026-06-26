@@ -2,6 +2,8 @@ import React, { useState, useEffect } from 'react';
 import { X } from 'lucide-react';
 import Button from '../common/Button';
 
+import { useExamStore } from '../../store/useExamStore';
+ 
 export default function QuestionForm({
   isOpen,
   onClose,
@@ -9,6 +11,8 @@ export default function QuestionForm({
   categories,
   selectedQuestion
 }) {
+  const adminActiveProgram = useExamStore((state) => state.adminActiveProgram);
+  const [programType, setProgramType] = useState('SKD');
   const [category, setCategory] = useState('TWK');
   const [questionText, setQuestionText] = useState('');
   const [optA, setOptA] = useState('');
@@ -36,6 +40,7 @@ export default function QuestionForm({
       setOptE(selectedQuestion.options?.find(o => o.key === 'E')?.text || '');
       setCorrectAnswer(selectedQuestion.correctAnswer || 'A');
       setExplanation(selectedQuestion.explanation || '');
+      setProgramType(selectedQuestion.program_type || 'SKD');
 
       if (selectedQuestion.category === 'TKP' && selectedQuestion.scores) {
         setScoreA(selectedQuestion.scores.A || 5);
@@ -54,13 +59,14 @@ export default function QuestionForm({
       setOptE('');
       setCorrectAnswer('A');
       setExplanation('');
+      setProgramType(adminActiveProgram || 'SKD');
       setScoreA(5);
       setScoreB(4);
       setScoreC(3);
       setScoreD(2);
       setScoreE(1);
     }
-  }, [selectedQuestion, isOpen]);
+  }, [selectedQuestion, isOpen, adminActiveProgram]);
 
   if (!isOpen) return null;
 
@@ -81,6 +87,7 @@ export default function QuestionForm({
     const questionData = {
       category,
       question: questionText,
+      program_type: programType,
       options: [
         { key: 'A', text: optA },
         { key: 'B', text: optB },
@@ -119,22 +126,39 @@ export default function QuestionForm({
         </div>
 
         <form onSubmit={handleFormSubmit} className="space-y-4">
-          <div>
-            <label className="block text-[10px] font-bold text-slate-400 uppercase tracking-wider mb-1.5">Kategori</label>
-            <select
-              value={category}
-              onChange={(e) => {
-                setCategory(e.target.value);
-                if (e.target.value === 'TKP') setCorrectAnswer('A');
-              }}
-              className={selectClass}
-            >
-              {categories.map(cat => (
-                <option key={cat.id} value={cat.name.toUpperCase()}>
-                  {cat.name.toUpperCase()}
-                </option>
-              ))}
-            </select>
+          <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
+            <div>
+              <label className="block text-[10px] font-bold text-slate-400 uppercase tracking-wider mb-1.5">Kategori</label>
+              <select
+                value={category}
+                onChange={(e) => {
+                  setCategory(e.target.value);
+                  if (e.target.value === 'TKP') setCorrectAnswer('A');
+                }}
+                className={selectClass}
+              >
+                {categories.map(cat => (
+                  <option key={cat.id} value={cat.name.toUpperCase()}>
+                    {cat.name.toUpperCase()}
+                  </option>
+                ))}
+              </select>
+            </div>
+ 
+            <div>
+              <label className="block text-[10px] font-bold text-slate-400 uppercase tracking-wider mb-1.5">Target Program</label>
+              <select
+                value={programType}
+                onChange={(e) => setProgramType(e.target.value)}
+                className={selectClass}
+                disabled={!!adminActiveProgram}
+                required
+              >
+                <option value="SKD">SKD CPNS</option>
+                <option value="PPPK">PPPK</option>
+                <option value="PPG">PPG</option>
+              </select>
+            </div>
           </div>
 
           <div>

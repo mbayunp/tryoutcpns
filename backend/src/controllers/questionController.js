@@ -3,11 +3,12 @@ const response = require('../utils/response');
 
 const getAllQuestions = async (req, res, next) => {
   try {
-    const { tryout_id, category_id } = req.query;
+    const { tryout_id, category_id, program_type } = req.query;
     const whereClause = {};
 
     if (tryout_id) whereClause.tryout_id = tryout_id;
     if (category_id) whereClause.category_id = category_id;
+    if (program_type) whereClause.program_type = program_type;
 
     const questions = await Question.findAll({
       where: whereClause,
@@ -36,7 +37,8 @@ const createQuestion = async (req, res, next) => {
       option_d,
       option_e,
       correct_answer,
-      option_weights
+      option_weights,
+      program_type
     } = req.body;
 
     // Check if Tryout and Category exist
@@ -60,7 +62,8 @@ const createQuestion = async (req, res, next) => {
       option_d,
       option_e,
       correct_answer: correct_answer.toLowerCase(),
-      option_weights
+      option_weights,
+      program_type: program_type || 'SKD'
     });
 
     // Automatically update tryout's total_questions count
@@ -86,7 +89,8 @@ const updateQuestion = async (req, res, next) => {
       option_d,
       option_e,
       correct_answer,
-      option_weights
+      option_weights,
+      program_type
     } = req.body;
 
     const q = await Question.findByPk(id);
@@ -120,6 +124,7 @@ const updateQuestion = async (req, res, next) => {
     if (option_e !== undefined) q.option_e = option_e;
     if (correct_answer !== undefined) q.correct_answer = correct_answer.toLowerCase();
     if (option_weights !== undefined) q.option_weights = option_weights;
+    if (program_type !== undefined) q.program_type = program_type;
 
     await q.save();
 
@@ -170,7 +175,7 @@ const deleteQuestion = async (req, res, next) => {
 
 const bulkCreateQuestions = async (req, res, next) => {
   try {
-    const { tryout_id, questions } = req.body;
+    const { tryout_id, questions, program_type } = req.body;
 
     if (!tryout_id) {
       return response.error(res, 'Tryout ID is required', 400);
@@ -195,7 +200,8 @@ const bulkCreateQuestions = async (req, res, next) => {
       option_d: q.option_d,
       option_e: q.option_e,
       correct_answer: q.correct_answer ? q.correct_answer.toLowerCase() : 'a',
-      option_weights: q.option_weights || null
+      option_weights: q.option_weights || null,
+      program_type: q.program_type || program_type || 'SKD'
     }));
 
     const newQuestions = await Question.bulkCreate(formattedQuestions);

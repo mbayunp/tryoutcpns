@@ -2,11 +2,14 @@ const { Announcement } = require('../models');
 const response = require('../utils/response');
 const { Op } = require('sequelize');
 
-// Get active announcement (Public)
 const getActiveAnnouncement = async (req, res, next) => {
   try {
+    const whereClause = { is_active: true, user_id: null };
+    if (req.query.program_type) {
+      whereClause.program_type = req.query.program_type;
+    }
     const announcements = await Announcement.findAll({
-      where: { is_active: true, user_id: null }, // Global public only
+      where: whereClause,
       order: [['updated_at', 'DESC']]
     });
     return response.success(res, announcements, 'Active announcements retrieved successfully');
@@ -15,17 +18,20 @@ const getActiveAnnouncement = async (req, res, next) => {
   }
 };
 
-// Get announcements for authenticated user notifications
 const getUserAnnouncements = async (req, res, next) => {
   try {
+    const whereClause = {
+      [Op.or]: [
+        { user_id: null },
+        { user_id: req.user.id }
+      ],
+      is_active: true
+    };
+    if (req.query.program_type) {
+      whereClause.program_type = req.query.program_type;
+    }
     const announcements = await Announcement.findAll({
-      where: {
-        [Op.or]: [
-          { user_id: null },
-          { user_id: req.user.id }
-        ],
-        is_active: true
-      },
+      where: whereClause,
       order: [['created_at', 'DESC']],
       limit: 15
     });
@@ -38,7 +44,12 @@ const getUserAnnouncements = async (req, res, next) => {
 // Get all announcements (Admin)
 const getAllAnnouncements = async (req, res, next) => {
   try {
+    const whereClause = {};
+    if (req.query.program_type) {
+      whereClause.program_type = req.query.program_type;
+    }
     const announcements = await Announcement.findAll({
+      where: whereClause,
       order: [['created_at', 'DESC']]
     });
     return response.success(res, announcements, 'All announcements retrieved successfully');
@@ -50,7 +61,7 @@ const getAllAnnouncements = async (req, res, next) => {
 // Create new announcement (Admin)
 const createAnnouncement = async (req, res, next) => {
   try {
-    const { text, link, is_active } = req.body;
+    const { text, link, is_active, program_type } = req.body;
     if (!text) {
       return response.error(res, 'Text is required', 400);
     }
@@ -58,7 +69,8 @@ const createAnnouncement = async (req, res, next) => {
     const newAnnouncement = await Announcement.create({
       text,
       link,
-      is_active: is_active !== undefined ? is_active : true
+      is_active: is_active !== undefined ? is_active : true,
+      program_type: program_type || 'SKD'
     });
 
     return response.success(res, newAnnouncement, 'Announcement created successfully', 201);
@@ -71,7 +83,7 @@ const createAnnouncement = async (req, res, next) => {
 const updateAnnouncement = async (req, res, next) => {
   try {
     const { id } = req.params;
-    const { text, link, is_active } = req.body;
+    const { text, link, is_active, program_type } = req.body;
 
     const announcement = await Announcement.findByPk(id);
     if (!announcement) {
@@ -81,6 +93,7 @@ const updateAnnouncement = async (req, res, next) => {
     if (text !== undefined) announcement.text = text;
     if (link !== undefined) announcement.link = link;
     if (is_active !== undefined) announcement.is_active = is_active;
+    if (program_type !== undefined) announcement.program_type = program_type;
 
     await announcement.save();
 

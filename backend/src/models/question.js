@@ -47,6 +47,11 @@ const Question = sequelize.define('Question', {
     type: DataTypes.JSON, // e.g. { "a": 5, "b": 4, "c": 3, "d": 2, "e": 1 }
     allowNull: true,
   },
+  program_type: {
+    type: DataTypes.ENUM('PPG', 'PPPK', 'SKD'),
+    allowNull: false,
+    defaultValue: 'SKD'
+  },
 }, {
   tableName: 'questions',
 });
