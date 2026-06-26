@@ -31,7 +31,7 @@ export default function AdminBanner() {
 
   useEffect(() => {
     if (!isEditingBanner) {
-      setBannerProgramType(adminActiveProgram || 'SKD');
+      setBannerProgramType(adminActiveProgram || '');
     }
   }, [adminActiveProgram, isEditingBanner]);
 
@@ -41,7 +41,7 @@ export default function AdminBanner() {
     setBannerText('');
     setBannerLink('');
     setBannerIsActive(true);
-    setBannerProgramType(adminActiveProgram || 'SKD');
+    setBannerProgramType(adminActiveProgram || '');
   };
 
   const handleEditBannerClick = (ann) => {
@@ -212,6 +212,7 @@ export default function AdminBanner() {
                 disabled={!!adminActiveProgram}
                 required
               >
+                {!adminActiveProgram && <option value="">-- Pilih Program --</option>}
                 <option value="SKD">SKD CPNS</option>
                 <option value="PPPK">PPPK</option>
                 <option value="PPG">PPG</option>

@@ -126,9 +126,14 @@ export const useExamStore = create(
         }
       },
 
-      fetchTransactions: async () => {
+      fetchTransactions: async (programType = null) => {
         try {
-          const res = await API.get('/transactions');
+          const params = {};
+          const activeProg = programType !== null ? programType : (get().user?.role === 'admin' ? get().adminActiveProgram : get().activeProgram);
+          if (activeProg) {
+            params.program_type = activeProg;
+          }
+          const res = await API.get('/transactions', { params });
           set({ transactions: res.data.data || [] });
         } catch (error) {
           console.error('Failed to fetch transactions:', error);

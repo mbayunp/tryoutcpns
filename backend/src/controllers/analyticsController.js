@@ -10,17 +10,25 @@ const cleanAmount = (amountStr) => {
 
 const getAnalytics = async (req, res, next) => {
   try {
+    const { program_type } = req.query;
+
     // 1. User metrics
     const totalUsers = await User.count({ where: { role: 'user' } });
     const activeUsers = await User.count({ where: { role: 'user', is_active: true } });
 
     // 2. Transaction status counts
+    const tryoutInclude = {
+      model: Tryout,
+      as: 'tryout',
+      attributes: ['category', 'title', 'program_type']
+    };
+
+    if (program_type) {
+      tryoutInclude.where = { program_type };
+    }
+
     const transactions = await Transaction.findAll({
-      include: [{
-        model: Tryout,
-        as: 'tryout',
-        attributes: ['category', 'title']
-      }]
+      include: [tryoutInclude]
     });
 
     let totalTransactions = transactions.length;

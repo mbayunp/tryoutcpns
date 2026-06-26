@@ -16,13 +16,13 @@ import { useExamStore } from '../../store/useExamStore';
 import { Helmet } from 'react-helmet-async';
 
 export default function AdminPembayaran() {
-    const { transactions, updateTransactionStatus, fetchTransactions } = useExamStore();
+    const { transactions, updateTransactionStatus, fetchTransactions, adminActiveProgram } = useExamStore();
     const [searchTerm, setSearchTerm] = useState('');
     const [filterStatus, setFilterStatus] = useState('all');
 
     React.useEffect(() => {
-        fetchTransactions();
-    }, [fetchTransactions]);
+        fetchTransactions(adminActiveProgram);
+    }, [fetchTransactions, adminActiveProgram]);
 
     // Fungsi untuk mengaktifkan paket (Approve)
     const handleApprove = async (id) => {

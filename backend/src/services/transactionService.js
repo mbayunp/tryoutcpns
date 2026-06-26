@@ -60,7 +60,7 @@ const createTransaction = async (userId, tryoutId, amount, proofImage, referralC
   return transaction;
 };
 
-const getTransactions = async (userId, isAdmin = false) => {
+const getTransactions = async (userId, isAdmin = false, programType = null) => {
   const queryOptions = {
     include: [
       {
@@ -71,7 +71,7 @@ const getTransactions = async (userId, isAdmin = false) => {
       {
         model: Tryout,
         as: 'tryout',
-        attributes: ['title']
+        attributes: ['title', 'program_type']
       }
     ],
     order: [['created_at', 'DESC']]
@@ -79,6 +79,10 @@ const getTransactions = async (userId, isAdmin = false) => {
 
   if (!isAdmin) {
     queryOptions.where = { user_id: userId };
+  }
+
+  if (programType) {
+    queryOptions.include[1].where = { program_type: programType };
   }
 
   const transactions = await Transaction.findAll(queryOptions);

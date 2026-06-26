@@ -4,7 +4,8 @@ const response = require('../utils/response');
 const getTransactions = async (req, res, next) => {
   try {
     const isAdmin = req.user.role === 'admin';
-    const transactions = await transactionService.getTransactions(req.user.id, isAdmin);
+    const { program_type } = req.query;
+    const transactions = await transactionService.getTransactions(req.user.id, isAdmin, program_type);
     return response.success(res, transactions, 'Transactions retrieved successfully');
   } catch (err) {
     next(err);

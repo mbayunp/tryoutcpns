@@ -59,7 +59,7 @@ export default function QuestionForm({
       setOptE('');
       setCorrectAnswer('A');
       setExplanation('');
-      setProgramType(adminActiveProgram || 'SKD');
+      setProgramType(adminActiveProgram || '');
       setScoreA(5);
       setScoreB(4);
       setScoreC(3);
@@ -154,6 +154,7 @@ export default function QuestionForm({
                 disabled={!!adminActiveProgram}
                 required
               >
+                {!adminActiveProgram && <option value="">-- Pilih Program --</option>}
                 <option value="SKD">SKD CPNS</option>
                 <option value="PPPK">PPPK</option>
                 <option value="PPG">PPG</option>

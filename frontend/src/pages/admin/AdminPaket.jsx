@@ -42,7 +42,7 @@ export default function AdminPaket() {
 
   useEffect(() => {
     if (!isEditingPkg) {
-      setPkgProgramType(adminActiveProgram || 'SKD');
+      setPkgProgramType(adminActiveProgram || '');
     }
   }, [adminActiveProgram, isEditingPkg]);
 
@@ -75,7 +75,7 @@ export default function AdminPaket() {
     setPkgStatus('Aktif');
     setPkgCategory('Tryout');
     setPkgImageUrl('');
-    setPkgProgramType(adminActiveProgram || 'SKD');
+    setPkgProgramType(adminActiveProgram || '');
   };
 
   const handleEditPkgClick = (pkg) => {
@@ -413,6 +413,7 @@ export default function AdminPaket() {
                 disabled={!!adminActiveProgram}
                 required
               >
+                {!adminActiveProgram && <option value="">-- Pilih Program --</option>}
                 <option value="SKD">SKD CPNS</option>
                 <option value="PPPK">PPPK</option>
                 <option value="PPG">PPG</option>
