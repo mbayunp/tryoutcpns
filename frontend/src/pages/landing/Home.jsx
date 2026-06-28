@@ -69,9 +69,26 @@ export default function Home() {
             <div className="lg:col-span-7 space-y-6 sm:space-y-8 text-center lg:text-left">
               <Reveal direction="up" duration={800} delay={100}>
 
+                {/* Brand & Logo */}
+                <div className="flex flex-col items-center lg:items-start gap-4">
+                  <div className="flex items-center gap-3">
+                    <div className="bg-white p-1 rounded-xl shadow-premium border border-slate-100 flex items-center justify-center">
+                      <img src="/logo.jpg" alt="Logo Wildan CASN" className="h-10 w-10 sm:h-12 sm:w-12 object-cover rounded-xl" />
+                    </div>
+                    <h1 className="text-3xl sm:text-4xl lg:text-5xl font-black tracking-tight text-slate-900 leading-normal">
+                      WILDAN <span className="text-blue-700">CASN</span>
+                    </h1>
+                  </div>
+                  <div className="text-blue-600 text-lg font-extrabold flex items-center gap-2">
+                    <span className="px-2 py-0.5 bg-blue-100 rounded-md">Tryout CAT CASN</span>
+                    <span className="text-slate-300">•</span>
+                    <span className="text-slate-500 font-medium">Terlengkap</span>
+                  </div>
+                </div>
+
                 {/* Hero Title */}
                 <h1 className="text-3xl sm:text-4xl lg:text-5xl font-black tracking-tight text-slate-900 leading-tight">
-                  Temani belajar hari ini, wujudkan impian esok hari.<br />
+                  Temani belajar,<br />
                   <span className="text-transparent bg-clip-text bg-gradient-to-r from-blue-700 via-indigo-600 to-blue-800">
                     wujudkan impian esok hari.
                   </span>

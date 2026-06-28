@@ -170,7 +170,7 @@ export default function Footer() {
             <ul className="space-y-3 text-sm">
               <li className="flex items-center gap-2.5">
                 <Mail className="h-4 w-4 text-blue-400 flex-shrink-0" />
-                <span className="truncate">[EMAIL_ADDRESS]</span>
+                <span className="truncate">alwydan06@gmail.com</span>
               </li>
               <li className="flex items-center gap-2.5">
                 <Phone className="h-4 w-4 text-blue-400 flex-shrink-0" />
