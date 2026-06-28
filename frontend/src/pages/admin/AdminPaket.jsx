@@ -34,6 +34,9 @@ export default function AdminPaket() {
   const [pkgStatus, setPkgStatus] = useState('Aktif');
   const [pkgCategory, setPkgCategory] = useState('Tryout');
   const [pkgImageUrl, setPkgImageUrl] = useState('');
+  const [pkgProductType, setPkgProductType] = useState('TRYOUT');
+  const [pkgWaGroupLink, setPkgWaGroupLink] = useState('');
+  const [pkgEbookFile, setPkgEbookFile] = useState(null);
 
   useEffect(() => {
     fetchPackages(adminActiveProgram);
@@ -82,6 +85,9 @@ export default function AdminPaket() {
     setPkgCategory('Tryout');
     setPkgImageUrl('');
     setPkgProgramType(adminActiveProgram || '');
+    setPkgProductType('TRYOUT');
+    setPkgWaGroupLink('');
+    setPkgEbookFile(null);
   };
 
   const handleEditPkgClick = (pkg) => {
@@ -97,6 +103,9 @@ export default function AdminPaket() {
     setPkgCategory(pkg.category || 'Tryout');
     setPkgImageUrl(pkg.imageUrl || '');
     setPkgProgramType(pkg.program_type || 'SKD');
+    setPkgProductType(pkg.product_type || 'TRYOUT');
+    setPkgWaGroupLink(pkg.wa_group_link || '');
+    setPkgEbookFile(null);
   };
 
   const handlePkgImageChange = (e) => {
@@ -112,13 +121,46 @@ export default function AdminPaket() {
 
   const handlePkgSubmit = async (e) => {
     e.preventDefault();
-    if (!pkgTitle || !pkgDescription || !pkgDuration) {
+    if (!pkgTitle || !pkgDescription) {
       Swal.fire({
         title: 'Peringatan',
-        text: 'Harap isi seluruh formulir data paket!',
+        text: 'Harap isi judul dan deskripsi paket!',
         icon: 'warning',
         confirmButtonText: 'OK',
-        confirmButtonColor: '#3085d6'
+        confirmButtonColor: '#0B1C30'
+      });
+      return;
+    }
+
+    if (pkgProductType === 'TRYOUT' && !pkgDuration) {
+      Swal.fire({
+        title: 'Peringatan',
+        text: 'Durasi wajib diisi untuk tipe Tryout!',
+        icon: 'warning',
+        confirmButtonText: 'OK',
+        confirmButtonColor: '#0B1C30'
+      });
+      return;
+    }
+
+    if (pkgProductType === 'KELAS' && !pkgWaGroupLink) {
+      Swal.fire({
+        title: 'Peringatan',
+        text: 'Link grup WhatsApp wajib diisi untuk Kelas Online!',
+        icon: 'warning',
+        confirmButtonText: 'OK',
+        confirmButtonColor: '#0B1C30'
+      });
+      return;
+    }
+
+    if (pkgProductType === 'EBOOK' && !isEditingPkg && !pkgEbookFile) {
+      Swal.fire({
+        title: 'Peringatan',
+        text: 'Harap unggah berkas e-book (.pdf) terlebih dahulu!',
+        icon: 'warning',
+        confirmButtonText: 'OK',
+        confirmButtonColor: '#0B1C30'
       });
       return;
     }
@@ -127,14 +169,17 @@ export default function AdminPaket() {
       id: editingPkgId,
       title: pkgTitle,
       description: pkgDescription,
-      duration: parseInt(pkgDuration, 10),
+      duration: pkgProductType === 'TRYOUT' ? parseInt(pkgDuration, 10) : 0,
       status: pkgStatus,
       category: pkgCategory,
       imageUrl: pkgImageUrl,
       originalPrice: parseInt(pkgOriginalPrice, 10) || 0,
       discountPercentage: parseInt(pkgDiscountPercentage, 10) || 0,
       price: parseInt(pkgPrice, 10) || 0,
-      program_type: pkgProgramType
+      program_type: pkgProgramType,
+      product_type: pkgProductType,
+      wa_group_link: pkgProductType === 'KELAS' ? pkgWaGroupLink : null,
+      ebookFile: pkgProductType === 'EBOOK' ? pkgEbookFile : null
     };
 
     try {
@@ -313,31 +358,69 @@ export default function AdminPaket() {
               />
             </div>
 
-            <div className="grid grid-cols-2 gap-3">
+            <div className="space-y-4">
               <div>
-                <label className="block text-[10px] font-bold text-slate-400 uppercase tracking-wider mb-1.5">Durasi (Menit)</label>
-                <input
-                  type="number"
-                  value={pkgDuration}
-                  onChange={(e) => setPkgDuration(e.target.value)}
-                  className="w-full px-3 py-2.5 rounded-xl bg-slate-50 ring-1 ring-slate-200/60 text-xs font-semibold text-slate-800 outline-none focus:ring-2 focus:ring-blue-500 focus:bg-white transition-all duration-200"
-                  required
-                />
-              </div>
-
-              <div>
-                <label className="block text-[10px] font-bold text-slate-400 uppercase tracking-wider mb-1.5">Kategori / Produk</label>
+                <label className="block text-[10px] font-bold text-slate-400 uppercase tracking-wider mb-1.5">Tipe Produk</label>
                 <select
-                  value={pkgCategory}
-                  onChange={(e) => setPkgCategory(e.target.value)}
+                  value={pkgProductType}
+                  onChange={(e) => {
+                    const val = e.target.value;
+                    setPkgProductType(val);
+                    if (val === 'TRYOUT') setPkgCategory('Tryout');
+                    else if (val === 'KELAS') setPkgCategory('Kelas Online');
+                    else if (val === 'EBOOK') setPkgCategory('E-Book');
+                    else if (val === 'BUNDLE') setPkgCategory('Bundling');
+                  }}
                   className={selectClass}
                 >
-                  <option value="Tryout">Tryout</option>
-                  <option value="Kelas Online">Kelas Online</option>
-                  <option value="E-Book">E-Book</option>
-                  <option value="Bundling">Bundling</option>
+                  <option value="TRYOUT">Try Out</option>
+                  <option value="KELAS">Kelas Online</option>
+                  <option value="EBOOK">E-Book</option>
+                  <option value="BUNDLE">Bundling</option>
                 </select>
               </div>
+
+              {pkgProductType === 'TRYOUT' && (
+                <div>
+                  <label className="block text-[10px] font-bold text-slate-400 uppercase tracking-wider mb-1.5">Durasi (Menit)</label>
+                  <input
+                    type="number"
+                    value={pkgDuration}
+                    onChange={(e) => setPkgDuration(e.target.value)}
+                    className="w-full px-3 py-2.5 rounded-xl bg-slate-50 ring-1 ring-slate-200/60 text-xs font-semibold text-slate-800 outline-none focus:ring-2 focus:ring-blue-500 focus:bg-white transition-all duration-200"
+                    required
+                  />
+                </div>
+              )}
+
+              {pkgProductType === 'KELAS' && (
+                <div>
+                  <label className="block text-[10px] font-bold text-slate-400 uppercase tracking-wider mb-1.5">Link Grup WhatsApp</label>
+                  <input
+                    type="url"
+                    value={pkgWaGroupLink}
+                    onChange={(e) => setPkgWaGroupLink(e.target.value)}
+                    placeholder="https://chat.whatsapp.com/..."
+                    className="w-full px-3.5 py-2.5 rounded-xl bg-slate-50 ring-1 ring-slate-200/60 text-xs font-medium text-slate-800 outline-none focus:ring-2 focus:ring-blue-500 focus:bg-white transition-all duration-200"
+                    required
+                  />
+                </div>
+              )}
+
+              {pkgProductType === 'EBOOK' && (
+                <div>
+                  <label className="block text-[10px] font-bold text-slate-400 uppercase tracking-wider mb-1.5">Upload File E-Book (PDF)</label>
+                  <input
+                    type="file"
+                    accept="application/pdf"
+                    onChange={(e) => setPkgEbookFile(e.target.files[0])}
+                    className="block w-full text-xs text-slate-500 file:mr-4 file:py-2 file:px-4 file:rounded-xl file:border-0 file:text-xs file:font-bold file:bg-slate-100 file:text-[#0B1C30] hover:file:bg-slate-200 cursor-pointer"
+                  />
+                  {pkgEbookFile && (
+                    <p className="text-[10px] text-emerald-600 font-semibold mt-1">✓ Berkas terpilih: {pkgEbookFile.name}</p>
+                  )}
+                </div>
+              )}
             </div>
 
             <div className="bg-slate-50 rounded-2xl p-4 border border-slate-200/60 space-y-3.5">

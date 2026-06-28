@@ -54,6 +54,27 @@ const startServer = async () => {
       // Ignore
     }
 
+    try {
+      await sequelize.query("ALTER TABLE `tryouts` ADD COLUMN `product_type` ENUM('TRYOUT', 'KELAS', 'EBOOK', 'BUNDLE') NOT NULL DEFAULT 'TRYOUT';");
+      console.log('Added product_type column to tryouts table.');
+    } catch (err) {
+      // Ignore
+    }
+
+    try {
+      await sequelize.query("ALTER TABLE `tryouts` ADD COLUMN `wa_group_link` VARCHAR(255) DEFAULT NULL;");
+      console.log('Added wa_group_link column to tryouts table.');
+    } catch (err) {
+      // Ignore
+    }
+
+    try {
+      await sequelize.query("ALTER TABLE `tryouts` ADD COLUMN `ebook_file_path` VARCHAR(255) DEFAULT NULL;");
+      console.log('Added ebook_file_path column to tryouts table.');
+    } catch (err) {
+      // Ignore
+    }
+
     // Sync database schema
     const syncOptions = {
       alter: false,

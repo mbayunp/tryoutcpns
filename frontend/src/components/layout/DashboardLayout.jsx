@@ -156,6 +156,8 @@ export default function DashboardLayout() {
       navigate('/dashboard/riwayat');
     } else if (tabId === 'ranking') {
       navigate('/dashboard/ranking');
+    } else if (tabId === 'pembayaran') {
+      navigate('/dashboard/pembayaran');
     } else if (tabId === 'profil') {
       navigate('/dashboard/profil');
     }
@@ -232,6 +234,7 @@ export default function DashboardLayout() {
     { id: 'paket-saya', name: 'Paket Saya', icon: <FileText className="h-[18px] w-[18px]" /> },
     { id: 'riwayat', name: 'Riwayat', icon: <History className="h-[18px] w-[18px]" /> },
     { id: 'ranking', name: 'Ranking', icon: <Trophy className="h-[18px] w-[18px]" /> },
+    { id: 'pembayaran', name: 'Konfirmasi Bayar', icon: <Receipt className="h-[18px] w-[18px]" /> },
     { id: 'profil', name: 'Profil', icon: <UserIcon className="h-[18px] w-[18px]" /> },
   ];
 

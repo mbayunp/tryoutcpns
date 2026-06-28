@@ -9,7 +9,8 @@ import {
   X,
   MessageCircle,
   Package,
-  Search
+  Search,
+  Download
 } from 'lucide-react';
 import { useExamStore } from '../../store/useExamStore';
 
@@ -32,7 +33,8 @@ export default function PackageCatalog({ showOnlyPurchased = false }) {
     searchQuery,
     setSearchQuery,
     validateReferralCode,
-    activeProgram
+    activeProgram,
+    downloadPackageEbook
   } = useExamStore();
 
   const [selectedLockedPackage, setSelectedLockedPackage] = useState(null);
@@ -43,6 +45,28 @@ export default function PackageCatalog({ showOnlyPurchased = false }) {
   const [appliedReferral, setAppliedReferral] = useState(null);
   const [isApplyingReferral, setIsApplyingReferral] = useState(false);
   const [referralError, setReferralError] = useState('');
+  const [downloadingId, setDownloadingId] = useState(null);
+
+  const basePrice = selectedLockedPackage?.price || 0;
+  const finalPrice = appliedReferral
+    ? Math.round(basePrice - (basePrice * appliedReferral.percentage / 100))
+    : basePrice;
+
+  const handleDownloadEbook = async (pkgId, title) => {
+    setDownloadingId(pkgId);
+    try {
+      await downloadPackageEbook(pkgId, title);
+    } catch (err) {
+      Swal.fire({
+        title: 'Gagal Mengunduh',
+        text: err.message || 'Gagal mengunduh file e-book.',
+        icon: 'error',
+        confirmButtonColor: '#EF4444'
+      });
+    } finally {
+      setDownloadingId(null);
+    }
+  };
 
   useEffect(() => {
     fetchPackages();
@@ -120,7 +144,7 @@ export default function PackageCatalog({ showOnlyPurchased = false }) {
   };
 
   const handleDirectConfirm = async () => {
-    if (!proofFilePreview) {
+    if (finalPrice > 0 && !proofFilePreview) {
       Swal.fire({
         title: 'Bukti Pembayaran Wajib',
         text: 'Harap unggah bukti transfer QRIS terlebih dahulu!',
@@ -133,16 +157,12 @@ export default function PackageCatalog({ showOnlyPurchased = false }) {
 
     setIsSubmittingPay(true);
     try {
-      const basePrice = selectedLockedPackage.price || 0;
-      const finalPrice = appliedReferral
-        ? Math.round(basePrice - (basePrice * appliedReferral.percentage / 100))
-        : basePrice;
       const formattedAmount = formatRupiah(finalPrice);
 
       await createPendingTransaction(
         selectedLockedPackage.id,
         formattedAmount,
-        proofFilePreview,
+        proofFilePreview || 'FREE_PROMO',
         appliedReferral?.code || null
       );
 
@@ -158,6 +178,7 @@ export default function PackageCatalog({ showOnlyPurchased = false }) {
       setReferralInput('');
       setAppliedReferral(null);
       setReferralError('');
+      navigate('/dashboard/pembayaran');
     } catch (err) {
       Swal.fire({
         title: 'Gagal Mengirim',
@@ -170,12 +191,8 @@ export default function PackageCatalog({ showOnlyPurchased = false }) {
     }
   };
 
-  const handleWhatsAppConfirm = () => {
+  const handleWhatsAppConfirm = async () => {
     const adminPhone = "6281297298862";
-    const basePrice = selectedLockedPackage.price || 0;
-    const finalPrice = appliedReferral
-      ? Math.round(basePrice - (basePrice * appliedReferral.percentage / 100))
-      : basePrice;
     const formattedAmount = formatRupiah(finalPrice);
 
     const referralText = appliedReferral
@@ -183,21 +200,36 @@ export default function PackageCatalog({ showOnlyPurchased = false }) {
       : '';
     const message = `Halo Admin WILDAN CASN, saya ingin konfirmasi pembayaran.%0A%0A*Detail Pesanan:*%0ANama: ${user?.name || 'User'}%0AEmail: ${user?.email || 'email'}%0APaket: ${selectedLockedPackage?.title}${referralText}%0ANominal: ${formattedAmount}%0A%0ASaya telah melakukan scan QRIS. Berikut saya lampirkan bukti transfernya:`;
 
-    createPendingTransaction(
-      selectedLockedPackage.id,
-      formattedAmount,
-      proofFilePreview || null,
-      appliedReferral?.code || null
-    );
+    setIsSubmittingPay(true);
+    try {
+      await createPendingTransaction(
+        selectedLockedPackage.id,
+        formattedAmount,
+        proofFilePreview || (finalPrice === 0 ? 'FREE_PROMO' : null),
+        appliedReferral?.code || null
+      );
 
-    window.open(`https://wa.me/${adminPhone}?text=${message}`, '_blank');
+      if (finalPrice > 0) {
+        window.open(`https://wa.me/${adminPhone}?text=${message}`, '_blank');
+      }
 
-    setSelectedLockedPackage(null);
-    setProofFile(null);
-    setProofFilePreview('');
-    setReferralInput('');
-    setAppliedReferral(null);
-    setReferralError('');
+      setSelectedLockedPackage(null);
+      setProofFile(null);
+      setProofFilePreview('');
+      setReferralInput('');
+      setAppliedReferral(null);
+      setReferralError('');
+      navigate('/dashboard/pembayaran');
+    } catch (err) {
+      Swal.fire({
+        title: 'Gagal Mengirim',
+        text: err.message || 'Terjadi kesalahan saat memproses transaksi.',
+        icon: 'error',
+        confirmButtonColor: '#EF4444'
+      });
+    } finally {
+      setIsSubmittingPay(false);
+    }
   };
 
   const filteredPackages = packages.filter((pkg) => {
@@ -273,10 +305,18 @@ export default function PackageCatalog({ showOnlyPurchased = false }) {
 
               <div className="mt-5 space-y-4">
                 {/* Duration and Questions Count */}
-                <div className="flex justify-between text-[11px] text-slate-400 font-bold pt-2 border-t border-slate-50">
-                  <span className="flex items-center gap-1"><Clock className="h-3.5 w-3.5 text-slate-400" />{pkg.duration} Min</span>
-                  <span className="flex items-center gap-1"><FileText className="h-3.5 w-3.5 text-slate-400" />{pkg.totalQuestions} Soal</span>
-                </div>
+                {pkg.product_type === 'TRYOUT' ? (
+                  <div className="flex justify-between text-[11px] text-slate-400 font-bold pt-2 border-t border-slate-50">
+                    <span className="flex items-center gap-1"><Clock className="h-3.5 w-3.5 text-slate-400" />{pkg.duration} Min</span>
+                    <span className="flex items-center gap-1"><FileText className="h-3.5 w-3.5 text-slate-400" />{pkg.totalQuestions} Soal</span>
+                  </div>
+                ) : (
+                  <div className="flex justify-between text-[11px] text-slate-400 font-bold pt-2 border-t border-slate-50">
+                    <span className="bg-slate-100 text-slate-700 px-2.5 py-0.5 rounded text-[9px] uppercase font-black tracking-wider">
+                      {pkg.product_type === 'KELAS' ? 'Kelas Online' : 'E-Book PDF'}
+                    </span>
+                  </div>
+                )}
 
                 {/* Price Section */}
                 <div className="flex items-center justify-between pt-3 border-t border-slate-50">
@@ -299,23 +339,42 @@ export default function PackageCatalog({ showOnlyPurchased = false }) {
 
                 {/* CTA Button */}
                 {showOnlyPurchased ? (
-                  <button
-                    onClick={() => {
-                      if (!hasPendingTrx) handleStartExam(pkg);
-                    }}
-                    disabled={hasPendingTrx && pkg.status === 'Terkunci'}
-                    className={`w-full py-2.5 rounded-full font-bold text-xs shadow-md transition-all flex items-center justify-center gap-1 border-0 cursor-pointer ${
-                      hasPendingTrx && pkg.status === 'Terkunci'
-                        ? 'bg-amber-100 text-amber-700 cursor-not-allowed shadow-none'
-                        : 'bg-[#0B1C30] hover:bg-[#1E3E66] text-white hover:shadow-lg active:scale-[0.98]'
-                    }`}
-                  >
-                    {hasPendingTrx && pkg.status === 'Terkunci' ? (
-                      <span className="flex items-center gap-1"><Clock className="h-3.5 w-3.5 animate-pulse" />Verifikasi...</span>
-                    ) : (
-                      <span className="flex items-center gap-1">Mulai Ujian <ArrowRight className="h-3.5 w-3.5" /></span>
-                    )}
-                  </button>
+                  hasPendingTrx && pkg.status === 'Terkunci' ? (
+                    <button
+                      disabled
+                      className="w-full py-2.5 rounded-full font-bold text-xs bg-amber-100 text-amber-700 transition-all flex items-center justify-center gap-1 border-0 cursor-not-allowed shadow-none"
+                    >
+                      <Clock className="h-3.5 w-3.5 animate-pulse" />Verifikasi...
+                    </button>
+                  ) : pkg.product_type === 'KELAS' ? (
+                    <button
+                      onClick={() => {
+                        if (pkg.wa_group_link) {
+                          window.open(pkg.wa_group_link, '_blank');
+                        } else {
+                          Swal.fire('Info', 'Link WhatsApp grup belum tersedia, silakan hubungi admin.', 'info');
+                        }
+                      }}
+                      className="w-full py-2.5 bg-[#25D366] hover:bg-[#20ba56] text-white rounded-full font-bold text-xs shadow-md hover:shadow-lg active:scale-[0.98] transition-all flex items-center justify-center gap-1 border-0 cursor-pointer"
+                    >
+                      <MessageCircle className="h-4 w-4" /> Gabung Grup WA
+                    </button>
+                  ) : pkg.product_type === 'EBOOK' ? (
+                    <button
+                      onClick={() => handleDownloadEbook(pkg.id, pkg.title)}
+                      disabled={downloadingId === pkg.id}
+                      className="w-full py-2.5 bg-blue-600 hover:bg-blue-700 disabled:bg-blue-300 text-white rounded-full font-bold text-xs shadow-md hover:shadow-lg active:scale-[0.98] transition-all flex items-center justify-center gap-1 border-0 cursor-pointer"
+                    >
+                      <Download className="h-4 w-4" /> {downloadingId === pkg.id ? 'Mengunduh...' : 'Download E-Book'}
+                    </button>
+                  ) : (
+                    <button
+                      onClick={() => handleStartExam(pkg)}
+                      className="w-full py-2.5 bg-[#0B1C30] hover:bg-[#1E3E66] text-white rounded-full font-bold text-xs shadow-md hover:shadow-lg active:scale-[0.98] transition-all flex items-center justify-center gap-1 border-0 cursor-pointer"
+                    >
+                      Kerjakan Try Out <ArrowRight className="h-3.5 w-3.5" />
+                    </button>
+                  )
                 ) : (
                   <button
                     onClick={() => navigate(`/paket/${pkg.id}`)}
@@ -502,59 +561,66 @@ export default function PackageCatalog({ showOnlyPurchased = false }) {
               </div>
 
               {/* Upload Proof Area */}
-              <div className="space-y-2 text-left">
-                <label className="block text-[10px] font-bold text-slate-455 uppercase tracking-wider">Unggah Bukti Transfer</label>
-                <div
-                  className="border-2 border-dashed border-slate-200 hover:border-slate-350 rounded-xl p-4 bg-slate-50/50 hover:bg-slate-50 transition-all flex flex-col items-center justify-center cursor-pointer relative group min-h-[90px]"
-                  onClick={() => document.getElementById('proof-upload-input').click()}
-                >
-                  <input
-                    id="proof-upload-input"
-                    type="file"
-                    accept="image/*"
-                    className="hidden"
-                    onChange={handleFileChange}
-                  />
-                  {proofFilePreview ? (
-                    <div className="flex items-center gap-3 w-full">
-                      <img src={proofFilePreview} alt="Bukti Transfer" className="h-14 w-14 object-cover rounded-lg border border-slate-200" />
-                      <div className="overflow-hidden flex-1">
-                        <p className="text-xs font-bold text-slate-800 truncate">{proofFile?.name}</p>
-                        <p className="text-[10px] text-slate-450 font-semibold">{(proofFile?.size / 1024).toFixed(1)} KB</p>
+              {finalPrice > 0 ? (
+                <div className="space-y-2 text-left">
+                  <label className="block text-[10px] font-bold text-slate-455 uppercase tracking-wider">Unggah Bukti Transfer</label>
+                  <div
+                    className="border-2 border-dashed border-slate-200 hover:border-slate-350 rounded-xl p-4 bg-slate-50/50 hover:bg-slate-50 transition-all flex flex-col items-center justify-center cursor-pointer relative group min-h-[90px]"
+                    onClick={() => document.getElementById('proof-upload-input').click()}
+                  >
+                    <input
+                      id="proof-upload-input"
+                      type="file"
+                      accept="image/*"
+                      className="hidden"
+                      onChange={handleFileChange}
+                    />
+                    {proofFilePreview ? (
+                      <div className="flex items-center gap-3 w-full">
+                        <img src={proofFilePreview} alt="Bukti Transfer" className="h-14 w-14 object-cover rounded-lg border border-slate-200" />
+                        <div className="overflow-hidden flex-1">
+                          <p className="text-xs font-bold text-slate-800 truncate">{proofFile?.name}</p>
+                          <p className="text-[10px] text-slate-450 font-semibold">{(proofFile?.size / 1024).toFixed(1)} KB</p>
+                        </div>
+                        <button
+                          type="button"
+                          onClick={(e) => {
+                            e.stopPropagation();
+                            setProofFile(null);
+                            setProofFilePreview('');
+                          }}
+                          className="p-1 rounded-lg hover:bg-red-50 text-red-500 transition-colors border-0 bg-transparent cursor-pointer"
+                        >
+                          <X className="h-4 w-4" />
+                        </button>
                       </div>
-                      <button
-                        type="button"
-                        onClick={(e) => {
-                          e.stopPropagation();
-                          setProofFile(null);
-                          setProofFilePreview('');
-                        }}
-                        className="p-1 rounded-lg hover:bg-red-50 text-red-500 transition-colors border-0 bg-transparent cursor-pointer"
-                      >
-                        <X className="h-4 w-4" />
-                      </button>
-                    </div>
-                  ) : (
-                    <div className="text-center space-y-1">
-                      <span className="text-xs font-bold text-slate-700">Pilih Berkas Bukti Transfer</span>
-                      <p className="text-[10px] text-slate-405 font-semibold">Maksimal 2MB (.png, .jpg, .jpeg)</p>
-                    </div>
-                  )}
+                    ) : (
+                      <div className="text-center space-y-1">
+                        <span className="text-xs font-bold text-slate-700">Pilih Berkas Bukti Transfer</span>
+                        <p className="text-[10px] text-slate-405 font-semibold">Maksimal 2MB (.png, .jpg, .jpeg)</p>
+                      </div>
+                    )}
+                  </div>
                 </div>
-              </div>
+              ) : (
+                <div className="p-4 bg-emerald-50 text-emerald-700 border border-emerald-100 rounded-2xl flex items-center justify-center gap-2.5 text-xs font-bold animate-pulse">
+                  <span>🎉 Diskon 100% Referal Diterapkan! Pembelian Gratis.</span>
+                </div>
+              )}
 
               {/* Action Buttons */}
               <div className="pt-4 border-t border-slate-100 space-y-2.5">
                 <button
                   onClick={handleDirectConfirm}
-                  disabled={isSubmittingPay || !proofFilePreview}
+                  disabled={isSubmittingPay || (finalPrice > 0 && !proofFilePreview)}
                   className="w-full bg-[#0B1C30] hover:bg-[#102A43] disabled:opacity-40 disabled:cursor-not-allowed text-white flex items-center justify-center gap-2 py-3.5 rounded-xl font-bold shadow-md transition-all active:scale-[0.98] border-0 cursor-pointer"
                 >
-                  {isSubmittingPay ? 'Mengirim...' : 'Kirim Bukti Pembayaran'}
+                  {isSubmittingPay ? 'Mengirim...' : finalPrice === 0 ? 'Konfirmasi Pembelian Gratis' : 'Kirim Bukti Pembayaran'}
                 </button>
 
                 <button
                   onClick={handleWhatsAppConfirm}
+                  disabled={isSubmittingPay}
                   className="w-full bg-white border border-slate-200 text-slate-650 hover:bg-slate-50 flex items-center justify-center gap-2 py-3 rounded-xl font-bold transition-all active:scale-[0.98] border-0 cursor-pointer"
                 >
                   <MessageCircle className="h-4 w-4 text-[#25D366]" />

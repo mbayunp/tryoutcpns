@@ -12,6 +12,9 @@ router.get('/', transactionController.getTransactions);
 // Create a new transaction (user initiates tryout package purchase)
 router.post('/', transactionController.createTransaction);
 
+// Upload proof of payment for an existing transaction
+router.put('/:id/proof', transactionController.uploadProof);
+
 // Update status of transaction (admin verifies / rejects payment)
 router.put('/:id/status', adminMiddleware, transactionController.updateTransactionStatus);
 

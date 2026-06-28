@@ -13,7 +13,7 @@ const formatRupiah = (num) => {
 export default function PackageDetail() {
   const { id } = useParams();
   const navigate = useNavigate();
-  const { packages, user, fetchPackages, validateReferralCode } = useExamStore();
+  const { packages, user, fetchPackages, validateReferralCode, createPendingTransaction } = useExamStore();
 
   React.useEffect(() => {
     if (packages.length === 0) {
@@ -86,6 +86,33 @@ export default function PackageDetail() {
       }
     }
 
+    if (finalPrice === 0) {
+      try {
+        const formattedAmount = formatRupiah(finalPrice);
+        await createPendingTransaction(
+          pkg.id,
+          formattedAmount,
+          'FREE_PROMO',
+          appliedCode
+        );
+        await Swal.fire({
+          title: 'Transaksi Berhasil!',
+          text: 'Pendaftaran paket gratis Anda berhasil diajukan. Silakan konfirmasi pendaftaran Anda.',
+          icon: 'success',
+          confirmButtonColor: '#0B1C30'
+        });
+        navigate('/dashboard/pembayaran');
+      } catch (err) {
+        Swal.fire({
+          title: 'Gagal',
+          text: err.message || 'Gagal memproses pendaftaran gratis.',
+          icon: 'error',
+          confirmButtonColor: '#EF4444'
+        });
+      }
+      return;
+    }
+
     Swal.fire({
       title: 'Metode Pembayaran Transfer',
       html: `
@@ -106,11 +133,30 @@ export default function PackageDetail() {
       cancelButtonText: 'Batal',
       confirmButtonColor: '#25D366',
       cancelButtonColor: '#6B7280'
-    }).then((result) => {
+    }).then(async (result) => {
       if (result.isConfirmed) {
-        const referralMsg = appliedCode ? `%0AKode Referal: ${appliedCode}` : '';
-        const message = `Halo Admin, saya ingin konfirmasi pembayaran.%0A%0ANama: ${user?.name || 'User'}%0AEmail: ${user?.email || 'email'}%0APaket: ${pkg.title}${referralMsg}%0A%0ASaya telah melakukan transfer sebesar ${formatRupiah(finalPrice)}. Berikut bukti transfernya:`;
-        window.open(`https://wa.me/6281297298862?text=${message}`, '_blank');
+        try {
+          const formattedAmount = formatRupiah(finalPrice);
+          await createPendingTransaction(
+            pkg.id,
+            formattedAmount,
+            null,
+            appliedCode
+          );
+          
+          const referralMsg = appliedCode ? `%0AKode Referal: ${appliedCode}` : '';
+          const message = `Halo Admin, saya ingin konfirmasi pembayaran.%0A%0ANama: ${user?.name || 'User'}%0AEmail: ${user?.email || 'email'}%0APaket: ${pkg.title}${referralMsg}%0A%0ASaya telah melakukan transfer sebesar ${formatRupiah(finalPrice)}. Berikut bukti transfernya:`;
+          window.open(`https://wa.me/6281297298862?text=${message}`, '_blank');
+          
+          navigate('/dashboard/pembayaran');
+        } catch (err) {
+          Swal.fire({
+            title: 'Gagal',
+            text: err.message || 'Gagal membuat transaksi. Silakan coba lagi.',
+            icon: 'error',
+            confirmButtonColor: '#EF4444'
+          });
+        }
       }
     });
   };

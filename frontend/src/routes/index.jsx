@@ -33,6 +33,7 @@ const UserProfile = React.lazy(() => import('../pages/dashboard/UserProfile'));
 const HistoryTab = React.lazy(() => import('../pages/dashboard/HistoryTab'));
 const RankingTab = React.lazy(() => import('../pages/dashboard/RankingTab'));
 const ProgramSelection = React.lazy(() => import('../pages/dashboard/ProgramSelection'));
+const Pembayaran = React.lazy(() => import('../pages/dashboard/Pembayaran'));
 
 export default function AppRoutes() {
   return (
@@ -87,6 +88,11 @@ export default function AppRoutes() {
         <Route path="/dashboard/profil" element={
           <Suspense fallback={<LoadingSpinner />}>
             <UserProfile />
+          </Suspense>
+        } />
+        <Route path="/dashboard/pembayaran" element={
+          <Suspense fallback={<LoadingSpinner />}>
+            <Pembayaran />
           </Suspense>
         } />
 

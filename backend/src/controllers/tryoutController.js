@@ -46,18 +46,27 @@ const submitTryout = async (req, res, next) => {
 // Admin CRUD Operations
 const createTryout = async (req, res, next) => {
   try {
-    const { title, description, duration, status, category, image_url, original_price, discount_percentage, price, program_type } = req.body;
+    const { title, description, duration, status, category, image_url, original_price, discount_percentage, price, program_type, product_type, wa_group_link } = req.body;
+    
+    let ebook_file_path = null;
+    if (req.file) {
+      ebook_file_path = 'uploads/ebooks/' + req.file.filename;
+    }
+
     const newTryout = await Tryout.create({
       title,
       description,
-      duration,
+      duration: duration !== undefined && duration !== '' ? parseInt(duration) : 0,
       status: status || 'active',
       category: category || 'Tryout',
       image_url,
-      original_price: original_price !== undefined ? original_price : 0,
-      discount_percentage: discount_percentage !== undefined ? discount_percentage : 0,
-      price: price !== undefined ? price : 0,
-      program_type: program_type || 'SKD'
+      original_price: original_price !== undefined ? parseInt(original_price) : 0,
+      discount_percentage: discount_percentage !== undefined ? parseInt(discount_percentage) : 0,
+      price: price !== undefined ? parseInt(price) : 0,
+      program_type: program_type || 'SKD',
+      product_type: product_type || 'TRYOUT',
+      wa_group_link: product_type === 'KELAS' ? wa_group_link : null,
+      ebook_file_path: product_type === 'EBOOK' ? ebook_file_path : null
     });
     return response.success(res, newTryout, 'Tryout created successfully', 201);
   } catch (err) {
@@ -68,7 +77,7 @@ const createTryout = async (req, res, next) => {
  const updateTryout = async (req, res, next) => {
    try {
      const { id } = req.params;
-     const { title, description, duration, status, category, image_url, original_price, discount_percentage, price, program_type } = req.body;
+     const { title, description, duration, status, category, image_url, original_price, discount_percentage, price, program_type, product_type, wa_group_link } = req.body;
  
      const tryout = await Tryout.findByPk(id);
      if (!tryout) {
@@ -77,14 +86,28 @@ const createTryout = async (req, res, next) => {
  
      if (title !== undefined) tryout.title = title;
      if (description !== undefined) tryout.description = description;
-     if (duration !== undefined) tryout.duration = duration;
+     if (duration !== undefined) tryout.duration = duration !== '' ? parseInt(duration) : 0;
      if (status !== undefined) tryout.status = status;
      if (category !== undefined) tryout.category = category;
      if (image_url !== undefined) tryout.image_url = image_url;
-     if (original_price !== undefined) tryout.original_price = original_price;
-     if (discount_percentage !== undefined) tryout.discount_percentage = discount_percentage;
-     if (price !== undefined) tryout.price = price;
+     if (original_price !== undefined) tryout.original_price = parseInt(original_price) || 0;
+     if (discount_percentage !== undefined) tryout.discount_percentage = parseInt(discount_percentage) || 0;
+     if (price !== undefined) tryout.price = parseInt(price) || 0;
      if (program_type !== undefined) tryout.program_type = program_type;
+     
+     if (product_type !== undefined) tryout.product_type = product_type;
+     
+     if (product_type === 'KELAS' || (tryout.product_type === 'KELAS' && wa_group_link !== undefined)) {
+       tryout.wa_group_link = wa_group_link;
+     } else if (product_type && product_type !== 'KELAS') {
+       tryout.wa_group_link = null;
+     }
+
+     if (req.file) {
+       tryout.ebook_file_path = 'uploads/ebooks/' + req.file.filename;
+     } else if (product_type && product_type !== 'EBOOK') {
+       tryout.ebook_file_path = null;
+     }
  
      await tryout.save();
      return response.success(res, tryout, 'Tryout updated successfully');
@@ -376,6 +399,44 @@ const getMyPackages = async (req, res, next) => {
   }
 };
 
+const downloadEbook = async (req, res, next) => {
+  try {
+    const { id } = req.params;
+    const userId = req.user.id;
+
+    // Check transaction status for this tryout_id
+    const { Transaction } = require('../models');
+    const transaction = await Transaction.findOne({
+      where: {
+        user_id: userId,
+        tryout_id: id,
+        status: 'success'
+      }
+    });
+
+    if (!transaction && req.user.role !== 'admin') {
+      return response.error(res, 'Anda belum membeli e-book ini atau pembayaran Anda belum diverifikasi.', 403);
+    }
+
+    const tryout = await Tryout.findByPk(id);
+    if (!tryout || !tryout.ebook_file_path) {
+      return response.error(res, 'File e-book tidak ditemukan.', 404);
+    }
+
+    const path = require('path');
+    const fs = require('fs');
+    const absolutePath = path.join(__dirname, '../../', tryout.ebook_file_path);
+
+    if (!fs.existsSync(absolutePath)) {
+      return response.error(res, 'File di server tidak ditemukan.', 404);
+    }
+
+    return res.download(absolutePath, `${tryout.title}.pdf`);
+  } catch (err) {
+    next(err);
+  }
+};
+
 module.exports = {
   getTryouts,
   getTryoutById,
@@ -387,5 +448,6 @@ module.exports = {
   assignQuestionsToPackage,
   getQuestionsForPackage,
   saveAttemptResult,
-  getMyPackages
+  getMyPackages,
+  downloadEbook
 };

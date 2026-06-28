@@ -12,8 +12,16 @@ const tryoutValidation = validate([
     .optional()
     .trim(),
   body('duration')
-    .isInt({ min: 1 })
-    .withMessage('Duration must be a positive integer in minutes'),
+    .custom((value, { req }) => {
+      const productType = req.body.product_type || 'TRYOUT';
+      if (productType.toUpperCase() !== 'TRYOUT') {
+        return true;
+      }
+      if (value === undefined || value === null || value === '' || isNaN(value) || parseInt(value) < 1) {
+        throw new Error('Duration must be a positive integer in minutes');
+      }
+      return true;
+    }),
   body('status')
     .optional()
     .isIn(['active', 'inactive'])

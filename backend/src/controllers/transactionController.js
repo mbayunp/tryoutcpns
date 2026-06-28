@@ -45,8 +45,20 @@ const updateTransactionStatus = async (req, res, next) => {
   }
 };
 
+const uploadProof = async (req, res, next) => {
+  try {
+    const { id } = req.params;
+    const { proof_image, proofImage } = req.body;
+    const transaction = await transactionService.uploadProof(id, req.user.id, proof_image || proofImage);
+    return response.success(res, transaction, 'Proof uploaded successfully');
+  } catch (err) {
+    next(err);
+  }
+};
+
 module.exports = {
   getTransactions,
   createTransaction,
-  updateTransactionStatus
+  updateTransactionStatus,
+  uploadProof
 };

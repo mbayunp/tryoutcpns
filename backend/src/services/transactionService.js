@@ -154,8 +154,28 @@ const updateTransactionStatus = async (transactionId, status) => {
   return transaction;
 };
 
+const uploadProof = async (transactionId, userId, proofImage) => {
+  const transaction = await Transaction.findOne({
+    where: {
+      id: transactionId,
+      user_id: userId
+    }
+  });
+
+  if (!transaction) {
+    const error = new Error('Transaction not found');
+    error.statusCode = 404;
+    throw error;
+  }
+
+  transaction.proof_image = proofImage || null;
+  await transaction.save();
+  return transaction;
+};
+
 module.exports = {
   createTransaction,
   getTransactions,
-  updateTransactionStatus
+  updateTransactionStatus,
+  uploadProof
 };

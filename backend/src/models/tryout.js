@@ -56,6 +56,19 @@ const Tryout = sequelize.define('Tryout', {
     allowNull: false,
     defaultValue: 'SKD'
   },
+  product_type: {
+    type: DataTypes.ENUM('TRYOUT', 'KELAS', 'EBOOK', 'BUNDLE'),
+    allowNull: false,
+    defaultValue: 'TRYOUT'
+  },
+  wa_group_link: {
+    type: DataTypes.STRING,
+    allowNull: true
+  },
+  ebook_file_path: {
+    type: DataTypes.STRING,
+    allowNull: true
+  },
 }, {
   tableName: 'tryouts',
 });

@@ -169,7 +169,10 @@ export const useExamStore = create(
               imageUrl: pkg.image_url,
               originalPrice: pkg.original_price || 0,
               discountPercentage: pkg.discount_percentage || 0,
-              price: pkg.price || 0
+              price: pkg.price || 0,
+              product_type: pkg.product_type || 'TRYOUT',
+              wa_group_link: pkg.wa_group_link || null,
+              ebook_file_path: pkg.ebook_file_path || null
             };
           });
           set({ packages: mapped });
@@ -666,19 +669,45 @@ export const useExamStore = create(
 
       createPackage: async (pkgData) => {
         try {
-          const formatted = {
-            title: pkgData.title,
-            description: pkgData.description,
-            duration: parseInt(pkgData.duration),
-            status: pkgData.status === 'Aktif' ? 'active' : 'inactive',
-            category: pkgData.category || 'Tryout',
-            image_url: pkgData.imageUrl || null,
-            original_price: pkgData.originalPrice ? parseInt(pkgData.originalPrice) : 0,
-            discount_percentage: pkgData.discountPercentage ? parseInt(pkgData.discountPercentage) : 0,
-            price: pkgData.price ? parseInt(pkgData.price) : 0,
-            program_type: pkgData.program_type
-          };
-          await API.post('/tryouts', formatted);
+          const status = pkgData.status === 'Aktif' ? 'active' : 'inactive';
+          let body;
+          let headers = {};
+
+          if (pkgData.ebookFile) {
+            body = new FormData();
+            body.append('title', pkgData.title);
+            body.append('description', pkgData.description || '');
+            body.append('duration', parseInt(pkgData.duration) || 0);
+            body.append('status', status);
+            body.append('category', pkgData.category || 'Tryout');
+            if (pkgData.imageUrl) body.append('image_url', pkgData.imageUrl);
+            body.append('original_price', parseInt(pkgData.originalPrice) || 0);
+            body.append('discount_percentage', parseInt(pkgData.discountPercentage) || 0);
+            body.append('price', parseInt(pkgData.price) || 0);
+            body.append('program_type', pkgData.program_type);
+            body.append('product_type', pkgData.product_type || 'TRYOUT');
+            if (pkgData.wa_group_link) body.append('wa_group_link', pkgData.wa_group_link);
+            body.append('ebook_file', pkgData.ebookFile);
+            
+            headers['Content-Type'] = 'multipart/form-data';
+          } else {
+            body = {
+              title: pkgData.title,
+              description: pkgData.description,
+              duration: parseInt(pkgData.duration) || 0,
+              status,
+              category: pkgData.category || 'Tryout',
+              image_url: pkgData.imageUrl || null,
+              original_price: parseInt(pkgData.originalPrice) || 0,
+              discount_percentage: parseInt(pkgData.discountPercentage) || 0,
+              price: parseInt(pkgData.price) || 0,
+              program_type: pkgData.program_type,
+              product_type: pkgData.product_type || 'TRYOUT',
+              wa_group_link: pkgData.wa_group_link || null
+            };
+          }
+
+          await API.post('/tryouts', body, { headers });
           await get().fetchPackages();
         } catch (error) {
           console.error('Failed to create package:', error);
@@ -688,22 +717,67 @@ export const useExamStore = create(
 
       updatePackage: async (updatedPkg) => {
         try {
-          const formatted = {
-            title: updatedPkg.title,
-            description: updatedPkg.description,
-            duration: parseInt(updatedPkg.duration),
-            status: updatedPkg.status === 'Aktif' ? 'active' : 'inactive',
-            category: updatedPkg.category || 'Tryout',
-            image_url: updatedPkg.imageUrl || null,
-            original_price: updatedPkg.originalPrice ? parseInt(updatedPkg.originalPrice) : 0,
-            discount_percentage: updatedPkg.discountPercentage ? parseInt(updatedPkg.discountPercentage) : 0,
-            price: updatedPkg.price ? parseInt(updatedPkg.price) : 0,
-            program_type: updatedPkg.program_type
-          };
-          await API.put(`/tryouts/${updatedPkg.id}`, formatted);
+          const status = updatedPkg.status === 'Aktif' ? 'active' : 'inactive';
+          let body;
+          let headers = {};
+
+          if (updatedPkg.ebookFile) {
+            body = new FormData();
+            body.append('title', updatedPkg.title);
+            body.append('description', updatedPkg.description || '');
+            body.append('duration', parseInt(updatedPkg.duration) || 0);
+            body.append('status', status);
+            body.append('category', updatedPkg.category || 'Tryout');
+            if (updatedPkg.imageUrl) body.append('image_url', updatedPkg.imageUrl);
+            body.append('original_price', parseInt(updatedPkg.originalPrice) || 0);
+            body.append('discount_percentage', parseInt(updatedPkg.discountPercentage) || 0);
+            body.append('price', parseInt(updatedPkg.price) || 0);
+            body.append('program_type', updatedPkg.program_type);
+            body.append('product_type', updatedPkg.product_type || 'TRYOUT');
+            if (updatedPkg.wa_group_link) body.append('wa_group_link', updatedPkg.wa_group_link);
+            body.append('ebook_file', updatedPkg.ebookFile);
+            
+            headers['Content-Type'] = 'multipart/form-data';
+          } else {
+            body = {
+              title: updatedPkg.title,
+              description: updatedPkg.description,
+              duration: parseInt(updatedPkg.duration) || 0,
+              status,
+              category: updatedPkg.category || 'Tryout',
+              image_url: updatedPkg.imageUrl || null,
+              original_price: parseInt(updatedPkg.originalPrice) || 0,
+              discount_percentage: parseInt(updatedPkg.discountPercentage) || 0,
+              price: parseInt(updatedPkg.price) || 0,
+              program_type: updatedPkg.program_type,
+              product_type: updatedPkg.product_type || 'TRYOUT',
+              wa_group_link: updatedPkg.wa_group_link || null
+            };
+          }
+
+          await API.put(`/tryouts/${updatedPkg.id}`, body, { headers });
           await get().fetchPackages();
         } catch (error) {
           console.error('Failed to update package:', error);
+          throw error;
+        }
+      },
+
+      downloadPackageEbook: async (id, title) => {
+        try {
+          const res = await API.get(`/tryouts/${id}/download`, {
+            responseType: 'blob'
+          });
+          const url = window.URL.createObjectURL(new Blob([res.data]));
+          const link = document.createElement('a');
+          link.href = url;
+          link.setAttribute('download', `${title}.pdf`);
+          document.body.appendChild(link);
+          link.click();
+          link.remove();
+          window.URL.revokeObjectURL(url);
+        } catch (error) {
+          console.error('Failed to download ebook:', error);
           throw error;
         }
       },
@@ -720,15 +794,30 @@ export const useExamStore = create(
 
       createPendingTransaction: async (tryoutId, amount, proofImage, referralCode) => {
         try {
-          await API.post('/transactions', {
+          const res = await API.post('/transactions', {
             tryout_id: tryoutId,
             amount: amount,
             proof_image: proofImage || null,
             referral_code: referralCode || null
           });
           await get().fetchPackages();
+          return res.data.data;
         } catch (error) {
           console.error('Failed to create transaction:', error);
+          throw error;
+        }
+      },
+
+      uploadTransactionProof: async (transactionId, proofImage) => {
+        try {
+          const res = await API.put(`/transactions/${transactionId}/proof`, {
+            proof_image: proofImage
+          });
+          await get().fetchTransactions();
+          await get().fetchPackages();
+          return res.data.data;
+        } catch (error) {
+          console.error('Failed to upload proof:', error);
           throw error;
         }
       },

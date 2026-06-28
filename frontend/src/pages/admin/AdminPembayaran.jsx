@@ -261,15 +261,19 @@ export default function AdminPembayaran() {
                                         <td className="px-6 py-4 text-center">
                                             <button
                                                 type="button"
-                                                onClick={() => Swal.fire({
-                                                    title: 'Bukti Transfer Pembayaran',
-                                                    text: `Transaksi ID: ${trx.id} (${trx.userName})`,
-                                                    imageUrl: trx.proofImage || 'https://placehold.co/600x400?text=Bukti+Transfer',
-                                                    imageWidth: 400,
-                                                    imageAlt: 'Bukti Transfer',
-                                                    confirmButtonText: 'Tutup',
-                                                    confirmButtonColor: '#0B1C35'
-                                                })}
+                                                onClick={() => {
+                                                    const isFree = trx.proofImage === 'FREE_PROMO' || trx.amount === 'Rp 0' || trx.amount === 'Rp. 0';
+                                                    Swal.fire({
+                                                        title: 'Bukti Transfer Pembayaran',
+                                                        text: `Transaksi ID: ${trx.id} (${trx.userName})`,
+                                                        imageUrl: isFree ? undefined : (trx.proofImage || 'https://placehold.co/600x400?text=Bukti+Transfer'),
+                                                        html: isFree ? '<div class="p-6 bg-emerald-50 text-emerald-700 font-extrabold text-sm rounded-xl border border-emerald-100">Promo Diskon 100% / Gratis<br/>Tidak memerlukan bukti transfer</div>' : undefined,
+                                                        imageWidth: isFree ? undefined : 400,
+                                                        imageAlt: 'Bukti Transfer',
+                                                        confirmButtonText: 'Tutup',
+                                                        confirmButtonColor: '#0B1C35'
+                                                    });
+                                                }}
                                                 className="px-2.5 py-1.5 bg-blue-50 text-blue-600 hover:bg-blue-100 hover:text-blue-800 rounded-lg text-xs font-bold transition-all border-0 cursor-pointer"
                                             >
                                                 Lihat Bukti

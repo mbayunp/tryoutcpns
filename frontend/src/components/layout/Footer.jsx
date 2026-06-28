@@ -207,7 +207,7 @@ export default function Footer() {
         </div>
 
         <div className="mt-12 pt-6 border-t border-slate-900 text-center text-xs text-slate-600">
-          <p>© {new Date().getFullYear()} WILDAN CASN</p>
+          <p>© {new Date().getFullYear()} WILDAN CASN | Website Versi 1.0.3</p>
         </div>
       </div>
 

@@ -5,6 +5,35 @@ const authMiddleware = require('../middlewares/authMiddleware');
 const adminMiddleware = require('../middlewares/adminMiddleware');
 const { tryoutValidation, startValidation, submitValidation } = require('../validations/tryoutValidation');
 
+const multer = require('multer');
+const path = require('path');
+const fs = require('fs');
+
+const storage = multer.diskStorage({
+  destination: (req, file, cb) => {
+    const dir = path.join(__dirname, '../../uploads/ebooks');
+    if (!fs.existsSync(dir)) {
+      fs.mkdirSync(dir, { recursive: true });
+    }
+    cb(null, dir);
+  },
+  filename: (req, file, cb) => {
+    const uniqueSuffix = Date.now() + '-' + Math.round(Math.random() * 1e9);
+    cb(null, file.fieldname + '-' + uniqueSuffix + path.extname(file.originalname));
+  }
+});
+
+const upload = multer({
+  storage: storage,
+  fileFilter: (req, file, cb) => {
+    if (file.mimetype === 'application/pdf') {
+      cb(null, true);
+    } else {
+      cb(new Error('Only PDF files are allowed!'), false);
+    }
+  }
+});
+
 router.use(authMiddleware);
 
 // Candidate / User Tryout Flow
@@ -13,10 +42,11 @@ router.get('/my-packages', tryoutController.getMyPackages);
 router.get('/:id', tryoutController.getTryoutById);
 router.post('/start', startValidation, tryoutController.startTryout);
 router.post('/submit', submitValidation, tryoutController.submitTryout);
+router.get('/:id/download', tryoutController.downloadEbook);
 
 // Administrative CRUD endpoints
-router.post('/', adminMiddleware, tryoutValidation, tryoutController.createTryout);
-router.put('/:id', adminMiddleware, tryoutValidation, tryoutController.updateTryout);
+router.post('/', adminMiddleware, upload.single('ebook_file'), tryoutValidation, tryoutController.createTryout);
+router.put('/:id', adminMiddleware, upload.single('ebook_file'), tryoutValidation, tryoutController.updateTryout);
 router.delete('/:id', adminMiddleware, tryoutController.deleteTryout);
 
 // Package Questions Mapping
