@@ -46,6 +46,12 @@ export default function AdminPaket() {
     }
   }, [adminActiveProgram, isEditingPkg]);
 
+  useEffect(() => {
+    if (pkgProgramType === 'PPPK') {
+      setPkgDuration(130);
+    }
+  }, [pkgProgramType]);
+
   // Modal for question assignment mapping
   const [showQuestionModal, setShowQuestionModal] = useState(false);
   const [selectedPkg, setSelectedPkg] = useState(null);

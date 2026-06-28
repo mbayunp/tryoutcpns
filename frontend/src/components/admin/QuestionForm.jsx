@@ -14,6 +14,7 @@ export default function QuestionForm({
   const adminActiveProgram = useExamStore((state) => state.adminActiveProgram);
   const [programType, setProgramType] = useState('SKD');
   const [category, setCategory] = useState('TWK');
+  const [subCategory, setSubCategory] = useState('Teknis');
   const [questionText, setQuestionText] = useState('');
   const [optA, setOptA] = useState('');
   const [optB, setOptB] = useState('');
@@ -31,23 +32,31 @@ export default function QuestionForm({
 
   useEffect(() => {
     if (selectedQuestion) {
-      setCategory(selectedQuestion.category);
+      setCategory(selectedQuestion.category || 'TWK');
       setQuestionText(selectedQuestion.question);
-      setOptA(selectedQuestion.options?.find(o => o.key === 'A')?.text || '');
-      setOptB(selectedQuestion.options?.find(o => o.key === 'B')?.text || '');
-      setOptC(selectedQuestion.options?.find(o => o.key === 'C')?.text || '');
-      setOptD(selectedQuestion.options?.find(o => o.key === 'D')?.text || '');
-      setOptE(selectedQuestion.options?.find(o => o.key === 'E')?.text || '');
-      setCorrectAnswer(selectedQuestion.correctAnswer || 'A');
+      setOptA(selectedQuestion.options?.find(o => o.key === 'A')?.text || selectedQuestion.option_a || '');
+      setOptB(selectedQuestion.options?.find(o => o.key === 'B')?.text || selectedQuestion.option_b || '');
+      setOptC(selectedQuestion.options?.find(o => o.key === 'C')?.text || selectedQuestion.option_c || '');
+      setOptD(selectedQuestion.options?.find(o => o.key === 'D')?.text || selectedQuestion.option_d || '');
+      setOptE(selectedQuestion.options?.find(o => o.key === 'E')?.text || selectedQuestion.option_e || '');
+      setCorrectAnswer(selectedQuestion.correctAnswer || selectedQuestion.correct_answer?.toUpperCase() || 'A');
       setExplanation(selectedQuestion.explanation || '');
       setProgramType(selectedQuestion.program_type || 'SKD');
+      setSubCategory(selectedQuestion.sub_category || 'Teknis');
 
-      if (selectedQuestion.category === 'TKP' && selectedQuestion.scores) {
-        setScoreA(selectedQuestion.scores.A || 5);
-        setScoreB(selectedQuestion.scores.B || 4);
-        setScoreC(selectedQuestion.scores.C || 3);
-        setScoreD(selectedQuestion.scores.D || 2);
-        setScoreE(selectedQuestion.scores.E || 1);
+      const weights = selectedQuestion.options_weights || selectedQuestion.option_weights || selectedQuestion.scores;
+      if (weights) {
+        setScoreA(weights.A !== undefined ? weights.A : (weights.a !== undefined ? weights.a : 5));
+        setScoreB(weights.B !== undefined ? weights.B : (weights.b !== undefined ? weights.b : 4));
+        setScoreC(weights.C !== undefined ? weights.C : (weights.c !== undefined ? weights.c : 3));
+        setScoreD(weights.D !== undefined ? weights.D : (weights.d !== undefined ? weights.d : 2));
+        setScoreE(weights.E !== undefined ? weights.E : (weights.e !== undefined ? weights.e : 1));
+      } else {
+        setScoreA(5);
+        setScoreB(4);
+        setScoreC(3);
+        setScoreD(2);
+        setScoreE(1);
       }
     } else {
       setCategory('TWK');
@@ -59,7 +68,8 @@ export default function QuestionForm({
       setOptE('');
       setCorrectAnswer('A');
       setExplanation('');
-      setProgramType(adminActiveProgram || '');
+      setProgramType(adminActiveProgram || 'SKD');
+      setSubCategory('Teknis');
       setScoreA(5);
       setScoreB(4);
       setScoreC(3);
@@ -82,21 +92,43 @@ export default function QuestionForm({
     { key: 'E', val: optE, set: setOptE, score: scoreE, setScore: setScoreE }
   ];
 
+  const isPPPK = programType === 'PPPK';
+  const showE = !(isPPPK && ['Manajerial', 'Sosial Kultural', 'Wawancara'].includes(subCategory));
+  const activeOptions = showE ? optionSetters : optionSetters.slice(0, 4);
+  const showWeightInput = isPPPK || category === 'TKP';
+
   const handleFormSubmit = (e) => {
     e.preventDefault();
+    
+    const options = [
+      { key: 'A', text: optA },
+      { key: 'B', text: optB },
+      { key: 'C', text: optC },
+      { key: 'D', text: optD }
+    ];
+    if (showE) {
+      options.push({ key: 'E', text: optE });
+    }
+
+    const optionsWeights = {
+      A: parseInt(scoreA) || 0,
+      B: parseInt(scoreB) || 0,
+      C: parseInt(scoreC) || 0,
+      D: parseInt(scoreD) || 0
+    };
+    if (showE) {
+      optionsWeights.E = parseInt(scoreE) || 0;
+    }
+
     const questionData = {
       category,
       question: questionText,
       program_type: programType,
-      options: [
-        { key: 'A', text: optA },
-        { key: 'B', text: optB },
-        { key: 'C', text: optC },
-        { key: 'D', text: optD },
-        { key: 'E', text: optE }
-      ],
+      sub_category: isPPPK ? subCategory : null,
+      options,
       explanation,
-      correctAnswer: category === 'TKP' ? null : correctAnswer,
+      correctAnswer: isPPPK ? null : (category === 'TKP' ? null : correctAnswer),
+      options_weights: isPPPK ? optionsWeights : null,
       scores: category === 'TKP' ? {
         A: parseInt(scoreA),
         B: parseInt(scoreB),
@@ -162,6 +194,23 @@ export default function QuestionForm({
             </div>
           </div>
 
+          {isPPPK && (
+            <div>
+              <label className="block text-[10px] font-bold text-slate-400 uppercase tracking-wider mb-1.5">Sub Kategori PPPK</label>
+              <select
+                value={subCategory}
+                onChange={(e) => setSubCategory(e.target.value)}
+                className={selectClass}
+                required
+              >
+                <option value="Teknis">Teknis</option>
+                <option value="Manajerial">Manajerial</option>
+                <option value="Sosial Kultural">Sosial Kultural</option>
+                <option value="Wawancara">Wawancara</option>
+              </select>
+            </div>
+          )}
+
           <div>
             <label className="block text-[10px] font-bold text-slate-400 uppercase tracking-wider mb-1.5">Teks Soal</label>
             <textarea
@@ -176,19 +225,19 @@ export default function QuestionForm({
 
           <div className="space-y-2">
             <label className="block text-[10px] font-bold text-slate-400 uppercase tracking-wider">Opsi Jawaban</label>
-            {optionSetters.map((opt) => (
+            {activeOptions.map((opt) => (
               <div key={opt.key} className="flex items-center gap-2">
                 <span className="text-[10px] font-bold text-slate-400 w-4">{opt.key}</span>
                 <input
                   placeholder={`Opsi ${opt.key}`}
                   value={opt.val}
                   onChange={(e) => opt.set(e.target.value)}
-                  required
+                  required={opt.key !== 'E' || showE}
                   className="flex-1 px-3 py-2 rounded-lg bg-slate-50 ring-1 ring-slate-200/60 text-xs font-medium text-slate-800 placeholder:text-slate-300 outline-none focus:ring-2 focus:ring-blue-500 transition-all"
                 />
-                {category === 'TKP' && (
+                {showWeightInput && (
                   <input
-                    type="number" min="1" max="5"
+                    type="number" min="0" max="5"
                     value={opt.score}
                     onChange={(e) => opt.setScore(e.target.value)}
                     className={scoreInputClass}
@@ -199,7 +248,7 @@ export default function QuestionForm({
             ))}
           </div>
 
-          {category !== 'TKP' && (
+          {category !== 'TKP' && !isPPPK && (
             <div>
               <label className="block text-[10px] font-bold text-slate-400 uppercase tracking-wider mb-1.5">Kunci Jawaban</label>
               <select value={correctAnswer} onChange={(e) => setCorrectAnswer(e.target.value)} className={selectClass}>

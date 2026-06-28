@@ -18,6 +18,42 @@ const startServer = async () => {
       // Ignore if column already exists
     }
 
+    // Add PPPK columns and alter table schemas safely
+    try {
+      await sequelize.query("ALTER TABLE `questions` ADD COLUMN `options_weights` JSON DEFAULT NULL;");
+      console.log('Added options_weights column to questions table.');
+    } catch (err) {
+      // Ignore
+    }
+
+    try {
+      await sequelize.query("ALTER TABLE `questions` ADD COLUMN `sub_category` VARCHAR(100) DEFAULT NULL;");
+      console.log('Added sub_category column to questions table.');
+    } catch (err) {
+      // Ignore
+    }
+
+    try {
+      await sequelize.query("ALTER TABLE `questions` MODIFY COLUMN `correct_answer` VARCHAR(5) DEFAULT NULL;");
+      console.log('Modified correct_answer column to be nullable in questions table.');
+    } catch (err) {
+      // Ignore
+    }
+
+    try {
+      await sequelize.query("ALTER TABLE `questions` MODIFY COLUMN `program_type` ENUM('PPG', 'PPPK', 'SKD') NOT NULL DEFAULT 'SKD';");
+      console.log('Updated questions.program_type enum.');
+    } catch (err) {
+      // Ignore
+    }
+
+    try {
+      await sequelize.query("ALTER TABLE `tryouts` MODIFY COLUMN `program_type` ENUM('PPG', 'PPPK', 'SKD') NOT NULL DEFAULT 'SKD';");
+      console.log('Updated tryouts.program_type enum.');
+    } catch (err) {
+      // Ignore
+    }
+
     // Sync database schema
     const syncOptions = {
       alter: false,

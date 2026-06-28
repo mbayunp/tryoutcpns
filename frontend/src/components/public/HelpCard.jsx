@@ -4,26 +4,26 @@ export default function HelpCard({ title, description, icon: Icon, isActive, onC
   return (
     <button
       onClick={onClick}
-      className={`group text-left w-full p-6 rounded-2xl border transition-all duration-300 flex flex-col items-start gap-4 ${
+      className={`group text-left w-full p-6 rounded-3xl border transition-all duration-350 flex flex-col items-start gap-4 active:scale-[0.98] ${
         isActive
-          ? 'bg-white border-blue-600 ring-4 ring-blue-600/5 shadow-premium'
-          : 'bg-white border-slate-200/80 hover:border-blue-300 shadow-sm hover:shadow-premium'
+          ? 'bg-white border-blue-500 shadow-premium-lg ring-4 ring-blue-550/5 -translate-y-1'
+          : 'bg-white border-slate-200/80 hover:border-slate-350 shadow-sm hover:shadow-premium hover:-translate-y-1'
       }`}
     >
-      <div className={`p-3 rounded-xl transition-all duration-300 ${
+      <div className={`p-3.5 rounded-2xl transition-all duration-300 ${
         isActive 
-          ? 'bg-blue-600 text-white shadow-md shadow-blue-500/10' 
-          : 'bg-slate-50 text-slate-600 group-hover:bg-blue-50 group-hover:text-blue-600'
+          ? 'bg-blue-600 text-white shadow-md shadow-blue-500/20 scale-105' 
+          : 'bg-slate-50 text-slate-600 group-hover:bg-blue-50 group-hover:text-blue-600 group-hover:scale-105'
       }`}>
-        <Icon className="h-6 w-6" />
+        <Icon className="h-5.5 w-5.5" />
       </div>
       <div>
-        <h3 className={`font-bold text-base sm:text-lg mb-1 transition-colors ${
-          isActive ? 'text-blue-600' : 'text-slate-900 group-hover:text-blue-600'
+        <h3 className={`font-black text-sm sm:text-base mb-1.5 transition-colors ${
+          isActive ? 'text-blue-700' : 'text-slate-900 group-hover:text-blue-600'
         }`}>
           {title}
         </h3>
-        <p className="text-slate-500 text-xs sm:text-sm leading-relaxed">
+        <p className="text-slate-450 text-[11px] sm:text-xs leading-relaxed font-semibold">
           {description}
         </p>
       </div>

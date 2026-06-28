@@ -13,9 +13,9 @@ export default function ContactSupport() {
     },
     {
       title: 'Email Resmi',
-      value: 'support@domainanda.com',
+      value: 'support@wildancasn.id',
       description: 'Kirimkan pertanyaan atau keluhan detail ke email kami.',
-      href: 'mailto:support@domainanda.com',
+      href: 'mailto:support@wildancasn.id',
       icon: Mail,
       color: 'blue',
     },

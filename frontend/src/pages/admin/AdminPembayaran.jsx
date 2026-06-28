@@ -13,7 +13,7 @@ import {
 import Card from '../../components/common/Card';
 import Badge from '../../components/common/Badge';
 import { useExamStore } from '../../store/useExamStore';
-import { Helmet } from 'react-helmet-async';
+import SEO from '../../components/common/SEO';
 
 export default function AdminPembayaran() {
     const { transactions, updateTransactionStatus, fetchTransactions, adminActiveProgram } = useExamStore();
@@ -144,9 +144,7 @@ export default function AdminPembayaran() {
 
     return (
         <>
-            <Helmet>
-                <title>Verifikasi Pembayaran - WILDAN CASN</title>
-            </Helmet>
+            <SEO title="Verifikasi Pembayaran" />
             <div className="max-w-7xl mx-auto space-y-6 pb-12 font-sans">
                 {/* Header Title */}
                 <div className="space-y-4">

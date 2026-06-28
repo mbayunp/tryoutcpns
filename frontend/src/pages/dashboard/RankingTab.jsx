@@ -11,6 +11,12 @@ export default function RankingTab() {
   const [activeCategory, setActiveCategory] = useState('overall'); // 'overall', 'twk', 'tiu', 'tkp'
   const [loading, setLoading] = useState(false);
 
+  const selectedPkg = packages.find(p => p.id === selectedPkgId);
+  const isPPPK = selectedPkg && selectedPkg.program_type === 'PPPK';
+  const label1 = isPPPK ? 'Teknis' : 'TWK';
+  const label2 = isPPPK ? 'Manajerial' : 'TIU';
+  const label3 = isPPPK ? 'Soskult & Waw' : 'TKP';
+
   useEffect(() => {
     const loadPackagesAndRankings = async () => {
       setLoading(true);
@@ -128,15 +134,15 @@ export default function RankingTab() {
 
           <div className="grid grid-cols-4 gap-4 text-center w-full md:w-auto relative z-10 pt-4 md:pt-0 border-t border-white/10 md:border-t-0">
             <div>
-              <p className="text-[9px] font-bold text-slate-300 uppercase">TWK</p>
+              <p className="text-[9px] font-bold text-slate-300 uppercase">{label1}</p>
               <p className="text-sm font-extrabold mt-0.5 text-blue-300">{userBestAttempt.twk}</p>
             </div>
             <div className="border-l border-white/10">
-              <p className="text-[9px] font-bold text-slate-300 uppercase">TIU</p>
+              <p className="text-[9px] font-bold text-slate-300 uppercase">{label2}</p>
               <p className="text-sm font-extrabold mt-0.5 text-indigo-300">{userBestAttempt.tiu}</p>
             </div>
             <div className="border-l border-white/10">
-              <p className="text-[9px] font-bold text-slate-300 uppercase">TKP</p>
+              <p className="text-[9px] font-bold text-slate-300 uppercase truncate max-w-[80px]" title={label3}>{label3}</p>
               <p className="text-sm font-extrabold mt-0.5 text-amber-300">{userBestAttempt.tkp}</p>
             </div>
             <div className="border-l border-white/10 bg-white/5 rounded-lg px-2 py-1">
@@ -240,9 +246,9 @@ export default function RankingTab() {
           <div className="flex bg-slate-100 p-1.5 rounded-xl gap-1 w-full md:w-auto">
             {[
               { id: 'overall', name: 'Keseluruhan' },
-              { id: 'twk', name: 'TWK' },
-              { id: 'tiu', name: 'TIU' },
-              { id: 'tkp', name: 'TKP' }
+              { id: 'twk', name: label1 },
+              { id: 'tiu', name: label2 },
+              { id: 'tkp', name: label3 }
             ].map(tab => (
               <button
                 key={tab.id}
@@ -292,9 +298,9 @@ export default function RankingTab() {
                 <tr className="bg-slate-50/80 text-[10px] font-bold uppercase text-slate-400 tracking-wider border-b border-slate-100">
                   <th className="px-6 py-4 w-20 text-center">Rank</th>
                   <th className="px-6 py-4">Peserta</th>
-                  <th className="px-6 py-4 text-center">TWK</th>
-                  <th className="px-6 py-4 text-center">TIU</th>
-                  <th className="px-6 py-4 text-center">TKP</th>
+                  <th className="px-6 py-4 text-center">{label1}</th>
+                  <th className="px-6 py-4 text-center">{label2}</th>
+                  <th className="px-6 py-4 text-center">{label3}</th>
                   <th className="px-6 py-4 text-center">Total Skor</th>
                   <th className="px-6 py-4 text-center">Hasil</th>
                 </tr>

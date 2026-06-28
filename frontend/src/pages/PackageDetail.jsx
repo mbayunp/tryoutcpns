@@ -1,6 +1,6 @@
 import React from 'react';
 import { useParams, useNavigate } from 'react-router-dom';
-import { Helmet } from 'react-helmet-async';
+import SEO from '../components/common/SEO';
 import Swal from 'sweetalert2';
 import { useExamStore } from '../store/useExamStore';
 import { Clock, FileText, ArrowLeft, CheckCircle, Shield, Award, BookOpen } from 'lucide-react';
@@ -124,9 +124,7 @@ export default function PackageDetail() {
 
   return (
     <>
-      <Helmet>
-        <title>{pkg.title} - WILDAN CASN</title>
-      </Helmet>
+      <SEO title={pkg.title} />
       <div className="max-w-6xl mx-auto space-y-6 pb-12 font-body-md text-on-surface animate-fadeIn">
         {/* Back Button */}
         <button

@@ -88,8 +88,8 @@ export default function HelpCenter() {
         <div className="absolute bottom-1/2 right-1/4 translate-y-1/2 w-80 h-80 bg-emerald-500/10 rounded-full blur-3xl pointer-events-none" />
         
         <div className="relative max-w-4xl mx-auto px-4 sm:px-6 text-center space-y-6">
-          <span className="inline-flex items-center px-3 py-1 rounded-full text-xs font-semibold bg-blue-500/10 text-blue-400 border border-blue-500/20 uppercase tracking-wider">
-            Pusat Bantuan Sentral CPNS
+          <span className="inline-flex items-center px-3 py-1.5 rounded-full text-xs font-semibold bg-blue-500/10 text-blue-400 border border-blue-500/20 uppercase tracking-wider">
+            Pusat Bantuan Wildan CASN
           </span>
           <h1 className="text-3xl sm:text-4xl lg:text-5xl font-extrabold tracking-tight text-white leading-tight">
             Bagaimana Kami Bisa Membantu?

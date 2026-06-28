@@ -459,30 +459,52 @@ export const useExamStore = create(
       submitExamAttempt: async (attemptId, answersMap) => {
         try {
           const questions = get().questions;
-          let twk = 0;
-          let tiu = 0;
-          let tkp = 0;
+          const isPPPK = get().activeProgram === 'PPPK';
+          
+          let twk = 0; // Teknis for PPPK
+          let tiu = 0; // Manajerial for PPPK
+          let tkp = 0; // Sosial Kultural & Wawancara for PPPK
           
           const answersList = questions.map((q) => {
-            const selected = (answersMap[q.id] || '').toLowerCase().trim();
-            const category = q.category ? q.category.toUpperCase() : 'TWK';
+            const selected = (answersMap[q.id] || '').trim();
+            const selectedUpper = selected.toUpperCase();
+            const selectedLower = selected.toLowerCase();
             
             let isCorrect = false;
             let score = 0;
             
-            if (category === 'TKP') {
-              if (q.scores) {
-                score = q.scores[selected.toUpperCase()] || 0;
-              } else {
-                score = selected === (q.correctAnswer || '').toLowerCase() ? 5 : 0;
+            if (isPPPK) {
+              const weights = q.options_weights || q.option_weights || q.scores;
+              if (weights) {
+                score = weights[selectedUpper] || weights[selectedLower] || 0;
               }
-              isCorrect = score === 5;
-              tkp += score;
+              isCorrect = score > 0;
+              
+              const subCat = q.sub_category ? q.sub_category.trim() : '';
+              if (subCat === 'Teknis') {
+                twk += score;
+              } else if (subCat === 'Manajerial') {
+                tiu += score;
+              } else if (subCat === 'Sosial Kultural' || subCat === 'Wawancara') {
+                tkp += score;
+              }
             } else {
-              isCorrect = selected === (q.correctAnswer || '').toLowerCase();
-              score = isCorrect ? 5 : 0;
-              if (category === 'TWK') twk += score;
-              if (category === 'TIU') tiu += score;
+              const category = q.category ? q.category.toUpperCase() : 'TWK';
+              if (category === 'TKP') {
+                const weights = q.options_weights || q.option_weights || q.scores;
+                if (weights) {
+                  score = weights[selectedUpper] || weights[selectedLower] || 0;
+                } else {
+                  score = selectedLower === (q.correctAnswer || q.correct_answer || '').toLowerCase() ? 5 : 0;
+                }
+                isCorrect = score === 5;
+                tkp += score;
+              } else {
+                isCorrect = selectedLower === (q.correctAnswer || q.correct_answer || '').toLowerCase();
+                score = isCorrect ? 5 : 0;
+                if (category === 'TWK') twk += score;
+                if (category === 'TIU') tiu += score;
+              }
             }
             
             return {
@@ -494,7 +516,7 @@ export const useExamStore = create(
           });
           
           const totalScore = twk + tiu + tkp;
-          const result = totalScore >= 10 ? 'LULUS' : 'TIDAK LULUS';
+          const result = isPPPK ? 'LULUS' : (totalScore >= 10 ? 'LULUS' : 'TIDAK LULUS');
           
           const payload = {
             attempt_id: attemptId,
@@ -530,7 +552,7 @@ export const useExamStore = create(
             option_c: newQuestion.options.find(o => o.key === 'C')?.text || '',
             option_d: newQuestion.options.find(o => o.key === 'D')?.text || '',
             option_e: newQuestion.options.find(o => o.key === 'E')?.text || '',
-            correct_answer: newQuestion.correctAnswer ? newQuestion.correctAnswer.toLowerCase() : 'a',
+            correct_answer: newQuestion.correctAnswer ? newQuestion.correctAnswer.toLowerCase() : null,
             option_weights: newQuestion.scores ? {
               a: newQuestion.scores.A,
               b: newQuestion.scores.B,
@@ -538,6 +560,8 @@ export const useExamStore = create(
               d: newQuestion.scores.D,
               e: newQuestion.scores.E
             } : null,
+            options_weights: newQuestion.options_weights || null,
+            sub_category: newQuestion.sub_category || null,
             program_type: newQuestion.program_type
           };
 
@@ -564,14 +588,17 @@ export const useExamStore = create(
               option_c: newQuestion.options.find(o => o.key === 'C')?.text || '',
               option_d: newQuestion.options.find(o => o.key === 'D')?.text || '',
               option_e: newQuestion.options.find(o => o.key === 'E')?.text || '',
-              correct_answer: newQuestion.correctAnswer ? newQuestion.correctAnswer.toLowerCase() : 'a',
+              correct_answer: newQuestion.correctAnswer ? newQuestion.correctAnswer.toLowerCase() : null,
               option_weights: newQuestion.scores ? {
                 a: newQuestion.scores.A,
                 b: newQuestion.scores.B,
                 c: newQuestion.scores.C,
                 d: newQuestion.scores.D,
                 e: newQuestion.scores.E
-              } : null
+              } : null,
+              options_weights: newQuestion.options_weights || null,
+              sub_category: newQuestion.sub_category || null,
+              program_type: newQuestion.program_type || get().adminActiveProgram || 'SKD'
             };
           });
 
@@ -615,7 +642,7 @@ export const useExamStore = create(
             option_c: updatedQuestion.options.find(o => o.key === 'C')?.text || '',
             option_d: updatedQuestion.options.find(o => o.key === 'D')?.text || '',
             option_e: updatedQuestion.options.find(o => o.key === 'E')?.text || '',
-            correct_answer: updatedQuestion.correctAnswer ? updatedQuestion.correctAnswer.toLowerCase() : 'a',
+            correct_answer: updatedQuestion.correctAnswer ? updatedQuestion.correctAnswer.toLowerCase() : null,
             option_weights: updatedQuestion.scores ? {
               a: updatedQuestion.scores.A,
               b: updatedQuestion.scores.B,
@@ -623,6 +650,8 @@ export const useExamStore = create(
               d: updatedQuestion.scores.D,
               e: updatedQuestion.scores.E
             } : null,
+            options_weights: updatedQuestion.options_weights || null,
+            sub_category: updatedQuestion.sub_category || null,
             program_type: updatedQuestion.program_type
           };
 

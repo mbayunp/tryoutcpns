@@ -1,6 +1,6 @@
 import React, { useState, useEffect } from 'react';
 import { useNavigate, useSearchParams } from 'react-router-dom';
-import { Helmet } from 'react-helmet-async';
+import SEO from '../../components/common/SEO';
 import Swal from 'sweetalert2';
 import {
   FileText,
@@ -334,9 +334,7 @@ export default function PackageCatalog({ showOnlyPurchased = false }) {
 
   return (
     <>
-      <Helmet>
-        <title>{showOnlyPurchased ? 'Paket Saya' : 'Katalog Paket'} - WILDAN CASN</title>
-      </Helmet>
+      <SEO title={showOnlyPurchased ? 'Paket Saya' : 'Katalog Paket'} />
       <div className="max-w-6xl mx-auto space-y-6 pb-12 animate-fadeIn font-body-md text-on-surface">
         {/* Search Bar Input */}
         <div className="relative max-w-md">

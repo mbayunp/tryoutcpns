@@ -1,7 +1,7 @@
 import React, { useState, useEffect } from 'react';
 import { useExamStore } from '../../store/useExamStore';
 import API from '../../utils/api';
-import { Helmet } from 'react-helmet-async';
+import SEO from '../../components/common/SEO';
 import * as XLSX from 'xlsx';
 import {
   Receipt,
@@ -137,9 +137,7 @@ export default function Analytics() {
 
   return (
     <>
-      <Helmet>
-        <title>Keuangan & Analisis Admin - WILDAN CASN</title>
-      </Helmet>
+      <SEO title="Keuangan & Analisis Admin" />
       
       <div className="space-y-8 pb-12 font-body-md text-on-surface animate-fadeIn max-w-7xl mx-auto">
         {/* Title */}

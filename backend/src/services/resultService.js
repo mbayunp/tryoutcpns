@@ -10,7 +10,7 @@ const getResult = async (attemptId, userId) => {
       {
         model: Tryout,
         as: 'tryout',
-        attributes: ['id', 'title', 'description', 'duration', 'total_questions']
+        attributes: ['id', 'title', 'description', 'duration', 'total_questions', 'program_type']
       }
     ]
   });
@@ -28,7 +28,7 @@ const getResult = async (attemptId, userId) => {
       {
         model: Question,
         as: 'question',
-        attributes: ['id', 'question', 'option_a', 'option_b', 'option_c', 'option_d', 'option_e', 'correct_answer', 'option_weights'],
+        attributes: ['id', 'question', 'option_a', 'option_b', 'option_c', 'option_d', 'option_e', 'correct_answer', 'option_weights', 'options_weights', 'sub_category'],
         include: [
           {
             model: Category,
@@ -40,97 +40,45 @@ const getResult = async (attemptId, userId) => {
     ]
   });
 
-  let twkCorrect = 0;
-  let tiuCorrect = 0;
-  let tkpRawSum = 0;
+  const isPPPK = attempt.tryout && attempt.tryout.program_type === 'PPPK';
 
-  answers.forEach(ans => {
-    const q = ans.question;
-    if (!q) return;
+  let computedTWK = 0;
+  let computedTIU = 0;
+  let computedTKP = 0;
+  let finalScore = 0;
+  let resultStatus = 'LULUS';
+  let correctCount = 0;
 
-    const catName = q.category ? q.category.name.toUpperCase() : '';
-    const selected = ans.selected_answer ? ans.selected_answer.toLowerCase().trim() : null;
+  if (isPPPK) {
+    answers.forEach(ans => {
+      const q = ans.question;
+      if (!q) return;
 
-    if (!selected) return;
+      const selected = ans.selected_answer ? ans.selected_answer.toUpperCase().trim() : null;
+      if (!selected) return;
 
-    if (catName === 'TWK') {
-      const correct = q.correct_answer ? q.correct_answer.toLowerCase().trim() : '';
-      if (selected === correct) twkCorrect += 1;
-    } else if (catName === 'TIU') {
-      const correct = q.correct_answer ? q.correct_answer.toLowerCase().trim() : '';
-      if (selected === correct) tiuCorrect += 1;
-    } else if (catName === 'TKP') {
-      if (q.option_weights) {
-        const weights = typeof q.option_weights === 'string'
-          ? JSON.parse(q.option_weights)
-          : q.option_weights;
-        tkpRawSum += weights[selected] || 0;
-      } else {
-        const correct = q.correct_answer ? q.correct_answer.toLowerCase().trim() : '';
-        if (selected === correct) tkpRawSum += 5;
+      const weights = q.options_weights || q.option_weights;
+      let score = 0;
+      if (weights) {
+        const parsedWeights = typeof weights === 'string' ? JSON.parse(weights) : weights;
+        score = parsedWeights[selected] || parsedWeights[selected.toLowerCase()] || 0;
       }
-    }
-  });
 
-  const computedTWK = twkCorrect * 15;
-  const computedTIU = tiuCorrect * 17.5;
-  const computedTKP = tkpRawSum * 4.5;
-  const finalScore = Math.round(computedTWK + computedTIU + computedTKP);
-
-  const passed = (computedTWK >= 65) && (computedTIU >= 80) && (computedTKP >= 166);
-  const resultStatus = passed ? 'LULUS' : 'TIDAK LULUS';
-
-  return {
-    attempt: {
-      ...attempt.toJSON(),
-      score: finalScore,
-      twk: computedTWK,
-      tiu: computedTIU,
-      tkp: computedTKP,
-      result: resultStatus,
-      correctCount: twkCorrect + tiuCorrect
-    },
-    answers
-  };
-};
-
-const getHistory = async (userId) => {
-  const attempts = await Attempt.findAll({
-    where: {
-      user_id: userId,
-      status: 'completed'
-    },
-    include: [
-      {
-        model: Tryout,
-        as: 'tryout',
-        attributes: ['id', 'title', 'duration', 'total_questions']
+      const subCat = q.sub_category ? q.sub_category.trim() : '';
+      if (subCat === 'Teknis') {
+        computedTWK += score;
+      } else if (subCat === 'Manajerial') {
+        computedTIU += score;
+      } else if (subCat === 'Sosial Kultural' || subCat === 'Wawancara') {
+        computedTKP += score;
       }
-    ],
-    order: [['finished_at', 'DESC']]
-  });
 
-  const results = [];
-  for (const attempt of attempts) {
-    // Fetch answers for this attempt
-    const answers = await Answer.findAll({
-      where: { attempt_id: attempt.id },
-      include: [
-        {
-          model: Question,
-          as: 'question',
-          attributes: ['id', 'correct_answer', 'option_weights'],
-          include: [
-            {
-              model: Category,
-              as: 'category',
-              attributes: ['name']
-            }
-          ]
-        }
-      ]
+      if (score > 0) {
+        correctCount += 1;
+      }
     });
-
+    finalScore = computedTWK + computedTIU + computedTKP;
+  } else {
     let twkCorrect = 0;
     let tiuCorrect = 0;
     let tkpRawSum = 0;
@@ -151,11 +99,10 @@ const getHistory = async (userId) => {
         const correct = q.correct_answer ? q.correct_answer.toLowerCase().trim() : '';
         if (selected === correct) tiuCorrect += 1;
       } else if (catName === 'TKP') {
-        if (q.option_weights) {
-          const weights = typeof q.option_weights === 'string'
-            ? JSON.parse(q.option_weights)
-            : q.option_weights;
-          tkpRawSum += weights[selected] || 0;
+        const weights = q.options_weights || q.option_weights;
+        if (weights) {
+          const parsedWeights = typeof weights === 'string' ? JSON.parse(weights) : weights;
+          tkpRawSum += parsedWeights[selected] || parsedWeights[selected.toUpperCase()] || 0;
         } else {
           const correct = q.correct_answer ? q.correct_answer.toLowerCase().trim() : '';
           if (selected === correct) tkpRawSum += 5;
@@ -163,13 +110,146 @@ const getHistory = async (userId) => {
       }
     });
 
-    const computedTWK = twkCorrect * 15;
-    const computedTIU = tiuCorrect * 17.5;
-    const computedTKP = tkpRawSum * 4.5;
-    const finalScore = Math.round(computedTWK + computedTIU + computedTKP);
+    computedTWK = twkCorrect * 15;
+    computedTIU = tiuCorrect * 17.5;
+    computedTKP = tkpRawSum * 4.5;
+    finalScore = Math.round(computedTWK + computedTIU + computedTKP);
 
     const passed = (computedTWK >= 65) && (computedTIU >= 80) && (computedTKP >= 166);
-    const resultStatus = passed ? 'LULUS' : 'TIDAK LULUS';
+    resultStatus = passed ? 'LULUS' : 'TIDAK LULUS';
+    correctCount = twkCorrect + tiuCorrect;
+  }
+
+  return {
+    attempt: {
+      ...attempt.toJSON(),
+      score: finalScore,
+      twk: computedTWK,
+      tiu: computedTIU,
+      tkp: computedTKP,
+      result: resultStatus,
+      correctCount: correctCount
+    },
+    answers
+  };
+};
+
+const getHistory = async (userId) => {
+  const attempts = await Attempt.findAll({
+    where: {
+      user_id: userId,
+      status: 'completed'
+    },
+    include: [
+      {
+        model: Tryout,
+        as: 'tryout',
+        attributes: ['id', 'title', 'duration', 'total_questions', 'program_type']
+      }
+    ],
+    order: [['finished_at', 'DESC']]
+  });
+
+  const results = [];
+  for (const attempt of attempts) {
+    // Fetch answers for this attempt
+    const answers = await Answer.findAll({
+      where: { attempt_id: attempt.id },
+      include: [
+        {
+          model: Question,
+          as: 'question',
+          attributes: ['id', 'correct_answer', 'option_weights', 'options_weights', 'sub_category'],
+          include: [
+            {
+              model: Category,
+              as: 'category',
+              attributes: ['name']
+            }
+          ]
+        }
+      ]
+    });
+
+    const isPPPK = attempt.tryout && attempt.tryout.program_type === 'PPPK';
+
+    let computedTWK = 0;
+    let computedTIU = 0;
+    let computedTKP = 0;
+    let finalScore = 0;
+    let resultStatus = 'LULUS';
+    let correctCount = 0;
+
+    if (isPPPK) {
+      answers.forEach(ans => {
+        const q = ans.question;
+        if (!q) return;
+
+        const selected = ans.selected_answer ? ans.selected_answer.toUpperCase().trim() : null;
+        if (!selected) return;
+
+        const weights = q.options_weights || q.option_weights;
+        let score = 0;
+        if (weights) {
+          const parsedWeights = typeof weights === 'string' ? JSON.parse(weights) : weights;
+          score = parsedWeights[selected] || parsedWeights[selected.toLowerCase()] || 0;
+        }
+
+        const subCat = q.sub_category ? q.sub_category.trim() : '';
+        if (subCat === 'Teknis') {
+          computedTWK += score;
+        } else if (subCat === 'Manajerial') {
+          computedTIU += score;
+        } else if (subCat === 'Sosial Kultural' || subCat === 'Wawancara') {
+          computedTKP += score;
+        }
+
+        if (score > 0) {
+          correctCount += 1;
+        }
+      });
+      finalScore = computedTWK + computedTIU + computedTKP;
+    } else {
+      let twkCorrect = 0;
+      let tiuCorrect = 0;
+      let tkpRawSum = 0;
+
+      answers.forEach(ans => {
+        const q = ans.question;
+        if (!q) return;
+
+        const catName = q.category ? q.category.name.toUpperCase() : '';
+        const selected = ans.selected_answer ? ans.selected_answer.toLowerCase().trim() : null;
+
+        if (!selected) return;
+
+        if (catName === 'TWK') {
+          const correct = q.correct_answer ? q.correct_answer.toLowerCase().trim() : '';
+          if (selected === correct) twkCorrect += 1;
+        } else if (catName === 'TIU') {
+          const correct = q.correct_answer ? q.correct_answer.toLowerCase().trim() : '';
+          if (selected === correct) tiuCorrect += 1;
+        } else if (catName === 'TKP') {
+          const weights = q.options_weights || q.option_weights;
+          if (weights) {
+            const parsedWeights = typeof weights === 'string' ? JSON.parse(weights) : weights;
+            tkpRawSum += parsedWeights[selected] || parsedWeights[selected.toUpperCase()] || 0;
+          } else {
+            const correct = q.correct_answer ? q.correct_answer.toLowerCase().trim() : '';
+            if (selected === correct) tkpRawSum += 5;
+          }
+        }
+      });
+
+      computedTWK = twkCorrect * 15;
+      computedTIU = tiuCorrect * 17.5;
+      computedTKP = tkpRawSum * 4.5;
+      finalScore = Math.round(computedTWK + computedTIU + computedTKP);
+
+      const passed = (computedTWK >= 65) && (computedTIU >= 80) && (computedTKP >= 166);
+      resultStatus = passed ? 'LULUS' : 'TIDAK LULUS';
+      correctCount = twkCorrect + tiuCorrect;
+    }
 
     results.push({
       id: attempt.id,
@@ -184,7 +264,7 @@ const getHistory = async (userId) => {
       tiu: computedTIU,
       tkp: computedTKP,
       result: resultStatus,
-      correctCount: twkCorrect + tiuCorrect
+      correctCount: correctCount
     });
   }
 

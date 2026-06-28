@@ -2,7 +2,7 @@ import React from 'react';
 import { useNavigate } from 'react-router-dom';
 import { useExamStore } from '../../store/useExamStore';
 import { GraduationCap, Briefcase, Landmark } from 'lucide-react';
-import { Helmet } from 'react-helmet-async';
+import SEO from '../../components/common/SEO';
 
 export default function ProgramSelection() {
   const navigate = useNavigate();
@@ -57,9 +57,7 @@ export default function ProgramSelection() {
 
   return (
     <>
-      <Helmet>
-        <title>Pilih Ruang Belajar - WILDAN CASN</title>
-      </Helmet>
+      <SEO title="Pilih Ruang Belajar" />
       <div className="w-full min-h-screen bg-slate-50 bg-grid-pattern flex flex-col justify-center items-center py-12 px-6 relative overflow-hidden font-sans">
         {/* Ambient Lights */}
         <div className="absolute top-1/4 left-1/4 w-[400px] h-[400px] bg-blue-400/10 rounded-full blur-[100px] -z-10 animate-pulse"></div>

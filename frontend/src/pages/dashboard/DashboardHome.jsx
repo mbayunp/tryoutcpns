@@ -1,6 +1,6 @@
 import React, { useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
-import { Helmet } from 'react-helmet-async';
+import SEO from '../../components/common/SEO';
 import {
   FileText,
   TrendingUp,
@@ -35,9 +35,7 @@ export default function DashboardHome() {
 
   return (
     <>
-      <Helmet>
-        <title>Dashboard Peserta - WILDAN CASN</title>
-      </Helmet>
+      <SEO title="Ruang Belajar" />
       <div className="max-w-6xl mx-auto space-y-gutter pb-12 font-body-md text-on-surface animate-fadeIn">
         
         {/* Welcome Banner */}

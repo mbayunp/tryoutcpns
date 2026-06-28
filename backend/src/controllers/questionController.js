@@ -38,6 +38,8 @@ const createQuestion = async (req, res, next) => {
       option_e,
       correct_answer,
       option_weights,
+      options_weights,
+      sub_category,
       program_type
     } = req.body;
 
@@ -61,8 +63,10 @@ const createQuestion = async (req, res, next) => {
       option_c,
       option_d,
       option_e,
-      correct_answer: correct_answer.toLowerCase(),
+      correct_answer: correct_answer ? correct_answer.toLowerCase() : null,
       option_weights,
+      options_weights,
+      sub_category,
       program_type: program_type || 'SKD'
     });
 
@@ -90,6 +94,8 @@ const updateQuestion = async (req, res, next) => {
       option_e,
       correct_answer,
       option_weights,
+      options_weights,
+      sub_category,
       program_type
     } = req.body;
 
@@ -122,8 +128,10 @@ const updateQuestion = async (req, res, next) => {
     if (option_c !== undefined) q.option_c = option_c;
     if (option_d !== undefined) q.option_d = option_d;
     if (option_e !== undefined) q.option_e = option_e;
-    if (correct_answer !== undefined) q.correct_answer = correct_answer.toLowerCase();
+    if (correct_answer !== undefined) q.correct_answer = correct_answer ? correct_answer.toLowerCase() : null;
     if (option_weights !== undefined) q.option_weights = option_weights;
+    if (options_weights !== undefined) q.options_weights = options_weights;
+    if (sub_category !== undefined) q.sub_category = sub_category;
     if (program_type !== undefined) q.program_type = program_type;
 
     await q.save();
@@ -199,8 +207,10 @@ const bulkCreateQuestions = async (req, res, next) => {
       option_c: q.option_c,
       option_d: q.option_d,
       option_e: q.option_e,
-      correct_answer: q.correct_answer ? q.correct_answer.toLowerCase() : 'a',
+      correct_answer: q.correct_answer ? q.correct_answer.toLowerCase() : null,
       option_weights: q.option_weights || null,
+      options_weights: q.options_weights || null,
+      sub_category: q.sub_category || null,
       program_type: q.program_type || program_type || 'SKD'
     }));
 

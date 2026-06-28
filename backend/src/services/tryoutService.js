@@ -39,8 +39,8 @@ const getTryoutById = async (id, userId, isAdmin = false) => {
 
   // If loading questions, exclude correct_answer and option_weights for users to prevent cheating
   const attributes = isAdmin 
-    ? ['id', 'question', 'option_a', 'option_b', 'option_c', 'option_d', 'option_e', 'correct_answer', 'option_weights']
-    : ['id', 'question', 'option_a', 'option_b', 'option_c', 'option_d', 'option_e'];
+    ? ['id', 'question', 'option_a', 'option_b', 'option_c', 'option_d', 'option_e', 'correct_answer', 'option_weights', 'options_weights', 'sub_category']
+    : ['id', 'question', 'option_a', 'option_b', 'option_c', 'option_d', 'option_e', 'sub_category'];
 
   let questions = await Question.findAll({
     attributes,
@@ -201,7 +201,7 @@ const submitTryout = async (userId, attemptId, submittedAnswers = []) => {
       question_id: detail.question_id,
       selected_option: detail.selected_answer,
       is_correct: detail.is_correct,
-      score: detail.is_correct ? 5 : 0
+      score: detail.score || 0
     }));
     await AttemptAnswer.bulkCreate(attemptAnswersData, { transaction: t });
 

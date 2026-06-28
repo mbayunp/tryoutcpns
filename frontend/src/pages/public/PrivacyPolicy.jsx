@@ -66,7 +66,7 @@ export default function PrivacyPolicy() {
 
         <PolicySection number="4" title="Pembagian Data">
           <p className="text-slate-600 text-sm sm:text-base">
-            Kami menjamin privasi Anda sepenuhnya. Sentral CPNS tidak akan menjual, menyewakan, meminjamkan, atau membagikan data pribadi Anda kepada pihak ketiga mana pun tanpa persetujuan tertulis sebelumnya, kecuali jika diwajibkan oleh ketentuan hukum yang berlaku.
+            Kami menjamin privasi Anda sepenuhnya. Wildan CASN tidak akan menjual, menyewakan, meminjamkan, atau membagikan data pribadi Anda kepada pihak ketiga mana pun tanpa persetujuan tertulis sebelumnya, kecuali jika diwajibkan oleh ketentuan hukum yang berlaku.
           </p>
         </PolicySection>
 

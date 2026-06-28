@@ -67,10 +67,11 @@ export default function Result() {
               ];
               
               let scores = null;
-              if (q.option_weights) {
+              const weights = q.options_weights || q.option_weights;
+              if (weights) {
                 scores = {};
-                const weights = typeof q.option_weights === 'string' ? JSON.parse(q.option_weights) : q.option_weights;
-                Object.keys(weights).forEach(k => { scores[k.toUpperCase()] = weights[k]; });
+                const weightsObj = typeof weights === 'string' ? JSON.parse(weights) : weights;
+                Object.keys(weightsObj).forEach(k => { scores[k.toUpperCase()] = weightsObj[k]; });
               }
 
               return {
@@ -260,15 +261,16 @@ export default function Result() {
           </div>
 
           <div className="space-y-3">
-            {currentQuestion.options.map((opt) => {
+            {currentQuestion.options.filter(opt => opt.text).map((opt) => {
               const isSelected = userAnswer === opt.key;
-              const isCorrectAnswer = currentQuestion.category !== 'TKP' && currentQuestion.correctAnswer === opt.key;
-              const tkpPoint = currentQuestion.category === 'TKP' ? (currentQuestion.scores?.[opt.key] || 0) : null;
+              const isWeighted = currentQuestion.category === 'TKP' || attempt.tryout?.program_type === 'PPPK' || !!currentQuestion.scores;
+              const isCorrectAnswer = !isWeighted && currentQuestion.correctAnswer === opt.key;
+              const tkpPoint = isWeighted ? (currentQuestion.scores?.[opt.key] || 0) : null;
               
               let optionStyle = 'bg-white border border-slate-200 opacity-70';
               let badgeStyle = 'bg-slate-100 text-slate-500';
 
-              if (currentQuestion.category !== 'TKP') {
+              if (!isWeighted) {
                 if (isCorrectAnswer) {
                   optionStyle = 'bg-emerald-50 border-2 border-emerald-500 text-emerald-900 font-bold shadow-sm opacity-100';
                   badgeStyle = 'bg-emerald-600 text-white';
@@ -277,10 +279,11 @@ export default function Result() {
                   badgeStyle = 'bg-red-600 text-white';
                 }
               } else {
+                const maxPoint = currentQuestion.scores ? Math.max(...Object.values(currentQuestion.scores)) : 5;
                 if (isSelected) {
                   optionStyle = 'bg-amber-50 border-2 border-amber-500 text-amber-900 font-bold shadow-sm opacity-100';
                   badgeStyle = 'bg-amber-600 text-white';
-                } else if (tkpPoint === 5) {
+                } else if (tkpPoint === maxPoint) {
                   optionStyle = 'bg-[#0B1C30]/5 border-2 border-[#0B1C30] text-[#0B1C30] font-bold shadow-sm opacity-100';
                   badgeStyle = 'bg-[#0B1C30] text-white';
                 }
@@ -296,8 +299,8 @@ export default function Result() {
                       {opt.text}
                     </span>
                   </div>
-                  {currentQuestion.category === 'TKP' && (
-                    <span className={`text-[10px] px-2 py-1 rounded-md font-bold flex-shrink-0 ${tkpPoint === 5 ? 'bg-[#0B1C30] text-white shadow-sm' : 'bg-white border border-slate-200 text-slate-500'}`}>
+                  {isWeighted && (
+                    <span className={`text-[10px] px-2 py-1 rounded-md font-bold flex-shrink-0 ${tkpPoint === (currentQuestion.scores ? Math.max(...Object.values(currentQuestion.scores)) : 5) ? 'bg-[#0B1C30] text-white shadow-sm' : 'bg-white border border-slate-200 text-slate-500'}`}>
                       {tkpPoint} Poin
                     </span>
                   )}
@@ -345,41 +348,61 @@ export default function Result() {
         <div className={`lg:col-span-4 space-y-5 ${showNav ? 'block' : 'hidden lg:block'}`}>
           <div className="bg-gradient-to-br from-[#0B1C30] to-[#1E3E66] rounded-2xl shadow-premium p-6 text-white space-y-5">
             <h3 className="text-xs font-bold text-slate-400 uppercase tracking-widest">Ringkasan Nilai</h3>
-            <div className="space-y-4">
-              <div className="flex justify-between items-end gap-2">
-                <div>
-                  <p className="text-[10px] font-bold text-blue-300">TWK</p>
-                  <p className="text-lg font-extrabold">{attempt.twk || 0} <span className="text-[10px] text-slate-400 font-medium">/ 150</span></p>
+            {(() => {
+              const isPPPK = attempt.tryout?.program_type === 'PPPK';
+              const label1 = isPPPK ? 'Teknis' : 'TWK';
+              const max1 = isPPPK ? 450 : 150;
+              const label2 = isPPPK ? 'Manajerial' : 'TIU';
+              const max2 = isPPPK ? 100 : 175;
+              const label3 = isPPPK ? 'Sosial Kultural & Wawancara' : 'TKP';
+              const max3 = isPPPK ? 120 : 225;
+              
+              return (
+                <div className="space-y-4">
+                  <div className="flex justify-between items-end gap-2 text-center">
+                    <div className="flex-1">
+                      <p className="text-[10px] font-bold text-blue-300">{label1}</p>
+                      <p className="text-base sm:text-lg font-extrabold">{attempt.twk || 0} <span className="text-[10px] text-slate-400 font-medium">/ {max1}</span></p>
+                    </div>
+                    <div className="border-l border-white/10 h-8"></div>
+                    <div className="flex-1">
+                      <p className="text-[10px] font-bold text-indigo-300">{label2}</p>
+                      <p className="text-base sm:text-lg font-extrabold">{attempt.tiu || 0} <span className="text-[10px] text-slate-400 font-medium">/ {max2}</span></p>
+                    </div>
+                    <div className="border-l border-white/10 h-8"></div>
+                    <div className="flex-1">
+                      <p className="text-[10px] font-bold text-amber-300 truncate max-w-[80px]" title={label3}>{isPPPK ? 'Soskult & Waw' : label3}</p>
+                      <p className="text-base sm:text-lg font-extrabold">{attempt.tkp || 0} <span className="text-[10px] text-slate-400 font-medium">/ {max3}</span></p>
+                    </div>
+                  </div>
+                  <div className="pt-4 border-t border-white/10">
+                    <button 
+                      className="w-full text-xs font-bold bg-white text-[#0B1C30] hover:bg-slate-100 py-3 rounded-xl flex items-center justify-center gap-2 transition-all duration-200 transform hover:scale-[1.02]" 
+                      onClick={handleBackToDashboard}
+                    >
+                      <LayoutDashboard className="h-4 w-4" />
+                      Akhiri Review
+                    </button>
+                  </div>
                 </div>
-                <div className="border-l border-white/10 h-8"></div>
-                <div>
-                  <p className="text-[10px] font-bold text-indigo-300">TIU</p>
-                  <p className="text-lg font-extrabold">{attempt.tiu || 0} <span className="text-[10px] text-slate-400 font-medium">/ 175</span></p>
-                </div>
-                <div className="border-l border-white/10 h-8"></div>
-                <div>
-                  <p className="text-[10px] font-bold text-amber-300">TKP</p>
-                  <p className="text-lg font-extrabold">{attempt.tkp || 0} <span className="text-[10px] text-slate-400 font-medium">/ 225</span></p>
-                </div>
-              </div>
-              <div className="pt-4 border-t border-white/10">
-                <button 
-                  className="w-full text-xs font-bold bg-white text-[#0B1C30] hover:bg-slate-100 py-3 rounded-xl flex items-center justify-center gap-2 transition-all duration-200 transform hover:scale-[1.02]" 
-                  onClick={handleBackToDashboard}
-                >
-                  <LayoutDashboard className="h-4 w-4" />
-                  Akhiri Review
-                </button>
-              </div>
-            </div>
+              );
+            })()}
           </div>
 
           {/* Card: Analisis Penguasaan Materi */}
           {(() => {
+            const isPPPK = attempt.tryout?.program_type === 'PPPK';
+            const label1 = isPPPK ? 'Teknis' : 'TWK';
+            const max1 = isPPPK ? 450 : 150;
+            const label2 = isPPPK ? 'Manajerial' : 'TIU';
+            const max2 = isPPPK ? 100 : 175;
+            const label3 = isPPPK ? 'Sosial Kultural & Wawancara' : 'TKP';
+            const max3 = isPPPK ? 120 : 225;
+
             const radarData = [
-              { subject: `TWK (${attempt.twk || 0}/150)`, skor: Math.round(((attempt.twk || 0) / 150) * 100), passing: Math.round((65 / 150) * 100) },
-              { subject: `TIU (${attempt.tiu || 0}/175)`, skor: Math.round(((attempt.tiu || 0) / 175) * 100), passing: Math.round((80 / 175) * 100) },
-              { subject: `TKP (${attempt.tkp || 0}/225)`, skor: Math.round(((attempt.tkp || 0) / 225) * 100), passing: Math.round((166 / 225) * 100) }
+              { subject: `${label1} (${attempt.twk || 0}/${max1})`, skor: Math.round(((attempt.twk || 0) / max1) * 100), passing: isPPPK ? 0 : Math.round((65 / 150) * 100) },
+              { subject: `${label2} (${attempt.tiu || 0}/${max2})`, skor: Math.round(((attempt.tiu || 0) / max2) * 100), passing: isPPPK ? 0 : Math.round((80 / 175) * 100) },
+              { subject: `${label3} (${attempt.tkp || 0}/${max3})`, skor: Math.round(((attempt.tkp || 0) / max3) * 100), passing: isPPPK ? 0 : Math.round((166 / 225) * 100) }
             ];
 
             return (

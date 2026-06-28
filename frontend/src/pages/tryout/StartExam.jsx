@@ -1,6 +1,6 @@
 import React, { useState, useEffect, useRef, useCallback } from 'react';
 import { useNavigate, useLocation } from 'react-router-dom';
-import { Helmet } from 'react-helmet-async';
+import SEO from '../../components/common/SEO';
 import { useExamStore } from '../../store/useExamStore';
 import { Clock, Award, ChevronLeft, ChevronRight, AlertCircle, Send, Cloud, Bookmark } from 'lucide-react';
 import Swal from 'sweetalert2';
@@ -332,9 +332,7 @@ export default function StartExam() {
   return (
     <div className={`min-h-screen flex flex-col select-none transition-colors duration-300 ${isCatMode ? 'bg-slate-100 font-sans' : 'bg-[#F4F6F9] animate-fadeIn'
       }`}>
-      <Helmet>
-        <title>Simulasi Ujian Aktif - WILDAN CASN</title>
-      </Helmet>
+      <SEO title="Simulasi Ujian Aktif" />
       {/* ─── HEADER ─── */}
       {isCatMode ? (
         <header className="bg-[#0B1C30] text-white py-3 px-4 sm:px-6 shadow flex items-center justify-between sticky top-0 z-30 select-none border-b border-slate-850">

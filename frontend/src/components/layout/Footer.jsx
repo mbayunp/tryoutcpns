@@ -170,11 +170,11 @@ export default function Footer() {
             <ul className="space-y-3 text-sm">
               <li className="flex items-center gap-2.5">
                 <Mail className="h-4 w-4 text-blue-400 flex-shrink-0" />
-                <span className="truncate">support@cpnstryout.id</span>
+                <span className="truncate">[EMAIL_ADDRESS]</span>
               </li>
               <li className="flex items-center gap-2.5">
                 <Phone className="h-4 w-4 text-blue-400 flex-shrink-0" />
-                <span>+62 812-3456-7890</span>
+                <span>+62 882 2179 5154</span>
               </li>
               <li className="flex items-start gap-2.5">
                 <MapPin className="h-4 w-4 text-blue-400 flex-shrink-0 mt-0.5" />

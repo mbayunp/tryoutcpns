@@ -9,7 +9,20 @@ const calculateQuestionScore = (question, selectedAnswer) => {
     return { score: 0, isCorrect: false };
   }
 
-  const normalizedAnswer = selectedAnswer.toLowerCase().trim();
+  const normalizedAnswer = selectedAnswer.toUpperCase().trim();
+  const normalizedAnswerLower = selectedAnswer.toLowerCase().trim();
+
+  // PPPK Evaluation Logic
+  if (question.program_type === 'PPPK') {
+    const weights = question.options_weights || question.option_weights;
+    let score = 0;
+    if (weights) {
+      const parsedWeights = typeof weights === 'string' ? JSON.parse(weights) : weights;
+      score = parsedWeights[normalizedAnswer] || parsedWeights[normalizedAnswerLower] || 0;
+    }
+    return { score, isCorrect: score > 0 };
+  }
+
   const correctAnswer = question.correct_answer ? question.correct_answer.toLowerCase().trim() : '';
 
   // Get category name
@@ -23,16 +36,16 @@ const calculateQuestionScore = (question, selectedAnswer) => {
         ? JSON.parse(question.option_weights)
         : question.option_weights;
 
-      score = weights[normalizedAnswer] || 0;
+      score = weights[normalizedAnswerLower] || weights[normalizedAnswer] || 0;
     } else {
       // Fallback if no weights are defined: correct answer gets 5, others get 0
-      score = normalizedAnswer === correctAnswer ? 5 : 0;
+      score = normalizedAnswerLower === correctAnswer ? 5 : 0;
     }
     // In TKP, there is no absolute "correct" but we can say isCorrect is true if they got the max possible score (5)
     return { score, isCorrect: score === 5 };
   } else {
     // TWK or TIU (or default): correct = 5, wrong = 0
-    const isCorrect = normalizedAnswer === correctAnswer;
+    const isCorrect = normalizedAnswerLower === correctAnswer;
     const score = isCorrect ? 5 : 0;
     return { score, isCorrect };
   }

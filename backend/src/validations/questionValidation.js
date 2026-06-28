@@ -33,11 +33,15 @@ const questionValidation = validate([
     .notEmpty()
     .withMessage('Option E is required'),
   body('correct_answer')
-    .trim()
-    .notEmpty()
-    .withMessage('Correct answer is required')
-    .isIn(['a', 'b', 'c', 'd', 'e', 'A', 'B', 'C', 'D', 'E'])
-    .withMessage('Correct answer must be one of: a, b, c, d, e'),
+    .custom((value, { req }) => {
+      if (req.body.program_type === 'PPPK') {
+        return true;
+      }
+      if (!value || !['a', 'b', 'c', 'd', 'e', 'A', 'B', 'C', 'D', 'E'].includes(value.trim())) {
+        throw new Error('Correct answer is required and must be one of: a, b, c, d, e');
+      }
+      return true;
+    }),
   body('option_weights')
     .optional()
     .custom((value) => {
@@ -52,6 +56,30 @@ const questionValidation = validate([
             throw new Error('Option weights values must be numbers between 0 and 5');
           }
         }
+      }
+      return true;
+    }),
+  body('options_weights')
+    .optional()
+    .custom((value) => {
+      if (typeof value === 'object' && value !== null) {
+        const keys = Object.keys(value);
+        for (let key of keys) {
+          if (!['a', 'b', 'c', 'd', 'e'].includes(key.toLowerCase())) {
+            throw new Error('Options weights keys must be A, B, C, D, or E');
+          }
+          if (typeof value[key] !== 'number' || value[key] < 0 || value[key] > 5) {
+            throw new Error('Options weights values must be numbers between 0 and 5');
+          }
+        }
+      }
+      return true;
+    }),
+  body('sub_category')
+    .optional()
+    .custom((value) => {
+      if (value && !['Teknis', 'Manajerial', 'Sosial Kultural', 'Wawancara'].includes(value)) {
+        throw new Error('Sub category must be one of: Teknis, Manajerial, Sosial Kultural, Wawancara');
       }
       return true;
     })

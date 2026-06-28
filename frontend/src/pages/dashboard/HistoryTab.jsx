@@ -1,4 +1,4 @@
-import React from 'react';
+import React, { useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { useExamStore } from '../../store/useExamStore';
 import { History, ChevronRight } from 'lucide-react';
@@ -6,8 +6,14 @@ import Card from '../../components/common/Card';
 import Badge from '../../components/common/Badge';
 
 export default function HistoryTab() {
-    const { history } = useExamStore();
-    const navigate = useNavigate(); // Inisialisasi navigasi
+    const { history, fetchHistory, activeProgram } = useExamStore();
+    const navigate = useNavigate();
+
+    useEffect(() => {
+        fetchHistory();
+    }, [fetchHistory]);
+
+    const isPPPK = activeProgram === 'PPPK';
 
     // Jika riwayat kosong
     if (history.length === 0) {
@@ -24,15 +30,21 @@ export default function HistoryTab() {
     // Jika ada riwayat
     return (
         <Card className="overflow-hidden p-0 border border-slate-200/60 shadow-premium bg-white animate-fadeIn">
+            <div className="p-5 border-b border-slate-100 flex justify-between items-center bg-slate-50/50">
+                <div>
+                    <h3 className="text-sm font-bold text-slate-800">Riwayat Tryout</h3>
+                    <p className="text-[10px] text-slate-450 mt-0.5 font-semibold">Daftar ujian yang telah Anda selesaikan</p>
+                </div>
+            </div>
             <div className="overflow-x-auto">
                 <table className="w-full text-left border-collapse">
                     <thead>
                         <tr className="bg-[#0B1C30] text-[11px] font-bold uppercase text-white/90 tracking-wider">
                             <th className="px-6 py-4">Paket Tryout</th>
                             <th className="px-6 py-4">Tanggal Pengerjaan</th>
-                            <th className="px-6 py-4 text-center">TWK</th>
-                            <th className="px-6 py-4 text-center">TIU</th>
-                            <th className="px-6 py-4 text-center">TKP</th>
+                            <th className="px-6 py-4 text-center">{isPPPK ? 'Teknis' : 'TWK'}</th>
+                            <th className="px-6 py-4 text-center">{isPPPK ? 'Manajerial' : 'TIU'}</th>
+                            <th className="px-6 py-4 text-center">{isPPPK ? 'Soskult & Waw' : 'TKP'}</th>
                             <th className="px-6 py-4 text-center">Total Skor</th>
                             <th className="px-6 py-4 text-center">Status Kelulusan</th>
                             <th className="px-6 py-4 text-center">Detail</th>

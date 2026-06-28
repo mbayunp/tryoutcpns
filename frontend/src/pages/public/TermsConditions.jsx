@@ -6,12 +6,12 @@ export default function TermsConditions() {
   return (
     <PolicyLayout
       title="Syarat dan Ketentuan Penggunaan"
-      description="Aturan, pedoman, dan tanggung jawab hukum penggunaan platform Sentral CPNS."
+      description="Aturan, pedoman, dan tanggung jawab hukum penggunaan platform Wildan CASN."
       lastUpdated="18 Juni 2026"
     >
       <div className="space-y-6">
         <p className="text-slate-600 leading-relaxed text-sm sm:text-base border-b border-slate-100 pb-6">
-          Selamat datang di platform Sentral CPNS. Dengan mengakses atau menggunakan situs dan layanan kami, Anda dianggap telah membaca, memahami, dan menyetujui seluruh syarat dan ketentuan yang dijelaskan di bawah ini. Jika Anda tidak menyetujui salah satu poin ketentuan, mohon untuk tidak menggunakan layanan kami.
+          Selamat datang di platform Wildan CASN. Dengan mengakses atau menggunakan situs dan layanan kami, Anda dianggap telah membaca, memahami, dan menyetujui seluruh syarat dan ketentuan yang dijelaskan di bawah ini. Jika Anda tidak menyetujui salah satu poin ketentuan, mohon untuk tidak menggunakan layanan kami.
         </p>
 
         <PolicySection number="1" title="Ketentuan Umum">
@@ -64,13 +64,13 @@ export default function TermsConditions() {
 
         <PolicySection number="5" title="Hak Platform">
           <p className="text-slate-600 text-sm sm:text-base">
-            Sentral CPNS berhak penuh untuk menonaktifkan akun, menolak akses, serta menghapus akun pelanggar secara sepihak jika terbukti melakukan pelanggaran terhadap syarat & ketentuan ini, tanpa kewajiban memberikan ganti rugi atau pengembalian dana.
+            Wildan CASN berhak penuh untuk menonaktifkan akun, menolak akses, serta menghapus akun pelanggar secara sepihak jika terbukti melakukan pelanggaran terhadap syarat & ketentuan ini, tanpa kewajiban memberikan ganti rugi atau pengembalian dana.
           </p>
         </PolicySection>
 
         <PolicySection number="6" title="Perubahan Ketentuan">
           <p className="text-slate-600 text-sm sm:text-base">
-            Syarat dan ketentuan ini dapat diubah sewaktu-waktu oleh pihak manajemen Sentral CPNS dengan pemberitahuan di website. Perubahan akan berlaku seketika setelah dipublikasikan. Pengguna diharapkan memantau halaman ini secara berkala.
+            Syarat dan ketentuan ini dapat diubah sewaktu-waktu oleh pihak manajemen Wildan CASN dengan pemberitahuan di website. Perubahan akan berlaku seketika setelah dipublikasikan. Pengguna diharapkan memantau halaman ini secara berkala.
           </p>
         </PolicySection>
       </div>
