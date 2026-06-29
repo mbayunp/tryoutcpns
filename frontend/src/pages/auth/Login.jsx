@@ -135,6 +135,8 @@ export default function Login() {
         icon: 'error',
         title: 'Login Gagal',
         text: 'Harap isi email dan kata sandi Anda.',
+        showConfirmButton: true,
+        confirmButtonText: 'Tutup',
         confirmButtonColor: '#ef4444',
       });
       return;
@@ -153,6 +155,8 @@ export default function Login() {
         icon: 'error',
         title: 'Login Gagal',
         text: errorMessage,
+        showConfirmButton: true,
+        confirmButtonText: 'Tutup',
         confirmButtonColor: '#ef4444',
       });
     } finally {
