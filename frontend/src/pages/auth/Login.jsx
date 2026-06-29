@@ -1,7 +1,7 @@
 import React, { useState } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { useExamStore } from '../../store/useExamStore';
-import { AlertCircle, Eye, EyeOff, ShieldCheck, BarChart3 } from 'lucide-react';
+import { Eye, EyeOff, ShieldCheck, BarChart3 } from 'lucide-react';
 import Button from '../../components/common/Button';
 import Input from '../../components/common/Input';
 import SEO from '../../components/common/SEO';
@@ -25,7 +25,7 @@ export default function Login() {
       Swal.fire({
         title: 'Menghubungkan...',
         text: 'Sedang masuk dengan akun Google Anda.',
-        allowOutsideClick: false,
+        allowOutsideClick: false,per
         didOpen: () => {
           Swal.showLoading();
         }
