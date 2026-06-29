@@ -60,6 +60,11 @@ const Question = sequelize.define('Question', {
     allowNull: false,
     defaultValue: 'SKD'
   },
+  scoring_type: {
+    type: DataTypes.ENUM('BINARY', 'WEIGHTED_1_5', 'WEIGHTED_1_4'),
+    allowNull: false,
+    defaultValue: 'BINARY'
+  },
 }, {
   tableName: 'questions',
 });

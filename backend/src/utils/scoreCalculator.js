@@ -12,9 +12,10 @@ const calculateQuestionScore = (question, selectedAnswer, scoringType = 'BINARY'
 
   const normalizedAnswer = selectedAnswer.toUpperCase().trim();
   const normalizedAnswerLower = selectedAnswer.toLowerCase().trim();
+  const finalScoringType = question.scoring_type || scoringType || 'BINARY';
 
   // If the package has a weighted scoring type, evaluate based on option weights
-  if (scoringType === 'WEIGHTED_1_5' || scoringType === 'WEIGHTED_1_4') {
+  if (finalScoringType === 'WEIGHTED_1_5' || finalScoringType === 'WEIGHTED_1_4') {
     const weights = question.options_weights || question.option_weights;
     let score = 0;
     if (weights) {
@@ -59,7 +60,7 @@ const calculateQuestionScore = (question, selectedAnswer, scoringType = 'BINARY'
     return { score, isCorrect: score === 5 };
   } else {
     // TWK or TIU (or default): correct = 5, wrong = 0
-    const isCorrect = normalizedAnswerLower === correctAnswer;
+    const isCorrect = normalizedAnswerLower === correctAnswer || normalizedAnswer === correctAnswer.toUpperCase();
     const score = isCorrect ? 5 : 0;
     return { score, isCorrect };
   }

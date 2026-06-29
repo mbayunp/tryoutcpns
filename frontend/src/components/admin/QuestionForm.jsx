@@ -48,19 +48,7 @@ export default function QuestionForm({
       setProgramType(selectedQuestion.program_type || 'SKD');
       setSubCategory(selectedQuestion.sub_category || 'Teknis');
 
-      const activePkg = packages.find(p => p.id === selectedQuestion.tryout_id);
-      if (activePkg) {
-        setScoringMethod(activePkg.scoring_type || 'BINARY');
-      } else {
-        const weights = selectedQuestion.options_weights || selectedQuestion.option_weights || selectedQuestion.scores;
-        if (weights) {
-          const vals = Object.values(typeof weights === 'string' ? JSON.parse(weights) : weights);
-          const maxVal = Math.max(...vals.map(Number));
-          setScoringMethod(maxVal === 4 ? 'WEIGHTED_1_4' : 'WEIGHTED_1_5');
-        } else {
-          setScoringMethod('BINARY');
-        }
-      }
+      setScoringMethod(selectedQuestion.scoring_type || 'BINARY');
 
       const weights = selectedQuestion.options_weights || selectedQuestion.option_weights || selectedQuestion.scores;
       if (weights) {
@@ -190,7 +178,8 @@ export default function QuestionForm({
       explanation,
       correctAnswer: isWeighted ? null : correctAnswer,
       options_weights: isWeighted ? optionsWeights : null,
-      scores: isWeighted ? optionsWeights : null
+      scores: isWeighted ? optionsWeights : null,
+      scoring_type: scoringMethod
     };
     onSubmit(questionData);
   };

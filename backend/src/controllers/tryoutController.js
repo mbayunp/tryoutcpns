@@ -1,5 +1,5 @@
 const tryoutService = require('../services/tryoutService');
-const { Tryout } = require('../models');
+const { Tryout, PackageQuestion, Attempt, AttemptAnswer, Answer, Transaction } = require('../models');
 const response = require('../utils/response');
 
 const getTryouts = async (req, res, next) => {
@@ -176,6 +176,23 @@ const deleteTryout = async (req, res, next) => {
     const tryout = await Tryout.findByPk(id);
     if (!tryout) {
       return response.error(res, 'Tryout not found', 404);
+    }
+
+    // Cleanup relational data to avoid database foreign key constraint errors
+    if (PackageQuestion) {
+      await PackageQuestion.destroy({ where: { package_id: id } });
+    }
+    
+    const attempts = await Attempt.findAll({ where: { tryout_id: id } });
+    const attemptIds = attempts.map(a => a.id);
+    if (attemptIds.length > 0) {
+      if (AttemptAnswer) await AttemptAnswer.destroy({ where: { attempt_id: attemptIds } });
+      if (Answer) await Answer.destroy({ where: { attempt_id: attemptIds } });
+      await Attempt.destroy({ where: { id: attemptIds } });
+    }
+
+    if (Transaction) {
+      await Transaction.destroy({ where: { tryout_id: id } });
     }
 
     await tryout.destroy();

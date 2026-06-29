@@ -14,7 +14,6 @@ export default function AdminPaket() {
     deletePackage,
     fetchPackages,
     questions,
-    fetchQuestions,
     assignQuestionsToPackage,
     getQuestionsForPackage,
     adminActiveProgram
@@ -45,12 +44,10 @@ export default function AdminPaket() {
   ]);
   const [pkgShieldText, setPkgShieldText] = useState('Aman & Terpercaya');
   const [pkgAwardText, setPkgAwardText] = useState('Jaminan Lulus Ambang Batas');
-  const [pkgScoringType, setPkgScoringType] = useState('BINARY');
 
   useEffect(() => {
     fetchPackages(adminActiveProgram);
-    fetchQuestions(1).catch(err => console.error('fetchQuestions error in AdminPaket:', err));
-  }, [adminActiveProgram]);
+  }, [fetchPackages, adminActiveProgram]);
 
   useEffect(() => {
     if (!isEditingPkg) {
@@ -105,7 +102,6 @@ export default function AdminPaket() {
     ]);
     setPkgShieldText('Aman & Terpercaya');
     setPkgAwardText('Jaminan Lulus Ambang Batas');
-    setPkgScoringType('BINARY');
   };
 
   const handleEditPkgClick = (pkg) => {
@@ -139,7 +135,6 @@ export default function AdminPaket() {
     };
     setPkgShieldText(parsedShieldAward.shield || 'Aman & Terpercaya');
     setPkgAwardText(parsedShieldAward.award || 'Jaminan Lulus Ambang Batas');
-    setPkgScoringType(pkg.scoring_type || 'BINARY');
   };
 
   const handlePkgImageChange = (e) => {
@@ -218,8 +213,7 @@ export default function AdminPaket() {
       shield_award: {
         shield: pkgShieldText,
         award: pkgAwardText
-      },
-      scoring_type: pkgScoringType
+      }
     };
 
     try {
@@ -244,9 +238,10 @@ export default function AdminPaket() {
       }
       resetPkgForm();
     } catch (err) {
+      const errMsg = err.response?.data?.message || err.message || 'Gagal menyimpan paket tryout.';
       Swal.fire({
         title: 'Gagal!',
-        text: 'Gagal menyimpan paket tryout.',
+        text: errMsg,
         icon: 'error',
         confirmButtonText: 'OK',
         confirmButtonColor: '#EF4444'
@@ -616,19 +611,6 @@ export default function AdminPaket() {
               </div>
             </div>
 
-            <div>
-              <label className="block text-[10px] font-bold text-slate-400 uppercase tracking-wider mb-1.5">Tipe Penilaian Paket</label>
-              <select
-                value={pkgScoringType}
-                onChange={(e) => setPkgScoringType(e.target.value)}
-                className={selectClass}
-                required
-              >
-                <option value="BINARY">Binary/SKD (Benar/Salah)</option>
-                <option value="WEIGHTED_1_5">PPPK Teknis (Bobot 1-5)</option>
-                <option value="WEIGHTED_1_4">PPPK Lainnya (Bobot 1-4)</option>
-              </select>
-            </div>
 
             <div>
               <label className="block text-[10px] font-bold text-slate-400 uppercase tracking-wider mb-1.5">Status</label>

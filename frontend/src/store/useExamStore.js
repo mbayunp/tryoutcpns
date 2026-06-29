@@ -387,6 +387,9 @@ export const useExamStore = create(
       },
 
       fetchQuestions: async (tryoutId) => {
+        if (!tryoutId || tryoutId === 'undefined' || tryoutId === 'null' || tryoutId === '') {
+          return null;
+        }
         try {
           const res = await API.get(`/tryouts/${tryoutId}`);
           if (!res.data || !res.data.data) {
@@ -425,6 +428,7 @@ export const useExamStore = create(
               correctAnswer: q.correct_answer ? q.correct_answer.toUpperCase() : '',
               explanation: generatedExplanation,
               scores,
+              scoring_type: q.scoring_type || 'BINARY',
               program_type: q.program_type
             };
           });
@@ -595,7 +599,8 @@ export const useExamStore = create(
             } : null,
             options_weights: newQuestion.options_weights || null,
             sub_category: newQuestion.sub_category || null,
-            program_type: newQuestion.program_type
+            program_type: newQuestion.program_type,
+            scoring_type: newQuestion.scoring_type || 'BINARY'
           };
 
           await API.post('/questions', formatted);
@@ -631,7 +636,8 @@ export const useExamStore = create(
               } : null,
               options_weights: newQuestion.options_weights || null,
               sub_category: newQuestion.sub_category || null,
-              program_type: newQuestion.program_type || get().adminActiveProgram || 'SKD'
+              program_type: newQuestion.program_type || get().adminActiveProgram || 'SKD',
+              scoring_type: newQuestion.scoring_type || 'BINARY'
             };
           });
 
@@ -685,7 +691,8 @@ export const useExamStore = create(
             } : null,
             options_weights: updatedQuestion.options_weights || null,
             sub_category: updatedQuestion.sub_category || null,
-            program_type: updatedQuestion.program_type
+            program_type: updatedQuestion.program_type,
+            scoring_type: updatedQuestion.scoring_type || 'BINARY'
           };
 
           await API.put(`/questions/${updatedQuestion.id}`, formatted);
@@ -747,6 +754,9 @@ export const useExamStore = create(
           await get().fetchPackages();
         } catch (error) {
           console.error('Failed to create package:', error);
+          if (error.response?.data) {
+            console.error('API Error details:', error.response.data);
+          }
           throw error;
         }
       },
@@ -801,6 +811,9 @@ export const useExamStore = create(
           await get().fetchPackages();
         } catch (error) {
           console.error('Failed to update package:', error);
+          if (error.response?.data) {
+            console.error('API Error details:', error.response.data);
+          }
           throw error;
         }
       },

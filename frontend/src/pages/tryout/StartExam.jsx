@@ -37,7 +37,6 @@ export default function StartExam() {
   const [examTimeLeft, setExamTimeLeft] = useState(currentPkg.duration * 60);
   const [isTimerRunning, setIsTimerRunning] = useState(false);
   const [showSubmitModal, setShowSubmitModal] = useState(false);
-  const [showNav, setShowNav] = useState(true);
   const [showBottomSheet, setShowBottomSheet] = useState(false);
   const [fontSize, setFontSize] = useState('md');
   const [showExitWarning, setShowExitWarning] = useState(false);

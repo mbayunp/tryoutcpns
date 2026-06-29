@@ -40,7 +40,8 @@ const createQuestion = async (req, res, next) => {
       option_weights,
       options_weights,
       sub_category,
-      program_type
+      program_type,
+      scoring_type
     } = req.body;
 
     // Check if Tryout and Category exist
@@ -67,7 +68,8 @@ const createQuestion = async (req, res, next) => {
       option_weights,
       options_weights,
       sub_category,
-      program_type: program_type || 'SKD'
+      program_type: program_type || 'SKD',
+      scoring_type: scoring_type || 'BINARY'
     });
 
     // Automatically update tryout's total_questions count
@@ -96,7 +98,8 @@ const updateQuestion = async (req, res, next) => {
       option_weights,
       options_weights,
       sub_category,
-      program_type
+      program_type,
+      scoring_type
     } = req.body;
 
     const q = await Question.findByPk(id);
@@ -133,6 +136,7 @@ const updateQuestion = async (req, res, next) => {
     if (options_weights !== undefined) q.options_weights = options_weights;
     if (sub_category !== undefined) q.sub_category = sub_category;
     if (program_type !== undefined) q.program_type = program_type;
+    if (scoring_type !== undefined) q.scoring_type = scoring_type;
 
     await q.save();
 

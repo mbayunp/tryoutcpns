@@ -34,24 +34,29 @@ export default function AdminSoal() {
   const [error, setError] = useState(null);
 
   useEffect(() => {
-    const loadQuestions = async () => {
-      try {
-        setError(null);
-        const data = await fetchQuestions(1);
-        if (data === null) {
-          setError('Data Try Out (ID 1) tidak ditemukan');
-        }
-      } catch (err) {
-        console.error('Error fetching questions:', err);
-        setError('Gagal memuat data soal');
-      }
-    };
-    loadQuestions();
     fetchPackages(adminActiveProgram);
     fetchAnnouncements(adminActiveProgram);
     fetchTransactions(adminActiveProgram);
     fetchCategories(adminActiveProgram);
-  }, [adminActiveProgram]);
+  }, [adminActiveProgram, fetchPackages, fetchAnnouncements, fetchTransactions, fetchCategories]);
+
+  useEffect(() => {
+    if (packages && packages.length > 0) {
+      const loadQuestions = async () => {
+        try {
+          setError(null);
+          const data = await fetchQuestions(packages[0].id);
+          if (data === null) {
+            setError(`Data Try Out (ID ${packages[0].id}) tidak ditemukan`);
+          }
+        } catch (err) {
+          console.error('Error fetching questions:', err);
+          setError('Gagal memuat data soal');
+        }
+      };
+      loadQuestions();
+    }
+  }, [packages, fetchQuestions]);
 
   // State for Bank Soal
   const [showManualForm, setShowManualForm] = useState(false);

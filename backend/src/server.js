@@ -27,6 +27,13 @@ const startServer = async () => {
     }
 
     try {
+      await sequelize.query("ALTER TABLE `questions` ADD COLUMN `scoring_type` ENUM('BINARY', 'WEIGHTED_1_5', 'WEIGHTED_1_4') NOT NULL DEFAULT 'BINARY';");
+      console.log('Added scoring_type column to questions table.');
+    } catch (err) {
+      // Ignore
+    }
+
+    try {
       await sequelize.query("ALTER TABLE `questions` ADD COLUMN `sub_category` VARCHAR(100) DEFAULT NULL;");
       console.log('Added sub_category column to questions table.');
     } catch (err) {
@@ -43,6 +50,13 @@ const startServer = async () => {
     try {
       await sequelize.query("ALTER TABLE `questions` MODIFY COLUMN `program_type` ENUM('PPG', 'PPPK', 'SKD') NOT NULL DEFAULT 'SKD';");
       console.log('Updated questions.program_type enum.');
+    } catch (err) {
+      // Ignore
+    }
+
+    try {
+      await sequelize.query("ALTER TABLE `tryouts` ADD COLUMN `program_type` ENUM('PPG', 'PPPK', 'SKD') NOT NULL DEFAULT 'SKD';");
+      console.log('Added program_type column to tryouts table.');
     } catch (err) {
       // Ignore
     }
