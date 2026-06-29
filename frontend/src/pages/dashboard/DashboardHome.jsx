@@ -1,4 +1,4 @@
-import React, { useEffect } from 'react';
+import React, { useEffect, useMemo } from 'react';
 import { useNavigate } from 'react-router-dom';
 import SEO from '../../components/common/SEO';
 import {
@@ -7,8 +7,8 @@ import {
   History as HistoryIcon,
   ArrowRight,
   PlusCircle,
-  Award,
-  Flame,
+  Trophy,
+  ShoppingBag,
   Package
 } from 'lucide-react';
 import { AreaChart, Area, XAxis, YAxis, CartesianGrid, Tooltip, ResponsiveContainer } from 'recharts';
@@ -32,6 +32,24 @@ export default function DashboardHome() {
   const highestScore = history.length > 0 ? Math.max(...history.map(h => h.score)) : 0;
   const averageScore = history.length > 0 ? Math.round(history.reduce((sum, h) => sum + h.score, 0) / history.length) : 0;
   const totalAttempts = history.length;
+  const purchasedPackageCount = packages.filter(p => p.isPurchased).length;
+
+  // Build chart data from real history (last 7 attempts)
+  const chartData = useMemo(() => {
+    if (history.length === 0) return [];
+    return history
+      .slice(0, 7)
+      .reverse()
+      .map((h, idx) => ({
+        name: h.date ? h.date.split(' ').slice(0, 2).join(' ') : `#${idx + 1}`,
+        skor: h.score || 0,
+      }));
+  }, [history]);
+
+  // Real accuracy: average score / 550 (passing threshold)
+  const accuracyPercent = history.length > 0 ? Math.round((averageScore / 550) * 100) : 0;
+  // Real daily target: attempts done out of a target of 1 tryout/day (7 days = 7 target)
+  const weeklyTarget = history.length > 0 ? Math.min(Math.round((Math.min(history.length, 7) / 7) * 100), 100) : 0;
 
   return (
     <>
@@ -48,7 +66,10 @@ export default function DashboardHome() {
               Selamat Datang, {user?.name?.split(' ')[0]}!
             </h1>
             <p className="font-body-lg text-sm md:text-base opacity-90 leading-relaxed">
-              Anda telah menyelesaikan 85% target belajar minggu ini. Teruslah berjuang untuk impian menjadi ASN bersama WILDAN CASN!
+              {totalAttempts > 0 
+                ? `Anda telah menyelesaikan ${totalAttempts} tryout dengan rata-rata skor ${averageScore}. Teruslah berjuang untuk impian menjadi ASN bersama WILDAN CASN!`
+                : 'Mulai perjalanan Anda menuju ASN bersama WILDAN CASN! Ikuti tryout pertama Anda sekarang.'
+              }
             </p>
             <button
               onClick={() => navigate('/dashboard/paket')}
@@ -92,24 +113,24 @@ export default function DashboardHome() {
 
           <Card className="p-6 border border-white/40 shadow-premium flex items-start gap-4 hover:-translate-y-1 hover:shadow-premium-hover transition-all duration-300 ease-out border-l-4 border-l-emerald-500 bg-white/80 backdrop-blur-md">
             <div className="w-12 h-12 bg-emerald-500/10 rounded-xl flex items-center justify-center text-emerald-600 flex-shrink-0">
-              <Award className="h-5 w-5" />
+              <Trophy className="h-5 w-5" />
             </div>
             <div className="space-y-1">
-              <p className="text-slate-400 text-xs font-bold uppercase tracking-wider">Peringkat Nasional</p>
+              <p className="text-slate-400 text-xs font-bold uppercase tracking-wider">Skor Tertinggi</p>
               <h3 className="text-2xl font-extrabold text-[#0B1C30]">
-                {highestScore >= 311 ? '#1,240' : '#8,495'} <span className="text-xs font-normal text-slate-400">dari 45k</span>
+                {highestScore} <span className="text-xs font-normal text-slate-400">/ 550</span>
               </h3>
             </div>
           </Card>
 
-          <Card className="p-6 border border-white/40 shadow-premium flex items-start gap-4 hover:-translate-y-1 hover:shadow-premium-hover transition-all duration-300 ease-out border-l-4 border-l-orange-500 bg-white/80 backdrop-blur-md">
-            <div className="w-12 h-12 bg-orange-500/10 rounded-xl flex items-center justify-center text-orange-500 flex-shrink-0 animate-pulse">
-              <Flame className="h-5 w-5 fill-current" />
+          <Card className="p-6 border border-white/40 shadow-premium flex items-start gap-4 hover:-translate-y-1 hover:shadow-premium-hover transition-all duration-300 ease-out border-l-4 border-l-violet-500 bg-white/80 backdrop-blur-md">
+            <div className="w-12 h-12 bg-violet-500/10 rounded-xl flex items-center justify-center text-violet-600 flex-shrink-0">
+              <ShoppingBag className="h-5 w-5" />
             </div>
             <div className="space-y-1">
-              <p className="text-slate-400 text-xs font-bold uppercase tracking-wider">Daily Streak</p>
+              <p className="text-slate-400 text-xs font-bold uppercase tracking-wider">Paket Dimiliki</p>
               <h3 className="text-2xl font-extrabold text-[#0B1C30]">
-                3 Hari <span className="text-xs font-normal text-slate-400">Beruntun</span>
+                {purchasedPackageCount} <span className="text-xs font-normal text-slate-400">Paket</span>
               </h3>
             </div>
           </Card>
@@ -127,83 +148,78 @@ export default function DashboardHome() {
             </div>
 
             {/* Chart Recharts */}
-            {(() => {
-              const chartData = [
-                { name: 'Sen', skor: 320 },
-                { name: 'Sel', skor: 410 },
-                { name: 'Rab', skor: 380 },
-                { name: 'Kam', skor: 490 },
-                { name: 'Jum', skor: 350 },
-                { name: 'Sab', skor: 430 },
-                { name: 'Min', skor: 520 },
-              ];
-
-              return (
-                <div className="h-60 w-full animate-fadeIn">
-                  <ResponsiveContainer width="100%" height="100%" minWidth={1} minHeight={240}>
-                    <AreaChart
-                      data={chartData}
-                      margin={{ top: 10, right: 10, left: -20, bottom: 0 }}
-                    >
-                      <defs>
-                        <linearGradient id="colorSkorDashboard" x1="0" y1="0" x2="0" y2="1">
-                          <stop offset="5%" stopColor="#3B82F6" stopOpacity={0.4} />
-                          <stop offset="95%" stopColor="#3B82F6" stopOpacity={0.0} />
-                        </linearGradient>
-                      </defs>
-                      <CartesianGrid strokeDasharray="3 3" stroke="#F1F5F9" />
-                      <XAxis
-                        dataKey="name"
-                        tick={{ fill: '#94A3B8', fontSize: 11, fontWeight: 700 }}
-                        axisLine={false}
-                        tickLine={false}
-                      />
-                      <YAxis
-                        domain={[0, 600]}
-                        tick={{ fill: '#94A3B8', fontSize: 10 }}
-                        axisLine={false}
-                        tickLine={false}
-                      />
-                      <Tooltip
-                        contentStyle={{
-                          backgroundColor: '#0B1C30',
-                          border: 'none',
-                          borderRadius: '12px',
-                          color: '#fff',
-                          fontSize: '11px',
-                          fontWeight: 'bold',
-                          padding: '8px 12px',
-                          boxShadow: '0 10px 15px -3px rgba(0,0,0,0.1)'
-                        }}
-                        itemStyle={{ color: '#fff' }}
-                        labelStyle={{ display: 'none' }}
-                      />
-                      <Area
-                        type="monotone"
-                        dataKey="skor"
-                        stroke="#3B82F6"
-                        strokeWidth={3}
-                        fillOpacity={1}
-                        fill="url(#colorSkorDashboard)"
-                      />
-                    </AreaChart>
-                  </ResponsiveContainer>
+            {chartData.length > 0 ? (
+              <div className="h-60 w-full animate-fadeIn">
+                <ResponsiveContainer width="100%" height="100%" minWidth={1} minHeight={240}>
+                  <AreaChart
+                    data={chartData}
+                    margin={{ top: 10, right: 10, left: -20, bottom: 0 }}
+                  >
+                    <defs>
+                      <linearGradient id="colorSkorDashboard" x1="0" y1="0" x2="0" y2="1">
+                        <stop offset="5%" stopColor="#3B82F6" stopOpacity={0.4} />
+                        <stop offset="95%" stopColor="#3B82F6" stopOpacity={0.0} />
+                      </linearGradient>
+                    </defs>
+                    <CartesianGrid strokeDasharray="3 3" stroke="#F1F5F9" />
+                    <XAxis
+                      dataKey="name"
+                      tick={{ fill: '#94A3B8', fontSize: 11, fontWeight: 700 }}
+                      axisLine={false}
+                      tickLine={false}
+                    />
+                    <YAxis
+                      domain={[0, 600]}
+                      tick={{ fill: '#94A3B8', fontSize: 10 }}
+                      axisLine={false}
+                      tickLine={false}
+                    />
+                    <Tooltip
+                      contentStyle={{
+                        backgroundColor: '#0B1C30',
+                        border: 'none',
+                        borderRadius: '12px',
+                        color: '#fff',
+                        fontSize: '11px',
+                        fontWeight: 'bold',
+                        padding: '8px 12px',
+                        boxShadow: '0 10px 15px -3px rgba(0,0,0,0.1)'
+                      }}
+                      itemStyle={{ color: '#fff' }}
+                      labelStyle={{ display: 'none' }}
+                    />
+                    <Area
+                      type="monotone"
+                      dataKey="skor"
+                      stroke="#3B82F6"
+                      strokeWidth={3}
+                      fillOpacity={1}
+                      fill="url(#colorSkorDashboard)"
+                    />
+                  </AreaChart>
+                </ResponsiveContainer>
+              </div>
+            ) : (
+              <div className="h-60 w-full flex items-center justify-center text-slate-300">
+                <div className="text-center space-y-2">
+                  <TrendingUp className="h-10 w-10 mx-auto text-slate-200" />
+                  <p className="text-xs font-semibold text-slate-400">Belum ada data. Ikuti tryout untuk melihat grafik progres Anda.</p>
                 </div>
-              );
-            })()}
+              </div>
+            )}
 
             {/* Progress sliders */}
             <div className="pt-6 border-t border-slate-100 grid grid-cols-1 md:grid-cols-2 gap-6">
               <div className="space-y-2">
-                <p className="text-slate-400 text-xs font-bold uppercase tracking-wider">Target Harian</p>
+                <p className="text-slate-400 text-xs font-bold uppercase tracking-wider">Target Mingguan <span className="text-slate-300 normal-case">({Math.min(totalAttempts, 7)}/7 tryout)</span></p>
                 <div className="w-full bg-slate-100 h-2.5 rounded-full overflow-hidden">
-                  <div className="bg-[#0B1C30] h-full rounded-full" style={{ width: '85%' }}></div>
+                  <div className="bg-[#0B1C30] h-full rounded-full transition-all duration-500" style={{ width: `${weeklyTarget}%` }}></div>
                 </div>
               </div>
               <div className="space-y-2">
-                <p className="text-slate-400 text-xs font-bold uppercase tracking-wider">Target Akurasi</p>
+                <p className="text-slate-400 text-xs font-bold uppercase tracking-wider">Rata-rata Akurasi <span className="text-slate-300 normal-case">({accuracyPercent}%)</span></p>
                 <div className="w-full bg-slate-100 h-2.5 rounded-full overflow-hidden">
-                  <div className="bg-amber-500 h-full rounded-full" style={{ width: '72%' }}></div>
+                  <div className="bg-amber-500 h-full rounded-full transition-all duration-500" style={{ width: `${accuracyPercent}%` }}></div>
                 </div>
               </div>
             </div>
