@@ -219,7 +219,7 @@ export default function PackageDetail() {
             {/* Description */}
             <div className="bg-white p-6 rounded-2xl border border-slate-200/60 shadow-sm space-y-4">
               <h3 className="text-base font-bold text-[#0B1C30] tracking-tight">Deskripsi Paket</h3>
-              <p className="text-sm text-slate-500 leading-relaxed font-medium">
+              <p className="text-sm text-slate-500 leading-relaxed font-medium whitespace-pre-wrap">
                 {pkg.description || 'Simulasi lengkap sesuai standar CAT BKN terbaru. Dilengkapi pembahasan lengkap.'}
               </p>
             </div>
