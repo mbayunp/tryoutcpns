@@ -173,9 +173,27 @@ const uploadProof = async (transactionId, userId, proofImage) => {
   return transaction;
 };
 
+const deleteTransaction = async (transactionId) => {
+  const { Payment } = require('../models');
+  const transaction = await Transaction.findByPk(transactionId);
+  if (!transaction) {
+    const error = new Error('Transaction not found');
+    error.statusCode = 404;
+    throw error;
+  }
+  
+  if (Payment) {
+    await Payment.destroy({ where: { transaction_id: transactionId } });
+  }
+  
+  await transaction.destroy();
+  return true;
+};
+
 module.exports = {
   createTransaction,
   getTransactions,
   updateTransactionStatus,
-  uploadProof
+  uploadProof,
+  deleteTransaction
 };

@@ -56,9 +56,20 @@ const uploadProof = async (req, res, next) => {
   }
 };
 
+const deleteTransaction = async (req, res, next) => {
+  try {
+    const { id } = req.params;
+    await transactionService.deleteTransaction(id);
+    return response.success(res, null, 'Transaction deleted successfully');
+  } catch (err) {
+    next(err);
+  }
+};
+
 module.exports = {
   getTransactions,
   createTransaction,
   updateTransactionStatus,
-  uploadProof
+  uploadProof,
+  deleteTransaction
 };

@@ -887,6 +887,16 @@ export const useExamStore = create(
         }
       },
 
+      deleteTransaction: async (id) => {
+        try {
+          await API.delete(`/transactions/${id}`);
+          await get().fetchTransactions();
+        } catch (error) {
+          console.error('Failed to delete transaction:', error);
+          throw error;
+        }
+      },
+
       validateReferralCode: async (code) => {
         try {
           const res = await API.post('/referrals/validate', { code });

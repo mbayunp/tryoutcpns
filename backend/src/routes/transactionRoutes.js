@@ -18,4 +18,7 @@ router.put('/:id/proof', transactionController.uploadProof);
 // Update status of transaction (admin verifies / rejects payment)
 router.put('/:id/status', adminMiddleware, transactionController.updateTransactionStatus);
 
+// Delete transaction (admin only)
+router.delete('/:id', adminMiddleware, transactionController.deleteTransaction);
+
 module.exports = router;
