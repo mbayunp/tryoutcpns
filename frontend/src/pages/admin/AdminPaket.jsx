@@ -49,8 +49,8 @@ export default function AdminPaket() {
 
   useEffect(() => {
     fetchPackages(adminActiveProgram);
-    fetchQuestions(1);
-  }, [fetchPackages, fetchQuestions, adminActiveProgram]);
+    fetchQuestions(1).catch(err => console.error('fetchQuestions error in AdminPaket:', err));
+  }, [adminActiveProgram]);
 
   useEffect(() => {
     if (!isEditingPkg) {

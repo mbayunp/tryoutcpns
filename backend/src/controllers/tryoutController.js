@@ -15,10 +15,19 @@ const getTryouts = async (req, res, next) => {
 const getTryoutById = async (req, res, next) => {
   try {
     const { id } = req.params;
+    
+    const tryoutCheck = await Tryout.findByPk(id);
+    if (!tryoutCheck) {
+      return res.status(404).json({ message: 'Try Out tidak ditemukan' });
+    }
+
     const isAdmin = req.user.role === 'admin';
     const tryout = await tryoutService.getTryoutById(id, req.user.id, isAdmin);
     return response.success(res, tryout, 'Tryout details retrieved successfully');
   } catch (err) {
+    if (err.statusCode === 404) {
+      return res.status(404).json({ message: 'Try Out tidak ditemukan' });
+    }
     next(err);
   }
 };

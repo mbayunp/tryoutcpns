@@ -34,12 +34,12 @@ export default function DashboardAdmin() {
   const navigate = useNavigate();
 
   useEffect(() => {
-    fetchQuestions(1);
+    fetchQuestions(1).catch(err => console.error('fetchQuestions error in DashboardAdmin:', err));
     fetchPackages(adminActiveProgram);
     fetchAnnouncements(adminActiveProgram);
     fetchTransactions(adminActiveProgram);
     fetchCategories(adminActiveProgram);
-  }, [fetchQuestions, fetchPackages, fetchAnnouncements, fetchTransactions, fetchCategories, adminActiveProgram]);
+  }, [adminActiveProgram]);
 
   // Calculations
   const filteredQuestions = questions ? (

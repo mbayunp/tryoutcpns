@@ -389,9 +389,12 @@ export const useExamStore = create(
       fetchQuestions: async (tryoutId) => {
         try {
           const res = await API.get(`/tryouts/${tryoutId}`);
+          if (!res.data || !res.data.data) {
+            return null;
+          }
           const data = res.data.data;
           
-          const mapped = data.questions.map((q) => {
+          const mapped = (data.questions || []).map((q) => {
             const options = [
               { key: 'A', text: q.option_a },
               { key: 'B', text: q.option_b },
@@ -430,7 +433,7 @@ export const useExamStore = create(
           return mapped;
         } catch (error) {
           console.error('Failed to fetch questions:', error);
-          throw error;
+          return null;
         }
       },
 

@@ -127,6 +127,9 @@ export default function StartExam() {
     const initExam = async () => {
       try {
         const questionsList = await fetchQuestions(pkgId);
+        if (!questionsList) {
+          throw new Error('Data Try Out tidak ditemukan');
+        }
         setExamQuestions(questionsList);
 
         const attempt = await startExamAttempt(pkgId);

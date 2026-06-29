@@ -31,13 +31,27 @@ export default function AdminSoal() {
     adminActiveProgram
   } = useExamStore();
 
+  const [error, setError] = useState(null);
+
   useEffect(() => {
-    fetchQuestions(1);
+    const loadQuestions = async () => {
+      try {
+        setError(null);
+        const data = await fetchQuestions(1);
+        if (data === null) {
+          setError('Data Try Out (ID 1) tidak ditemukan');
+        }
+      } catch (err) {
+        console.error('Error fetching questions:', err);
+        setError('Gagal memuat data soal');
+      }
+    };
+    loadQuestions();
     fetchPackages(adminActiveProgram);
     fetchAnnouncements(adminActiveProgram);
     fetchTransactions(adminActiveProgram);
     fetchCategories(adminActiveProgram);
-  }, [fetchQuestions, fetchPackages, fetchAnnouncements, fetchTransactions, fetchCategories, adminActiveProgram]);
+  }, [adminActiveProgram]);
 
   // State for Bank Soal
   const [showManualForm, setShowManualForm] = useState(false);
@@ -469,6 +483,13 @@ export default function AdminSoal() {
                 </div>
                 <Badge variant="primary">CPNS SKD</Badge>
               </div>
+
+              {error && (
+                <div className="mx-5 mt-4 p-3 bg-red-50 border border-red-100 rounded-xl flex items-center gap-3 text-red-700 text-xs font-semibold shadow-sm">
+                  <AlertCircle className="h-4.5 w-4.5 text-red-500 shrink-0" />
+                  <span>{error}</span>
+                </div>
+              )}
 
               {/* Filter and Search Bar Control Row */}
               <div className="p-4 border-b border-slate-100 flex flex-col sm:flex-row justify-between items-center gap-3 bg-slate-50/50">
