@@ -28,19 +28,28 @@ export const useExamStore = create(
       login: async (email, password) => {
         try {
           const res = await API.post('/auth/login', { email, password });
-          const { user, token } = res.data.data;
-          
+
+          console.log("Respons API Login:", res.data);
+
+          const userData = res.data.data || res.data;
+          const { user, token } = userData;
+
+          if (!token) throw new Error("Token tidak ditemukan dalam respons server.");
+
           localStorage.setItem('token', token);
-          
+
           const userWithAvatar = {
             ...user,
             avatar: '/images/icon.png'
           };
-          
+
           set({ user: userWithAvatar, token });
           return userWithAvatar;
         } catch (error) {
-          const message = error.response?.data?.message || 'Login gagal. Silakan periksa kembali email dan password Anda.';
+          const message = error.response?.data?.message ||
+            error.response?.data?.error ||
+            error.message ||
+            'Login gagal. Silakan periksa kembali email dan password Anda.';
           throw new Error(message);
         }
       },
@@ -49,14 +58,14 @@ export const useExamStore = create(
         try {
           const res = await API.post('/auth/google-login', { idToken });
           const { user, token } = res.data.data;
-          
+
           localStorage.setItem('token', token);
-          
+
           const userWithAvatar = {
             ...user,
             avatar: user.avatar || '/images/icon.png'
           };
-          
+
           set({ user: userWithAvatar, token });
           return userWithAvatar;
         } catch (error) {
@@ -69,7 +78,7 @@ export const useExamStore = create(
         try {
           // 1. Post to register endpoint
           await API.post('/auth/register', { name, email, password, phone_number });
-          
+
           // 2. Automatically log in the user upon successful registration
           const user = await get().login(email, password);
           return user;
@@ -88,12 +97,12 @@ export const useExamStore = create(
         try {
           const res = await API.put('/user/email', { email: newEmail });
           const updatedUser = res.data.data;
-          
+
           const userWithAvatar = {
             ...updatedUser,
             avatar: updatedUser.avatar || '/images/icon.png'
           };
-          
+
           set({ user: userWithAvatar });
           return userWithAvatar;
         } catch (error) {
@@ -106,19 +115,19 @@ export const useExamStore = create(
         try {
           const formData = new FormData();
           formData.append('avatar', avatarFile);
-          
+
           const res = await API.put('/user/avatar', formData, {
             headers: {
               'Content-Type': 'multipart/form-data'
             }
           });
-          
+
           const updatedUser = res.data.data;
           const userWithAvatar = {
             ...updatedUser,
             avatar: updatedUser.avatar || '/images/icon.png'
           };
-          
+
           set({ user: userWithAvatar });
           return userWithAvatar;
         } catch (error) {
@@ -145,13 +154,13 @@ export const useExamStore = create(
         try {
           // Fetch transactions first to get purchase status
           await get().fetchTransactions();
-          
+
           const params = {};
           const activeProg = programType !== null ? programType : get().activeProgram;
           if (activeProg) {
             params.program_type = activeProg;
           }
-          
+
           const res = await API.get('/tryouts', { params });
           const data = res.data.data;
           const mapped = data.map((pkg) => {
@@ -255,24 +264,24 @@ export const useExamStore = create(
         try {
           // 1. Fetch questions currently mapped to this package
           const currentPkgQuestions = await get().getQuestionsForPackage(packageId);
-          
+
           // 2. Filter out questions of this category
           const otherCategoryQuestionIds = currentPkgQuestions
             .filter(q => q.category?.name.toUpperCase() !== categoryName.toUpperCase())
             .map(q => q.id);
-            
+
           // 3. Get all questions in the bank that belong to this category (using bank = package 1)
           const allBankQuestions = await get().fetchQuestions(1);
           const targetCategoryQuestionIds = allBankQuestions
             .filter(q => q.category.toUpperCase() === categoryName.toUpperCase())
             .map(q => q.id);
-            
+
           // 4. Merge them
           const mergedQuestionIds = Array.from(new Set([...otherCategoryQuestionIds, ...targetCategoryQuestionIds]));
-          
+
           // 5. Update package mapping
           await get().assignQuestionsToPackage(packageId, mergedQuestionIds);
-          
+
           // 6. Also update tryout_id on questions in database for direct association
           await Promise.all(
             allBankQuestions
@@ -280,7 +289,7 @@ export const useExamStore = create(
               .map(async (q) => {
                 const catObj = get().categories.find(c => c.name.toUpperCase() === q.category.toUpperCase());
                 const category_id = catObj ? catObj.id : 1;
-                
+
                 await API.put(`/questions/${q.id}`, {
                   tryout_id: packageId,
                   category_id,
@@ -301,7 +310,7 @@ export const useExamStore = create(
                 });
               })
           );
-          
+
           // Refresh questions list for the bank and packages
           await get().fetchQuestions(1);
           await get().fetchPackages();
@@ -396,7 +405,7 @@ export const useExamStore = create(
             return null;
           }
           const data = res.data.data;
-          
+
           const mapped = (data.questions || []).map((q) => {
             const options = [
               { key: 'A', text: q.option_a },
@@ -475,24 +484,24 @@ export const useExamStore = create(
           const questions = get().questions;
           const scoringType = get().currentScoringType || 'BINARY';
           const isPPPK = scoringType === 'WEIGHTED_1_5' || scoringType === 'WEIGHTED_1_4';
-          
+
           let twk = 0; // Teknis for PPPK
           let tiu = 0; // Manajerial for PPPK
           let tkp = 0; // Sosial Kultural & Wawancara for PPPK
-          
+
           const answersList = questions.map((q) => {
             const selected = (answersMap[q.id] || '').trim();
             const selectedUpper = selected.toUpperCase();
             const selectedLower = selected.toLowerCase();
-            
+
             let isCorrect = false;
             let score = 0;
-            
+
             if (scoringType === 'WEIGHTED_1_5' || scoringType === 'WEIGHTED_1_4') {
               const weights = q.options_weights || q.option_weights || q.scores || {};
               score = weights[selectedUpper] || weights[selectedLower] || 0;
               isCorrect = score > 0;
-              
+
               const subCat = q.sub_category ? q.sub_category.trim() : '';
               if (subCat === 'Teknis') {
                 twk += score;
@@ -515,7 +524,7 @@ export const useExamStore = create(
                   score = weights[selectedUpper] || weights[selectedLower] || 0;
                 }
                 isCorrect = score > 0;
-                
+
                 const subCat = q.sub_category ? q.sub_category.trim() : '';
                 if (subCat === 'Teknis') {
                   twk += score;
@@ -543,7 +552,7 @@ export const useExamStore = create(
                 }
               }
             }
-            
+
             return {
               question_id: q.id,
               selected_option: selected || null,
@@ -551,10 +560,10 @@ export const useExamStore = create(
               score: score
             };
           });
-          
+
           const totalScore = twk + tiu + tkp;
           const result = isPPPK ? 'LULUS' : (totalScore >= 10 ? 'LULUS' : 'TIDAK LULUS');
-          
+
           const payload = {
             attempt_id: attemptId,
             package_id: 1, // Default to Tryout Akbar
@@ -565,7 +574,7 @@ export const useExamStore = create(
             result,
             answers: answersList
           };
-          
+
           const res = await API.post('/attempts', payload);
           return res.data.data;
         } catch (error) {
@@ -728,7 +737,7 @@ export const useExamStore = create(
             if (pkgData.benefits) body.append('benefits', JSON.stringify(pkgData.benefits));
             if (pkgData.shield_award) body.append('shield_award', JSON.stringify(pkgData.shield_award));
             body.append('scoring_type', pkgData.scoring_type || 'BINARY');
-            
+
             headers['Content-Type'] = 'multipart/form-data';
           } else {
             body = {
@@ -785,7 +794,7 @@ export const useExamStore = create(
             if (updatedPkg.benefits) body.append('benefits', JSON.stringify(updatedPkg.benefits));
             if (updatedPkg.shield_award) body.append('shield_award', JSON.stringify(updatedPkg.shield_award));
             body.append('scoring_type', updatedPkg.scoring_type || 'BINARY');
-            
+
             headers['Content-Type'] = 'multipart/form-data';
           } else {
             body = {
