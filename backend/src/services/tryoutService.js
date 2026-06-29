@@ -174,7 +174,8 @@ const submitTryout = async (userId, attemptId, submittedAnswers = []) => {
     });
   }
 
-  const { totalScore, answerDetails } = calculateTotalScore(questions, submittedAnswers);
+  const tryout = await Tryout.findByPk(attempt.tryout_id);
+  const { totalScore, answerDetails } = calculateTotalScore(questions, submittedAnswers, tryout ? tryout.scoring_type : 'BINARY');
 
   // Use transaction to save answers and update attempt
   const t = await sequelize.transaction();

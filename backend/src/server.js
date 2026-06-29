@@ -75,6 +75,27 @@ const startServer = async () => {
       // Ignore
     }
 
+    try {
+      await sequelize.query("ALTER TABLE `tryouts` ADD COLUMN `benefits` JSON DEFAULT NULL;");
+      console.log('Added benefits column to tryouts table.');
+    } catch (err) {
+      // Ignore
+    }
+
+    try {
+      await sequelize.query("ALTER TABLE `tryouts` ADD COLUMN `shield_award` JSON DEFAULT NULL;");
+      console.log('Added shield_award column to tryouts table.');
+    } catch (err) {
+      // Ignore
+    }
+
+    try {
+      await sequelize.query("ALTER TABLE `tryouts` ADD COLUMN `scoring_type` ENUM('BINARY', 'WEIGHTED_1_5', 'WEIGHTED_1_4') NOT NULL DEFAULT 'BINARY';");
+      console.log('Added scoring_type column to tryouts table.');
+    } catch (err) {
+      // Ignore
+    }
+
     // Sync database schema
     const syncOptions = {
       alter: false,

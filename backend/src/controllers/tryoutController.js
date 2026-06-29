@@ -43,14 +43,31 @@ const submitTryout = async (req, res, next) => {
   }
 };
 
-// Admin CRUD Operations
 const createTryout = async (req, res, next) => {
   try {
-    const { title, description, duration, status, category, image_url, original_price, discount_percentage, price, program_type, product_type, wa_group_link } = req.body;
+    const { title, description, duration, status, category, image_url, original_price, discount_percentage, price, program_type, product_type, wa_group_link, benefits, shield_award, scoring_type } = req.body;
     
     let ebook_file_path = null;
     if (req.file) {
       ebook_file_path = 'uploads/ebooks/' + req.file.filename;
+    }
+
+    let parsedBenefits = benefits;
+    if (typeof benefits === 'string') {
+      try {
+        parsedBenefits = JSON.parse(benefits);
+      } catch (e) {
+        // ignore
+      }
+    }
+
+    let parsedShieldAward = shield_award;
+    if (typeof shield_award === 'string') {
+      try {
+        parsedShieldAward = JSON.parse(shield_award);
+      } catch (e) {
+        // ignore
+      }
     }
 
     const newTryout = await Tryout.create({
@@ -66,7 +83,10 @@ const createTryout = async (req, res, next) => {
       program_type: program_type || 'SKD',
       product_type: product_type || 'TRYOUT',
       wa_group_link: product_type === 'KELAS' ? wa_group_link : null,
-      ebook_file_path: product_type === 'EBOOK' ? ebook_file_path : null
+      ebook_file_path: product_type === 'EBOOK' ? ebook_file_path : null,
+      benefits: parsedBenefits,
+      shield_award: parsedShieldAward,
+      scoring_type: scoring_type || 'BINARY'
     });
     return response.success(res, newTryout, 'Tryout created successfully', 201);
   } catch (err) {
@@ -77,7 +97,7 @@ const createTryout = async (req, res, next) => {
  const updateTryout = async (req, res, next) => {
    try {
      const { id } = req.params;
-     const { title, description, duration, status, category, image_url, original_price, discount_percentage, price, program_type, product_type, wa_group_link } = req.body;
+     const { title, description, duration, status, category, image_url, original_price, discount_percentage, price, program_type, product_type, wa_group_link, benefits, shield_award, scoring_type } = req.body;
  
      const tryout = await Tryout.findByPk(id);
      if (!tryout) {
@@ -94,6 +114,7 @@ const createTryout = async (req, res, next) => {
      if (discount_percentage !== undefined) tryout.discount_percentage = parseInt(discount_percentage) || 0;
      if (price !== undefined) tryout.price = parseInt(price) || 0;
      if (program_type !== undefined) tryout.program_type = program_type;
+     if (scoring_type !== undefined) tryout.scoring_type = scoring_type;
      
      if (product_type !== undefined) tryout.product_type = product_type;
      
@@ -107,6 +128,30 @@ const createTryout = async (req, res, next) => {
        tryout.ebook_file_path = 'uploads/ebooks/' + req.file.filename;
      } else if (product_type && product_type !== 'EBOOK') {
        tryout.ebook_file_path = null;
+     }
+
+     if (benefits !== undefined) {
+       let parsedBenefits = benefits;
+       if (typeof benefits === 'string') {
+         try {
+           parsedBenefits = JSON.parse(benefits);
+         } catch (e) {
+           // ignore
+         }
+       }
+       tryout.benefits = parsedBenefits;
+     }
+
+     if (shield_award !== undefined) {
+       let parsedShieldAward = shield_award;
+       if (typeof shield_award === 'string') {
+         try {
+           parsedShieldAward = JSON.parse(shield_award);
+         } catch (e) {
+           // ignore
+         }
+       }
+       tryout.shield_award = parsedShieldAward;
      }
  
      await tryout.save();
@@ -256,7 +301,7 @@ const saveAttemptResult = async (req, res, next) => {
     }
 
     // Calculate total score using the utility function
-    const { totalScore, answerDetails } = calculateTotalScore(dbQuestions, submittedAnswers);
+    const { totalScore, answerDetails } = calculateTotalScore(dbQuestions, submittedAnswers, tryout ? tryout.scoring_type : 'BINARY');
     
     let computedTWK = 0;
     let computedTIU = 0;

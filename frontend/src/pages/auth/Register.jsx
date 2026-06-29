@@ -76,7 +76,7 @@ export default function Register() {
       generateCaptcha();
       return;
     }
-    
+
     setError('');
     setLoading(true);
     try {
@@ -92,7 +92,7 @@ export default function Register() {
 
   return (
     <div className="flex min-h-screen w-full bg-white font-sans">
-      
+
       {/* ─── KIRI: BRANDING & ILUSTRASI ─── */}
       <div className="hidden lg:flex w-1/2 relative bg-gradient-to-br from-blue-700 to-blue-900 overflow-hidden items-center justify-center p-20">
         {/* Dekorasi Latar */}
@@ -107,7 +107,7 @@ export default function Register() {
           <p className="text-lg mb-12 text-blue-100 leading-relaxed font-medium">
             Gabung bersama ribuan calon ASN lainnya. Buat akun sekarang untuk langsung mengikuti simulasi tryout CPNS CAT terupdate.
           </p>
-          
+
           <div className="grid grid-cols-2 gap-6 text-left">
             <div className="bg-white/10 backdrop-blur-md p-6 rounded-2xl border border-white/20 flex flex-col gap-3 transition-transform hover:-translate-y-1 duration-300">
               <ShieldCheck className="h-8 w-8 text-blue-300" />
@@ -131,10 +131,10 @@ export default function Register() {
       <div className="flex-1 flex items-center justify-center p-6 sm:p-12 overflow-y-auto">
         {/* Container Form */}
         <div className="w-full max-w-[400px] space-y-6">
-          
-          <button 
-            type="button" 
-            onClick={() => navigate('/login')} 
+
+          <button
+            type="button"
+            onClick={() => navigate('/login')}
             className="flex items-center gap-2 text-xs font-bold text-slate-500 hover:text-slate-800 transition-colors border-0 bg-transparent cursor-pointer p-0 animate-fadeIn"
           >
             <ArrowLeft className="h-4 w-4" />
@@ -143,7 +143,7 @@ export default function Register() {
 
           <div className="text-center lg:text-left">
             <h2 className="text-3xl font-extrabold text-slate-900 mb-2 tracking-tight">Daftar Akun Baru</h2>
-            <p className="text-sm text-slate-500 font-medium">Buat akun untuk memulai persiapan ujian CPNS Anda.</p>
+            <p className="text-sm text-slate-500 font-medium">Buat akun untuk memulai belajar anda</p>
           </div>
 
           {/* Pesan Error */}
@@ -181,7 +181,7 @@ export default function Register() {
                 className="w-full h-11"
               />
             </div>
-            
+
             <div className="space-y-1">
               <label className="text-xs font-bold text-slate-700">Nomor Telepon / WhatsApp</label>
               <Input
@@ -194,7 +194,7 @@ export default function Register() {
                 className="w-full h-11"
               />
             </div>
-            
+
             <div className="space-y-1">
               <label className="text-xs font-bold text-slate-700">Kata Sandi</label>
               <div className="relative">
@@ -207,7 +207,7 @@ export default function Register() {
                   required
                   className="w-full h-11 pr-12"
                 />
-                <button 
+                <button
                   type="button"
                   onClick={() => setShowPassword(!showPassword)}
                   className="absolute right-4 top-1/2 -translate-y-1/2 text-slate-400 hover:text-blue-600 transition-colors focus:outline-none border-0 bg-transparent cursor-pointer"
@@ -225,8 +225,8 @@ export default function Register() {
                     <span className="text-slate-400">Kekuatan Sandi:</span>
                     <span className={
                       getPasswordStrength(password).score === 3 ? 'text-emerald-600 animate-pulse' :
-                      getPasswordStrength(password).score === 2 ? 'text-amber-600' :
-                      'text-rose-600'
+                        getPasswordStrength(password).score === 2 ? 'text-amber-600' :
+                          'text-rose-600'
                     }>
                       {getPasswordStrength(password).label}
                     </span>
@@ -236,15 +236,13 @@ export default function Register() {
 
               {/* Password Criteria Checklist */}
               <div className="flex flex-wrap gap-x-4 gap-y-1 pt-1.5 text-[10px] font-bold">
-                <div className={`flex items-center gap-1 transition-colors duration-200 ${
-                  password.length >= 6 ? 'text-emerald-600' : 'text-slate-400'
-                }`}>
+                <div className={`flex items-center gap-1 transition-colors duration-200 ${password.length >= 6 ? 'text-emerald-600' : 'text-slate-400'
+                  }`}>
                   <Check className="h-3.5 w-3.5" />
                   <span>Minimal 6 karakter</span>
                 </div>
-                <div className={`flex items-center gap-1 transition-colors duration-200 ${
-                  (/[a-zA-Z]/.test(password) && /\d/.test(password)) ? 'text-emerald-600' : 'text-slate-400'
-                }`}>
+                <div className={`flex items-center gap-1 transition-colors duration-200 ${(/[a-zA-Z]/.test(password) && /\d/.test(password)) ? 'text-emerald-600' : 'text-slate-400'
+                  }`}>
                   <Check className="h-3.5 w-3.5" />
                   <span>Mengandung huruf & angka</span>
                 </div>
@@ -263,7 +261,7 @@ export default function Register() {
                   required
                   className="w-full h-11 pr-12"
                 />
-                <button 
+                <button
                   type="button"
                   onClick={() => setShowConfirmPassword(!showConfirmPassword)}
                   className="absolute right-4 top-1/2 -translate-y-1/2 text-slate-400 hover:text-blue-600 transition-colors focus:outline-none border-0 bg-transparent cursor-pointer"
@@ -301,9 +299,9 @@ export default function Register() {
               </div>
             </div>
 
-            <Button 
-              variant="primary" 
-              type="submit" 
+            <Button
+              variant="primary"
+              type="submit"
               disabled={loading}
               className="w-full py-4.5 bg-blue-600 hover:bg-blue-700 text-white text-sm font-bold rounded-xl shadow-lg shadow-blue-600/20 transition-all duration-200 active:scale-[0.98] mt-3 border-0"
             >
@@ -313,9 +311,9 @@ export default function Register() {
 
           <p className="text-center text-sm font-medium text-slate-500 pt-2">
             Sudah punya akun?{' '}
-            <button 
-              type="button" 
-              onClick={() => navigate('/login')} 
+            <button
+              type="button"
+              onClick={() => navigate('/login')}
               className="text-blue-600 font-bold hover:underline hover:text-blue-800 transition-colors border-0 bg-transparent cursor-pointer"
             >
               Masuk disini

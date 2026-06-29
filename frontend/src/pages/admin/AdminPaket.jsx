@@ -37,6 +37,15 @@ export default function AdminPaket() {
   const [pkgProductType, setPkgProductType] = useState('TRYOUT');
   const [pkgWaGroupLink, setPkgWaGroupLink] = useState('');
   const [pkgEbookFile, setPkgEbookFile] = useState(null);
+  const [pkgBenefits, setPkgBenefits] = useState([
+    { title: 'Kurikulum SKD Terupdate', desc: 'Materi disusun sesuai kisi-kisi BKN 2026 terlengkap.' },
+    { title: 'Video Pembahasan Modul', desc: 'Penjelasan langkah-demi-langkah penyelesaian soal rumit.' },
+    { title: 'Simulasi Sistem CAT BKN', desc: 'Ujian dengan limit waktu dan layout persis CAT BKN.' },
+    { title: 'Analisis Hasil Instan', desc: 'Ketahui nilai kelulusan ambang batas passing grade secara langsung.' },
+  ]);
+  const [pkgShieldText, setPkgShieldText] = useState('Aman & Terpercaya');
+  const [pkgAwardText, setPkgAwardText] = useState('Jaminan Lulus Ambang Batas');
+  const [pkgScoringType, setPkgScoringType] = useState('BINARY');
 
   useEffect(() => {
     fetchPackages(adminActiveProgram);
@@ -88,6 +97,15 @@ export default function AdminPaket() {
     setPkgProductType('TRYOUT');
     setPkgWaGroupLink('');
     setPkgEbookFile(null);
+    setPkgBenefits([
+      { title: 'Kurikulum SKD Terupdate', desc: 'Materi disusun sesuai kisi-kisi BKN 2026 terlengkap.' },
+      { title: 'Video Pembahasan Modul', desc: 'Penjelasan langkah-demi-langkah penyelesaian soal rumit.' },
+      { title: 'Simulasi Sistem CAT BKN', desc: 'Ujian dengan limit waktu dan layout persis CAT BKN.' },
+      { title: 'Analisis Hasil Instan', desc: 'Ketahui nilai kelulusan ambang batas passing grade secara langsung.' },
+    ]);
+    setPkgShieldText('Aman & Terpercaya');
+    setPkgAwardText('Jaminan Lulus Ambang Batas');
+    setPkgScoringType('BINARY');
   };
 
   const handleEditPkgClick = (pkg) => {
@@ -106,6 +124,22 @@ export default function AdminPaket() {
     setPkgProductType(pkg.product_type || 'TRYOUT');
     setPkgWaGroupLink(pkg.wa_group_link || '');
     setPkgEbookFile(null);
+    
+    const parsedBenefits = pkg.benefits ? (typeof pkg.benefits === 'string' ? JSON.parse(pkg.benefits) : pkg.benefits) : [
+      { title: 'Kurikulum SKD Terupdate', desc: 'Materi disusun sesuai kisi-kisi BKN 2026 terlengkap.' },
+      { title: 'Video Pembahasan Modul', desc: 'Penjelasan langkah-demi-langkah penyelesaian soal rumit.' },
+      { title: 'Simulasi Sistem CAT BKN', desc: 'Ujian dengan limit waktu dan layout persis CAT BKN.' },
+      { title: 'Analisis Hasil Instan', desc: 'Ketahui nilai kelulusan ambang batas passing grade secara langsung.' },
+    ];
+    setPkgBenefits(parsedBenefits);
+
+    const parsedShieldAward = pkg.shield_award ? (typeof pkg.shield_award === 'string' ? JSON.parse(pkg.shield_award) : pkg.shield_award) : {
+      shield: 'Aman & Terpercaya',
+      award: 'Jaminan Lulus Ambang Batas'
+    };
+    setPkgShieldText(parsedShieldAward.shield || 'Aman & Terpercaya');
+    setPkgAwardText(parsedShieldAward.award || 'Jaminan Lulus Ambang Batas');
+    setPkgScoringType(pkg.scoring_type || 'BINARY');
   };
 
   const handlePkgImageChange = (e) => {
@@ -179,7 +213,13 @@ export default function AdminPaket() {
       program_type: pkgProgramType,
       product_type: pkgProductType,
       wa_group_link: pkgProductType === 'KELAS' ? pkgWaGroupLink : null,
-      ebookFile: pkgProductType === 'EBOOK' ? pkgEbookFile : null
+      ebookFile: pkgProductType === 'EBOOK' ? pkgEbookFile : null,
+      benefits: pkgBenefits,
+      shield_award: {
+        shield: pkgShieldText,
+        award: pkgAwardText
+      },
+      scoring_type: pkgScoringType
     };
 
     try {
@@ -479,6 +519,115 @@ export default function AdminPaket() {
                   className="block w-full text-xs text-slate-500 file:mr-4 file:py-2 file:px-4 file:rounded-xl file:border-0 file:text-xs file:font-bold file:bg-slate-100 file:text-[#0B1C30] hover:file:bg-slate-200 cursor-pointer"
                 />
               </div>
+            </div>
+
+            {/* Materi & Benefit yang Didapat */}
+            <div className="bg-slate-50/50 border border-slate-200/60 rounded-2xl p-4.5 space-y-4">
+              <div className="flex justify-between items-center border-b border-slate-200/80 pb-2">
+                <span className="text-[10px] font-bold text-slate-500 uppercase tracking-widest">Materi & Benefit ({pkgBenefits.length})</span>
+                <button
+                  type="button"
+                  onClick={() => setPkgBenefits([...pkgBenefits, { title: '', desc: '' }])}
+                  className="px-2.5 py-1 bg-[#0B1C30] hover:bg-[#1E3E66] text-white text-[9px] font-bold rounded-lg transition-colors border-0 cursor-pointer flex items-center gap-1 shadow-sm"
+                >
+                  <Plus className="h-3 w-3" /> Tambah Benefit
+                </button>
+              </div>
+
+              <div className="space-y-3 max-h-[300px] overflow-y-auto pr-1">
+                {pkgBenefits.length === 0 ? (
+                  <p className="text-xs text-slate-400 text-center py-4 font-medium">Belum ada benefit. Klik "+ Tambah Benefit" di atas.</p>
+                ) : (
+                  pkgBenefits.map((b, idx) => (
+                    <div key={idx} className="relative p-3.5 bg-white border border-slate-150 rounded-xl shadow-xs hover:shadow-sm transition-all space-y-2">
+                      <button
+                        type="button"
+                        onClick={() => setPkgBenefits(pkgBenefits.filter((_, i) => i !== idx))}
+                        className="absolute top-3.5 right-3 text-red-500 hover:text-red-750 bg-transparent border-0 cursor-pointer font-bold text-[10px] uppercase tracking-wider"
+                      >
+                        Hapus
+                      </button>
+                      <div className="space-y-2.5 pr-12">
+                        <div>
+                          <label className="block text-[8px] font-bold text-slate-400 uppercase mb-1">Judul Benefit</label>
+                          <input
+                            type="text"
+                            value={b.title}
+                            onChange={(e) => {
+                              const newB = [...pkgBenefits];
+                              newB[idx] = { ...newB[idx], title: e.target.value };
+                              setPkgBenefits(newB);
+                            }}
+                            placeholder="Contoh: Kurikulum SKD Terupdate"
+                            className="w-full px-2.5 py-1.5 text-xs font-semibold text-slate-800 border border-slate-200 rounded-lg outline-none focus:ring-1 focus:ring-blue-500 focus:bg-white"
+                            required
+                          />
+                        </div>
+                        <div>
+                          <label className="block text-[8px] font-bold text-slate-400 uppercase mb-1">Deskripsi Singkat</label>
+                          <textarea
+                            value={b.desc}
+                            onChange={(e) => {
+                              const newB = [...pkgBenefits];
+                              newB[idx] = { ...newB[idx], desc: e.target.value };
+                              setPkgBenefits(newB);
+                            }}
+                            placeholder="Contoh: Materi disusun sesuai kisi-kisi BKN 25."
+                            rows="2"
+                            className="w-full px-2.5 py-1.5 text-xs text-slate-650 border border-slate-200 rounded-lg outline-none focus:ring-1 focus:ring-blue-500 focus:bg-white"
+                            required
+                          />
+                        </div>
+                      </div>
+                    </div>
+                  ))
+                )}
+              </div>
+            </div>
+
+            {/* Shield & Award Text Customization */}
+            <div className="bg-slate-50/50 border border-slate-200/60 rounded-2xl p-4.5 space-y-4">
+              <div className="border-b border-slate-200/80 pb-2">
+                <span className="text-[10px] font-bold text-slate-500 uppercase tracking-widest">Kustomisasi Teks Ikon</span>
+              </div>
+              <div className="grid grid-cols-2 gap-3">
+                <div>
+                  <label className="block text-[9px] font-bold text-slate-450 uppercase mb-1">Teks Shield (Aman)</label>
+                  <input
+                    type="text"
+                    value={pkgShieldText}
+                    onChange={(e) => setPkgShieldText(e.target.value)}
+                    placeholder="Aman & Terpercaya"
+                    className="w-full px-2.5 py-1.5 text-xs font-semibold text-slate-800 border border-slate-200 rounded-lg outline-none focus:ring-1 focus:ring-blue-500 focus:bg-white"
+                    required
+                  />
+                </div>
+                <div>
+                  <label className="block text-[9px] font-bold text-slate-450 uppercase mb-1">Teks Award (Lulus)</label>
+                  <input
+                    type="text"
+                    value={pkgAwardText}
+                    onChange={(e) => setPkgAwardText(e.target.value)}
+                    placeholder="Jaminan Lulus Ambang Batas"
+                    className="w-full px-2.5 py-1.5 text-xs font-semibold text-slate-800 border border-slate-200 rounded-lg outline-none focus:ring-1 focus:ring-blue-500 focus:bg-white"
+                    required
+                  />
+                </div>
+              </div>
+            </div>
+
+            <div>
+              <label className="block text-[10px] font-bold text-slate-400 uppercase tracking-wider mb-1.5">Tipe Penilaian Paket</label>
+              <select
+                value={pkgScoringType}
+                onChange={(e) => setPkgScoringType(e.target.value)}
+                className={selectClass}
+                required
+              >
+                <option value="BINARY">Binary/SKD (Benar/Salah)</option>
+                <option value="WEIGHTED_1_5">PPPK Teknis (Bobot 1-5)</option>
+                <option value="WEIGHTED_1_4">PPPK Lainnya (Bobot 1-4)</option>
+              </select>
             </div>
 
             <div>

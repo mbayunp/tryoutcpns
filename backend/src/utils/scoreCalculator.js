@@ -2,9 +2,10 @@
  * Calculates the score of a user's answer for a question
  * @param {Object} question - The Question instance with Category included
  * @param {string} selectedAnswer - The answer selected by user ('a', 'b', 'c', 'd', 'e' or null)
+ * @param {string} scoringType - The scoring schema selected for the package ('BINARY', 'WEIGHTED_1_5', 'WEIGHTED_1_4')
  * @returns {Object} { score: number, isCorrect: boolean }
  */
-const calculateQuestionScore = (question, selectedAnswer) => {
+const calculateQuestionScore = (question, selectedAnswer, scoringType = 'BINARY') => {
   if (!selectedAnswer) {
     return { score: 0, isCorrect: false };
   }
@@ -12,7 +13,19 @@ const calculateQuestionScore = (question, selectedAnswer) => {
   const normalizedAnswer = selectedAnswer.toUpperCase().trim();
   const normalizedAnswerLower = selectedAnswer.toLowerCase().trim();
 
-  // PPPK Evaluation Logic
+  // If the package has a weighted scoring type, evaluate based on option weights
+  if (scoringType === 'WEIGHTED_1_5' || scoringType === 'WEIGHTED_1_4') {
+    const weights = question.options_weights || question.option_weights;
+    let score = 0;
+    if (weights) {
+      const parsedWeights = typeof weights === 'string' ? JSON.parse(weights) : weights;
+      score = parsedWeights[normalizedAnswer] || parsedWeights[normalizedAnswerLower] || 0;
+    }
+    return { score, isCorrect: score > 0 };
+  }
+
+  // Otherwise, use BINARY / standard SKD logic (backward compatibility):
+  // PPPK Evaluation Logic (if program_type === 'PPPK')
   if (question.program_type === 'PPPK') {
     const weights = question.options_weights || question.option_weights;
     let score = 0;
@@ -31,12 +44,13 @@ const calculateQuestionScore = (question, selectedAnswer) => {
   if (categoryName === 'TKP') {
     // TKP has weighted scores for options (typically 1 to 5)
     let score = 0;
-    if (question.option_weights) {
-      const weights = typeof question.option_weights === 'string'
-        ? JSON.parse(question.option_weights)
-        : question.option_weights;
+    const weights = question.option_weights || question.options_weights;
+    if (weights) {
+      const parsedWeights = typeof weights === 'string'
+        ? JSON.parse(weights)
+        : weights;
 
-      score = weights[normalizedAnswerLower] || weights[normalizedAnswer] || 0;
+      score = parsedWeights[normalizedAnswerLower] || parsedWeights[normalizedAnswer] || 0;
     } else {
       // Fallback if no weights are defined: correct answer gets 5, others get 0
       score = normalizedAnswerLower === correctAnswer ? 5 : 0;
@@ -55,9 +69,10 @@ const calculateQuestionScore = (question, selectedAnswer) => {
  * Calculates total score from list of questions and selected answers
  * @param {Array} questions - Array of question objects with included category
  * @param {Array} submittedAnswers - Array of { question_id, selected_answer }
+ * @param {string} scoringType - The scoring schema selected for the package
  * @returns {Object} { totalScore, answerDetails }
  */
-const calculateTotalScore = (questions, submittedAnswers) => {
+const calculateTotalScore = (questions, submittedAnswers, scoringType = 'BINARY') => {
   let totalScore = 0;
   const answerDetails = [];
 
@@ -69,7 +84,7 @@ const calculateTotalScore = (questions, submittedAnswers) => {
 
   questions.forEach(q => {
     const selectedAnswer = submissionMap[q.id] || null;
-    const { score, isCorrect } = calculateQuestionScore(q, selectedAnswer);
+    const { score, isCorrect } = calculateQuestionScore(q, selectedAnswer, scoringType);
 
     totalScore += score;
     answerDetails.push({

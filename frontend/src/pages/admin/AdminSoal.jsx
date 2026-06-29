@@ -622,6 +622,7 @@ export default function AdminSoal() {
           onClose={resetForm}
           onSubmit={handleFormSubmit}
           categories={categories}
+          packages={packages}
           selectedQuestion={selectedQuestion}
         />
       </div>

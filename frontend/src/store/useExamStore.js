@@ -19,6 +19,7 @@ export const useExamStore = create(
       searchQuery: '',
       activeProgram: null,
       adminActiveProgram: '',
+      currentScoringType: 'BINARY',
 
       // Actions
       setActiveProgram: (program) => set({ activeProgram: program }),
@@ -172,7 +173,10 @@ export const useExamStore = create(
               price: pkg.price || 0,
               product_type: pkg.product_type || 'TRYOUT',
               wa_group_link: pkg.wa_group_link || null,
-              ebook_file_path: pkg.ebook_file_path || null
+              ebook_file_path: pkg.ebook_file_path || null,
+              benefits: pkg.benefits || null,
+              shield_award: pkg.shield_award || null,
+              scoring_type: pkg.scoring_type || 'BINARY'
             };
           });
           set({ packages: mapped });
@@ -422,7 +426,7 @@ export const useExamStore = create(
             };
           });
 
-          set({ questions: mapped });
+          set({ questions: mapped, currentScoringType: data.scoring_type || 'BINARY' });
           return mapped;
         } catch (error) {
           console.error('Failed to fetch questions:', error);
@@ -462,7 +466,8 @@ export const useExamStore = create(
       submitExamAttempt: async (attemptId, answersMap) => {
         try {
           const questions = get().questions;
-          const isPPPK = get().activeProgram === 'PPPK';
+          const scoringType = get().currentScoringType || 'BINARY';
+          const isPPPK = scoringType === 'WEIGHTED_1_5' || scoringType === 'WEIGHTED_1_4';
           
           let twk = 0; // Teknis for PPPK
           let tiu = 0; // Manajerial for PPPK
@@ -476,11 +481,9 @@ export const useExamStore = create(
             let isCorrect = false;
             let score = 0;
             
-            if (isPPPK) {
-              const weights = q.options_weights || q.option_weights || q.scores;
-              if (weights) {
-                score = weights[selectedUpper] || weights[selectedLower] || 0;
-              }
+            if (scoringType === 'WEIGHTED_1_5' || scoringType === 'WEIGHTED_1_4') {
+              const weights = q.options_weights || q.option_weights || q.scores || {};
+              score = weights[selectedUpper] || weights[selectedLower] || 0;
               isCorrect = score > 0;
               
               const subCat = q.sub_category ? q.sub_category.trim() : '';
@@ -490,23 +493,47 @@ export const useExamStore = create(
                 tiu += score;
               } else if (subCat === 'Sosial Kultural' || subCat === 'Wawancara') {
                 tkp += score;
+              } else {
+                const category = q.category ? q.category.toUpperCase() : 'TWK';
+                if (category === 'TWK') twk += score;
+                if (category === 'TIU') tiu += score;
+                if (category === 'TKP') tkp += score;
               }
             } else {
-              const category = q.category ? q.category.toUpperCase() : 'TWK';
-              if (category === 'TKP') {
+              // BINARY / Default SKD evaluation
+              const isPPPK = get().activeProgram === 'PPPK';
+              if (isPPPK) {
                 const weights = q.options_weights || q.option_weights || q.scores;
                 if (weights) {
                   score = weights[selectedUpper] || weights[selectedLower] || 0;
-                } else {
-                  score = selectedLower === (q.correctAnswer || q.correct_answer || '').toLowerCase() ? 5 : 0;
                 }
-                isCorrect = score === 5;
-                tkp += score;
+                isCorrect = score > 0;
+                
+                const subCat = q.sub_category ? q.sub_category.trim() : '';
+                if (subCat === 'Teknis') {
+                  twk += score;
+                } else if (subCat === 'Manajerial') {
+                  tiu += score;
+                } else if (subCat === 'Sosial Kultural' || subCat === 'Wawancara') {
+                  tkp += score;
+                }
               } else {
-                isCorrect = selectedLower === (q.correctAnswer || q.correct_answer || '').toLowerCase();
-                score = isCorrect ? 5 : 0;
-                if (category === 'TWK') twk += score;
-                if (category === 'TIU') tiu += score;
+                const category = q.category ? q.category.toUpperCase() : 'TWK';
+                if (category === 'TKP') {
+                  const weights = q.options_weights || q.option_weights || q.scores;
+                  if (weights) {
+                    score = weights[selectedUpper] || weights[selectedLower] || 0;
+                  } else {
+                    score = selectedLower === (q.correctAnswer || q.correct_answer || '').toLowerCase() ? 5 : 0;
+                  }
+                  isCorrect = score === 5;
+                  tkp += score;
+                } else {
+                  isCorrect = selectedLower === (q.correctAnswer || q.correct_answer || '').toLowerCase();
+                  score = isCorrect ? 5 : 0;
+                  if (category === 'TWK') twk += score;
+                  if (category === 'TIU') tiu += score;
+                }
               }
             }
             
@@ -688,6 +715,9 @@ export const useExamStore = create(
             body.append('product_type', pkgData.product_type || 'TRYOUT');
             if (pkgData.wa_group_link) body.append('wa_group_link', pkgData.wa_group_link);
             body.append('ebook_file', pkgData.ebookFile);
+            if (pkgData.benefits) body.append('benefits', JSON.stringify(pkgData.benefits));
+            if (pkgData.shield_award) body.append('shield_award', JSON.stringify(pkgData.shield_award));
+            body.append('scoring_type', pkgData.scoring_type || 'BINARY');
             
             headers['Content-Type'] = 'multipart/form-data';
           } else {
@@ -703,7 +733,10 @@ export const useExamStore = create(
               price: parseInt(pkgData.price) || 0,
               program_type: pkgData.program_type,
               product_type: pkgData.product_type || 'TRYOUT',
-              wa_group_link: pkgData.wa_group_link || null
+              wa_group_link: pkgData.wa_group_link || null,
+              benefits: pkgData.benefits || null,
+              shield_award: pkgData.shield_award || null,
+              scoring_type: pkgData.scoring_type || 'BINARY'
             };
           }
 
@@ -736,6 +769,9 @@ export const useExamStore = create(
             body.append('product_type', updatedPkg.product_type || 'TRYOUT');
             if (updatedPkg.wa_group_link) body.append('wa_group_link', updatedPkg.wa_group_link);
             body.append('ebook_file', updatedPkg.ebookFile);
+            if (updatedPkg.benefits) body.append('benefits', JSON.stringify(updatedPkg.benefits));
+            if (updatedPkg.shield_award) body.append('shield_award', JSON.stringify(updatedPkg.shield_award));
+            body.append('scoring_type', updatedPkg.scoring_type || 'BINARY');
             
             headers['Content-Type'] = 'multipart/form-data';
           } else {
@@ -751,7 +787,10 @@ export const useExamStore = create(
               price: parseInt(updatedPkg.price) || 0,
               program_type: updatedPkg.program_type,
               product_type: updatedPkg.product_type || 'TRYOUT',
-              wa_group_link: updatedPkg.wa_group_link || null
+              wa_group_link: updatedPkg.wa_group_link || null,
+              benefits: updatedPkg.benefits || null,
+              shield_award: updatedPkg.shield_award || null,
+              scoring_type: updatedPkg.scoring_type || 'BINARY'
             };
           }
 

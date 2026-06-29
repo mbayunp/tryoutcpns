@@ -161,12 +161,17 @@ export default function PackageDetail() {
     });
   };
 
-  const benefits = [
+  const benefits = pkg.benefits ? (typeof pkg.benefits === 'string' ? JSON.parse(pkg.benefits) : pkg.benefits) : [
     { title: 'Kurikulum SKD Terupdate', desc: 'Materi disusun sesuai kisi-kisi BKN 2026 terlengkap.' },
     { title: 'Video Pembahasan Modul', desc: 'Penjelasan langkah-demi-langkah penyelesaian soal rumit.' },
     { title: 'Simulasi Sistem CAT BKN', desc: 'Ujian dengan limit waktu dan layout persis CAT BKN.' },
     { title: 'Analisis Hasil Instan', desc: 'Ketahui nilai kelulusan ambang batas passing grade secara langsung.' },
   ];
+
+  const shieldAward = pkg.shield_award ? (typeof pkg.shield_award === 'string' ? JSON.parse(pkg.shield_award) : pkg.shield_award) : {
+    shield: 'Aman & Terpercaya',
+    award: 'Jaminan Lulus Ambang Batas'
+  };
 
   return (
     <>
@@ -277,11 +282,11 @@ export default function PackageDetail() {
               <div className="space-y-3 pt-4 border-t border-slate-100">
                 <div className="flex items-center gap-2 text-[11px] text-slate-450 font-bold">
                   <Shield className="h-4 w-4 text-emerald-500" />
-                  <span>Aman & Terpercaya</span>
+                  <span>{shieldAward.shield || 'Aman & Terpercaya'}</span>
                 </div>
                 <div className="flex items-center gap-2 text-[11px] text-slate-450 font-bold">
                   <Award className="h-4 w-4 text-emerald-500" />
-                  <span>Jaminan Lulus Ambang Batas</span>
+                  <span>{shieldAward.award || 'Jaminan Lulus Ambang Batas'}</span>
                 </div>
               </div>
             </div>

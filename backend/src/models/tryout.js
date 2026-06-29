@@ -69,6 +69,19 @@ const Tryout = sequelize.define('Tryout', {
     type: DataTypes.STRING,
     allowNull: true
   },
+  benefits: {
+    type: DataTypes.JSON,
+    allowNull: true,
+  },
+  shield_award: {
+    type: DataTypes.JSON,
+    allowNull: true,
+  },
+  scoring_type: {
+    type: DataTypes.ENUM('BINARY', 'WEIGHTED_1_5', 'WEIGHTED_1_4'),
+    allowNull: false,
+    defaultValue: 'BINARY',
+  },
 }, {
   tableName: 'tryouts',
 });
