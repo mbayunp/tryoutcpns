@@ -20,13 +20,21 @@ API.interceptors.request.use(
   }
 );
 
-// Response interceptor to handle 401 errors
+// Response interceptor to handle 401 errors (expired token only)
 API.interceptors.response.use(
   (response) => response,
   (error) => {
     if (error.response && error.response.status === 401) {
-      useExamStore.getState().logout();
-      window.location.href = '/login';
+      // Jangan redirect jika 401 berasal dari endpoint auth (login/register).
+      // Biarkan halaman Login menangani error-nya sendiri via catch block.
+      const requestUrl = error.config?.url || '';
+      const isAuthEndpoint = requestUrl.includes('/auth/login') || requestUrl.includes('/auth/register');
+
+      if (!isAuthEndpoint) {
+        // Hanya redirect untuk 401 dari endpoint terproteksi (token expired/invalid)
+        useExamStore.getState().logout();
+        window.location.href = '/login';
+      }
     }
     return Promise.reject(error);
   }

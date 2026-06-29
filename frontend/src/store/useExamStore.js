@@ -46,11 +46,7 @@ export const useExamStore = create(
           set({ user: userWithAvatar, token });
           return userWithAvatar;
         } catch (error) {
-          const message = error.response?.data?.message ||
-            error.response?.data?.error ||
-            error.message ||
-            'Login gagal. Silakan periksa kembali email dan password Anda.';
-          throw new Error(message);
+          throw error;
         }
       },
 

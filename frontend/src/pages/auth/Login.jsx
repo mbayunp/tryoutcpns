@@ -150,14 +150,16 @@ export default function Login() {
         navigate('/program-selection');
       }
     } catch (err) {
-      const errorMessage = err.response?.data?.message || err.message || 'Email atau password salah!';
+      const backendMessage = err.response?.data?.message || err.response?.data?.error || 'Email atau password salah!';
+
       Swal.fire({
         icon: 'error',
         title: 'Login Gagal',
-        text: errorMessage,
+        text: backendMessage,
         showConfirmButton: true,
         confirmButtonText: 'Tutup',
         confirmButtonColor: '#ef4444',
+        allowOutsideClick: false
       });
     } finally {
       setIsLoading(false);
