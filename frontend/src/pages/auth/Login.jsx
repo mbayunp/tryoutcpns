@@ -14,7 +14,8 @@ export default function Login() {
 
   const [email, setEmail] = useState('');
   const [password, setPassword] = useState('');
-  const [error, setError] = useState('');
+  const [error, setError] = useState(null);
+  const [isLoading, setIsLoading] = useState(false);
   const [showPassword, setShowPassword] = useState(false);
 
   /*
@@ -133,7 +134,8 @@ export default function Login() {
       setError('Harap isi email dan kata sandi Anda.');
       return;
     }
-    setError('');
+    setError(null);
+    setIsLoading(true);
     try {
       const loggedUser = await login(email, password);
       if (loggedUser.role === 'admin') {
@@ -142,7 +144,10 @@ export default function Login() {
         navigate('/program-selection');
       }
     } catch (err) {
-      setError(err.message || 'Login gagal. Email atau kata sandi tidak valid.');
+      const errorMessage = err.response?.data?.message || err.message || 'Login gagal. Silakan periksa kembali email dan password Anda.';
+      setError(errorMessage);
+    } finally {
+      setIsLoading(false);
     }
   };
 
@@ -198,8 +203,10 @@ export default function Login() {
 
           {/* Pesan Error */}
           {error && (
-            <div className="bg-red-50 ring-1 ring-red-200 text-red-600 p-4 rounded-xl text-xs font-bold flex items-center gap-2 animate-fadeIn">
-              <AlertCircle className="h-4 w-4 flex-shrink-0" />
+            <div className="mb-4 p-3 rounded-lg bg-red-500/10 border border-red-500/50 flex items-center gap-3 text-red-500 text-sm animate-fadeIn">
+              <svg className="w-5 h-5 shrink-0" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 8v4m0 4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z" />
+              </svg>
               <span>{error}</span>
             </div>
           )}
@@ -212,7 +219,7 @@ export default function Login() {
                 type="email"
                 id="email"
                 value={email}
-                onChange={(e) => { setEmail(e.target.value); setError(''); }}
+                onChange={(e) => { setEmail(e.target.value); setError(null); }}
                 placeholder="nama@email.com"
                 required
                 className="w-full h-12"
@@ -226,7 +233,7 @@ export default function Login() {
                   type={showPassword ? 'text' : 'password'}
                   id="password"
                   value={password}
-                  onChange={(e) => { setPassword(e.target.value); setError(''); }}
+                  onChange={(e) => { setPassword(e.target.value); setError(null); }}
                   placeholder="••••••••"
                   required
                   className="w-full h-12 pr-12"
@@ -255,8 +262,13 @@ export default function Login() {
               </button>
             </div>
 
-            <Button variant="primary" type="submit" className="w-full py-4 bg-blue-600 hover:bg-blue-700 text-white text-sm font-bold rounded-xl shadow-lg shadow-blue-600/20 transition-all duration-200 active:scale-[0.98] mt-2">
-              Masuk Ke Dashboard
+            <Button
+              variant="primary"
+              type="submit"
+              disabled={isLoading}
+              className="w-full py-4 bg-blue-600 hover:bg-blue-700 disabled:bg-blue-400 text-white text-sm font-bold rounded-xl shadow-lg shadow-blue-600/20 transition-all duration-200 active:scale-[0.98] mt-2"
+            >
+              {isLoading ? 'Memproses...' : 'Masuk Ke Dashboard'}
             </Button>
 
             {/* <div className="mt-6">
