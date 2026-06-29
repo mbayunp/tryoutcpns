@@ -706,7 +706,7 @@ export const useExamStore = create(
 
       createPackage: async (pkgData) => {
         try {
-          const status = pkgData.status === 'Aktif' ? 'active' : 'inactive';
+          const status = (pkgData.status === undefined || pkgData.status === 'Aktif') ? 'active' : 'inactive';
           let body;
           let headers = {};
 
@@ -763,7 +763,7 @@ export const useExamStore = create(
 
       updatePackage: async (updatedPkg) => {
         try {
-          const status = updatedPkg.status === 'Aktif' ? 'active' : 'inactive';
+          const status = (updatedPkg.status === undefined || updatedPkg.status === 'Aktif') ? 'active' : 'inactive';
           let body;
           let headers = {};
 

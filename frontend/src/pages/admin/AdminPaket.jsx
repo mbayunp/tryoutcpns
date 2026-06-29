@@ -45,8 +45,20 @@ export default function AdminPaket() {
   const [pkgShieldText, setPkgShieldText] = useState('Aman & Terpercaya');
   const [pkgAwardText, setPkgAwardText] = useState('Jaminan Lulus Ambang Batas');
 
+  const [isLoading, setIsLoading] = useState(false);
+
   useEffect(() => {
-    fetchPackages(adminActiveProgram);
+    const loadData = async () => {
+      setIsLoading(true);
+      try {
+        await fetchPackages(adminActiveProgram);
+      } catch (err) {
+        console.error(err);
+      } finally {
+        setIsLoading(false);
+      }
+    };
+    loadData();
   }, [fetchPackages, adminActiveProgram]);
 
   useEffect(() => {
@@ -684,15 +696,31 @@ export default function AdminPaket() {
                 </tr>
               </thead>
               <tbody className="divide-y divide-slate-100/80 text-sm">
-                {packages.map((pkg) => (
-                  <tr key={pkg.id} className="hover:bg-slate-50/50 transition-colors duration-150">
-                    <td className="px-5 py-3 text-center text-[10px] font-bold text-slate-400">{pkg.id}</td>
-                    <td className="px-5 py-3 font-bold text-slate-800">{pkg.title}</td>
-                    <td className="px-5 py-3">
-                      <p className="line-clamp-2 text-xs font-medium text-slate-500 leading-relaxed">{pkg.description}</p>
+                {isLoading ? (
+                  <tr>
+                    <td colSpan="7" className="px-5 py-12 text-center text-xs font-bold text-slate-400">
+                      <div className="flex flex-col items-center justify-center gap-3">
+                        <div className="h-6 w-6 rounded-full border-2 border-slate-200 border-t-blue-500 animate-spin" />
+                        <span>Memuat data paket...</span>
+                      </div>
                     </td>
-                    <td className="px-5 py-3 text-center font-semibold text-slate-700">{pkg.duration} Min</td>
-                    <td className="px-5 py-3 text-center font-bold text-slate-700">{formatRupiah(pkg.price)}</td>
+                  </tr>
+                ) : packages.length === 0 ? (
+                  <tr>
+                    <td colSpan="7" className="px-5 py-12 text-center text-xs font-bold text-slate-400">
+                      Belum ada paket terdaftar.
+                    </td>
+                  </tr>
+                ) :
+                  packages.map((pkg) => (
+                    <tr key={pkg.id} className="hover:bg-slate-50/50 transition-colors duration-150">
+                      <td className="px-5 py-3 text-center text-[10px] font-bold text-slate-400">{pkg.id}</td>
+                      <td className="px-5 py-3 font-bold text-slate-800">{pkg.title}</td>
+                      <td className="px-5 py-3">
+                        <p className="line-clamp-2 text-xs font-medium text-slate-500 leading-relaxed">{pkg.description}</p>
+                      </td>
+                      <td className="px-5 py-3 text-center font-semibold text-slate-700">{pkg.duration} Min</td>
+                      <td className="px-5 py-3 text-center font-bold text-slate-700">{formatRupiah(pkg.price)}</td>
                     <td className="px-5 py-3 text-center">
                       <Badge variant={pkg.status === 'Aktif' ? 'success' : 'neutral'}>
                         {pkg.status}

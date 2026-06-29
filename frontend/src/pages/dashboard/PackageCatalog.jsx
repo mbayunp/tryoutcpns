@@ -69,7 +69,7 @@ export default function PackageCatalog({ showOnlyPurchased = false }) {
   };
 
   useEffect(() => {
-    fetchPackages();
+    fetchPackages(activeProgram);
   }, [fetchPackages, activeProgram]);
 
   const handleStartExam = (pkg) => {

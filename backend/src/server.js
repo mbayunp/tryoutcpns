@@ -69,6 +69,13 @@ const startServer = async () => {
     }
 
     try {
+      await sequelize.query("CREATE INDEX `idx_tryouts_program_type` ON `tryouts` (`program_type`);");
+      console.log('Added index on tryouts.program_type.');
+    } catch (err) {
+      // Ignore
+    }
+
+    try {
       await sequelize.query("ALTER TABLE `tryouts` ADD COLUMN `product_type` ENUM('TRYOUT', 'KELAS', 'EBOOK', 'BUNDLE') NOT NULL DEFAULT 'TRYOUT';");
       console.log('Added product_type column to tryouts table.');
     } catch (err) {

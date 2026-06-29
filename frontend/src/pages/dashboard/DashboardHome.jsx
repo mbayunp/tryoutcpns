@@ -140,7 +140,7 @@ export default function DashboardHome() {
 
               return (
                 <div className="h-60 w-full animate-fadeIn">
-                  <ResponsiveContainer width="100%" height="100%">
+                  <ResponsiveContainer width="100%" height="100%" minWidth={1} minHeight={240}>
                     <AreaChart
                       data={chartData}
                       margin={{ top: 10, right: 10, left: -20, bottom: 0 }}
