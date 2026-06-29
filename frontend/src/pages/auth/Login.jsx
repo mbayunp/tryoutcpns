@@ -1,4 +1,5 @@
 import React, { useState } from 'react';
+import Swal from 'sweetalert2';
 import { useNavigate } from 'react-router-dom';
 import { useExamStore } from '../../store/useExamStore';
 import { Eye, EyeOff, ShieldCheck, BarChart3 } from 'lucide-react';
@@ -14,7 +15,6 @@ export default function Login() {
 
   const [email, setEmail] = useState('');
   const [password, setPassword] = useState('');
-  const [error, setError] = useState(null);
   const [isLoading, setIsLoading] = useState(false);
   const [showPassword, setShowPassword] = useState(false);
 
@@ -131,10 +131,14 @@ export default function Login() {
   const handleSubmit = async (e) => {
     e.preventDefault();
     if (!email || !password) {
-      setError('Harap isi email dan kata sandi Anda.');
+      Swal.fire({
+        icon: 'error',
+        title: 'Login Gagal',
+        text: 'Harap isi email dan kata sandi Anda.',
+        confirmButtonColor: '#ef4444',
+      });
       return;
     }
-    setError(null);
     setIsLoading(true);
     try {
       const loggedUser = await login(email, password);
@@ -144,8 +148,13 @@ export default function Login() {
         navigate('/program-selection');
       }
     } catch (err) {
-      const errorMessage = err.response?.data?.message || err.message || 'Login gagal. Silakan periksa kembali email dan password Anda.';
-      setError(errorMessage);
+      const errorMessage = err.response?.data?.message || err.message || 'Email atau password salah!';
+      Swal.fire({
+        icon: 'error',
+        title: 'Login Gagal',
+        text: errorMessage,
+        confirmButtonColor: '#ef4444',
+      });
     } finally {
       setIsLoading(false);
     }
@@ -201,16 +210,6 @@ export default function Login() {
           </div>
 
 
-          {/* Pesan Error */}
-          {error && (
-            <div className="mb-4 p-3 rounded-lg bg-red-500/10 border border-red-500/50 flex items-center gap-3 text-red-500 text-sm animate-fadeIn">
-              <svg className="w-5 h-5 shrink-0" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 8v4m0 4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z" />
-              </svg>
-              <span>{error}</span>
-            </div>
-          )}
-
           {/* Form Input */}
           <form className="space-y-5" onSubmit={handleSubmit}>
             <div className="space-y-1">
@@ -219,7 +218,7 @@ export default function Login() {
                 type="email"
                 id="email"
                 value={email}
-                onChange={(e) => { setEmail(e.target.value); setError(null); }}
+                onChange={(e) => setEmail(e.target.value)}
                 placeholder="nama@email.com"
                 required
                 className="w-full h-12"
@@ -233,7 +232,7 @@ export default function Login() {
                   type={showPassword ? 'text' : 'password'}
                   id="password"
                   value={password}
-                  onChange={(e) => { setPassword(e.target.value); setError(null); }}
+                  onChange={(e) => setPassword(e.target.value)}
                   placeholder="••••••••"
                   required
                   className="w-full h-12 pr-12"
