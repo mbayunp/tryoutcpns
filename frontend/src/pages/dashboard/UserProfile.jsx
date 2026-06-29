@@ -120,7 +120,7 @@ export default function UserProfile() {
   };
 
   return (
-    <div className="grid grid-cols-1 lg:grid-cols-3 gap-6 items-start animate-fadeIn max-w-6xl mx-auto pb-12">
+    <div className="grid grid-cols-1 lg:grid-cols-3 gap-6 items-start animate-fadeIn max-w-full mx-auto pb-12">
       {/* Left Avatar Card */}
       <Card className="p-6 border border-slate-200/60 shadow-premium bg-white flex flex-col items-center text-center space-y-4">
         <div className="relative">

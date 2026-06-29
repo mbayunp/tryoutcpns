@@ -163,40 +163,7 @@ export default function DashboardLayout() {
     }
   };
 
-  const handleAdminClick = () => {
-    setMobileOpen(false);
-    navigate('/admin/dashboard');
-  };
 
-  const handleSoalClick = () => {
-    setMobileOpen(false);
-    navigate('/admin/soal');
-  };
-
-  const handlePaketClick = () => {
-    setMobileOpen(false);
-    navigate('/admin/paket');
-  };
-
-  const handlePembayaranClick = () => {
-    setMobileOpen(false);
-    navigate('/admin/pembayaran');
-  };
-
-  const handleBannerClick = () => {
-    setMobileOpen(false);
-    navigate('/admin/banner');
-  };
-
-  const handleAnalyticsClick = () => {
-    setMobileOpen(false);
-    navigate('/admin/analytics');
-  };
-
-  const handleReferralClick = () => {
-    setMobileOpen(false);
-    navigate('/admin/referral');
-  };
 
   const handleLogoutClick = () => {
     Swal.fire({
@@ -236,6 +203,16 @@ export default function DashboardLayout() {
     { id: 'ranking', name: 'Ranking', icon: <Trophy className="h-[18px] w-[18px]" /> },
     { id: 'pembayaran', name: 'Konfirmasi Bayar', icon: <Receipt className="h-[18px] w-[18px]" /> },
     { id: 'profil', name: 'Profil', icon: <UserIcon className="h-[18px] w-[18px]" /> },
+  ];
+
+  const adminMenuItems = [
+    { id: 'dashboard', name: 'Dashboard Overview', path: '/admin/dashboard', icon: <LayoutDashboard className="h-[18px] w-[18px]" /> },
+    { id: 'paket', name: 'Kelola Paket', path: '/admin/paket', icon: <Package className="h-[18px] w-[18px]" /> },
+    { id: 'soal', name: 'Bank Soal', path: '/admin/soal', icon: <FileText className="h-[18px] w-[18px]" /> },
+    { id: 'pembayaran', name: 'Verifikasi Bayar', path: '/admin/pembayaran', icon: <Receipt className="h-[18px] w-[18px]" /> },
+    { id: 'banner', name: 'Kelola Banner', path: '/admin/banner', icon: <Megaphone className="h-[18px] w-[18px]" /> },
+    { id: 'referral', name: 'Kelola Referal', path: '/admin/referral', icon: <Ticket className="h-[18px] w-[18px]" /> },
+    { id: 'analytics', name: 'Keuangan & Analisis', path: '/admin/analytics', icon: <TrendingUp className="h-[18px] w-[18px]" /> },
   ];
 
   const renderSidebarContent = (isMobile = false) => {
@@ -404,90 +381,37 @@ export default function DashboardLayout() {
                 {!collapsed && (
                   <p className="text-[10px] font-bold text-slate-400 uppercase tracking-widest px-3 mb-2">Admin</p>
                 )}
-                <button
-                  onClick={handleAdminClick}
-                  className={`w-full flex items-center ${collapsed ? 'justify-center' : 'gap-2.5 px-3'} py-2.5 rounded-xl text-[13px] font-semibold transition-all duration-200 ${
-                    (location.pathname === '/admin' || location.pathname === '/admin/dashboard')
-                      ? 'bg-[#0B1C30] text-white shadow-premium'
-                      : 'text-slate-500 hover:bg-slate-50 hover:text-[#0B1C30]'
-                  }`}
-                  title={collapsed ? 'Dashboard Overview' : undefined}
-                >
-                  <div className="flex-shrink-0"><LayoutDashboard className="h-[18px] w-[18px]" /></div>
-                  {!collapsed && <span className="whitespace-nowrap">Dashboard Overview</span>}
-                </button>
-                <button
-                  onClick={handlePaketClick}
-                  className={`w-full flex items-center ${collapsed ? 'justify-center' : 'gap-2.5 px-3'} py-2.5 rounded-xl text-[13px] font-semibold transition-all duration-200 mt-1 ${
-                    (location.pathname === '/admin/paket' || location.pathname === '/admin/kelola-paket')
-                      ? 'bg-[#0B1C30] text-white shadow-premium'
-                      : 'text-slate-500 hover:bg-slate-50 hover:text-[#0B1C30]'
-                  }`}
-                  title={collapsed ? 'Kelola Paket' : undefined}
-                >
-                  <div className="flex-shrink-0"><Package className="h-[18px] w-[18px]" /></div>
-                  {!collapsed && <span className="whitespace-nowrap">Kelola Paket</span>}
-                </button>
-                <button
-                  onClick={handleSoalClick}
-                  className={`w-full flex items-center ${collapsed ? 'justify-center' : 'gap-2.5 px-3'} py-2.5 rounded-xl text-[13px] font-semibold transition-all duration-200 mt-1 ${
-                    location.pathname === '/admin/soal'
-                      ? 'bg-[#0B1C30] text-white shadow-premium'
-                      : 'text-slate-500 hover:bg-slate-50 hover:text-[#0B1C30]'
-                  }`}
-                  title={collapsed ? 'Bank Soal' : undefined}
-                >
-                  <div className="flex-shrink-0"><FileText className="h-[18px] w-[18px]" /></div>
-                  {!collapsed && <span className="whitespace-nowrap">Bank Soal</span>}
-                </button>
-                <button
-                  onClick={handlePembayaranClick}
-                  className={`w-full flex items-center ${collapsed ? 'justify-center' : 'gap-2.5 px-3'} py-2.5 rounded-xl text-[13px] font-semibold transition-all duration-200 mt-1 ${
-                    location.pathname === '/admin/pembayaran'
-                      ? 'bg-[#0B1C30] text-white shadow-premium'
-                      : 'text-slate-500 hover:bg-slate-50 hover:text-[#0B1C30]'
-                  }`}
-                  title={collapsed ? 'Verifikasi Bayar' : undefined}
-                >
-                  <div className="flex-shrink-0"><Receipt className="h-[18px] w-[18px]" /></div>
-                  {!collapsed && <span className="whitespace-nowrap">Verifikasi Bayar</span>}
-                </button>
-                <button
-                  onClick={handleBannerClick}
-                  className={`w-full flex items-center ${collapsed ? 'justify-center' : 'gap-2.5 px-3'} py-2.5 rounded-xl text-[13px] font-semibold transition-all duration-200 mt-1 ${
-                    location.pathname === '/admin/banner'
-                      ? 'bg-[#0B1C30] text-white shadow-premium'
-                      : 'text-slate-500 hover:bg-slate-50 hover:text-[#0B1C30]'
-                  }`}
-                  title={collapsed ? 'Kelola Banner' : undefined}
-                >
-                  <div className="flex-shrink-0"><Megaphone className="h-[18px] w-[18px]" /></div>
-                  {!collapsed && <span className="whitespace-nowrap">Kelola Banner</span>}
-                </button>
-                <button
-                  onClick={handleReferralClick}
-                  className={`w-full flex items-center ${collapsed ? 'justify-center' : 'gap-2.5 px-3'} py-2.5 rounded-xl text-[13px] font-semibold transition-all duration-200 mt-1 ${
-                    (location.pathname === '/admin/referral' || location.pathname === '/admin/referal')
-                      ? 'bg-[#0B1C30] text-white shadow-premium'
-                      : 'text-slate-500 hover:bg-slate-50 hover:text-[#0B1C30]'
-                  }`}
-                  title={collapsed ? 'Kelola Referal' : undefined}
-                >
-                  <div className="flex-shrink-0"><Ticket className="h-[18px] w-[18px]" /></div>
-                  {!collapsed && <span className="whitespace-nowrap">Kelola Referal</span>}
-                </button>
-                <button
-                  onClick={handleAnalyticsClick}
-                  className={`w-full flex items-center ${collapsed ? 'justify-center' : 'gap-2.5 px-3'} py-2.5 rounded-xl text-[13px] font-semibold transition-all duration-200 mt-1 ${
-                    location.pathname === '/admin/analytics'
-                      ? 'bg-[#0B1C30] text-white shadow-premium'
-                      : 'text-slate-500 hover:bg-slate-50 hover:text-[#0B1C30]'
-                  }`}
-                  title={collapsed ? 'Keuangan & Analisis' : undefined}
-                >
-                  <div className="flex-shrink-0"><TrendingUp className="h-[18px] w-[18px]" /></div>
-                  {!collapsed && <span className="whitespace-nowrap">Keuangan & Analisis</span>}
-                </button>
+                {adminMenuItems.map((item) => {
+                  let isAct = false;
+                  if (item.id === 'dashboard') {
+                    isAct = location.pathname === '/admin' || location.pathname === '/admin/dashboard';
+                  } else if (item.id === 'paket') {
+                    isAct = location.pathname === '/admin/paket' || location.pathname === '/admin/kelola-paket';
+                  } else if (item.id === 'referral') {
+                    isAct = location.pathname === '/admin/referral' || location.pathname === '/admin/referal';
+                  } else {
+                    isAct = location.pathname === item.path;
+                  }
+
+                  return (
+                    <button
+                      key={item.id}
+                      onClick={() => {
+                        setMobileOpen(false);
+                        navigate(item.path);
+                      }}
+                      className={`w-full flex items-center ${collapsed ? 'justify-center' : 'gap-2.5 px-3'} py-2.5 rounded-xl text-[13px] font-semibold transition-all duration-200 ${
+                        isAct
+                          ? 'bg-[#0B1C30] text-white shadow-premium'
+                          : 'text-slate-500 hover:bg-slate-50 hover:text-[#0B1C30]'
+                      }`}
+                      title={collapsed ? item.name : undefined}
+                    >
+                      <div className="flex-shrink-0">{item.icon}</div>
+                      {!collapsed && <span className="whitespace-nowrap">{item.name}</span>}
+                    </button>
+                  );
+                })}
               </>
             )}
           </nav>

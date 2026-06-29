@@ -127,7 +127,7 @@ export default function Pembayaran() {
   return (
     <>
       <SEO title="Konfirmasi Pembayaran" />
-      <div className="max-w-4xl mx-auto space-y-6 pb-12 font-body-md text-on-surface animate-fadeIn">
+      <div className="max-w-full mx-auto space-y-6 pb-12 font-body-md text-on-surface animate-fadeIn">
         {/* Header & Back Action */}
         <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-4">
           <div>

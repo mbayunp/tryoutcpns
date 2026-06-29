@@ -359,7 +359,7 @@ export default function AdminPaket() {
   const textareaClass = "w-full px-3.5 py-2.5 rounded-xl bg-slate-50 ring-1 ring-slate-200/60 text-sm font-medium text-slate-800 placeholder:text-slate-300 outline-none focus:ring-2 focus:ring-blue-500 focus:bg-white transition-all duration-200";
 
   return (
-    <div className="max-w-7xl mx-auto space-y-6 pb-12 font-sans animate-fadeIn">
+    <div className="max-w-full mx-auto space-y-6 pb-12 font-sans animate-fadeIn">
       {/* Header Title */}
       <div className="space-y-1">
         <h2 className="text-2xl font-extrabold tracking-tight text-slate-900">Manajemen Paket & Kategori</h2>

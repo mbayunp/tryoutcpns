@@ -176,7 +176,7 @@ export default function PackageDetail() {
   return (
     <>
       <SEO title={pkg.title} />
-      <div className="max-w-6xl mx-auto space-y-6 pb-12 font-body-md text-on-surface animate-fadeIn">
+      <div className="max-w-full mx-auto space-y-6 pb-12 font-body-md text-on-surface animate-fadeIn">
         {/* Back Button */}
         <button
           onClick={() => navigate('/dashboard')}

@@ -193,7 +193,7 @@ export default function AdminReferral() {
   });
 
   return (
-    <div className="max-w-7xl mx-auto space-y-6 pb-12 font-sans animate-fadeIn">
+    <div className="max-w-full mx-auto space-y-6 pb-12 font-sans animate-fadeIn">
       {/* Header Info */}
       <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-4">
         <div>

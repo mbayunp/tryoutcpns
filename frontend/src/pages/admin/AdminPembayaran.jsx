@@ -177,7 +177,7 @@ export default function AdminPembayaran() {
     return (
         <>
             <SEO title="Verifikasi Pembayaran" />
-            <div className="max-w-7xl mx-auto space-y-6 pb-12 font-sans">
+            <div className="max-w-full mx-auto space-y-6 pb-12 font-sans">
                 {/* Header Title */}
                 <div className="space-y-4">
                     <div>

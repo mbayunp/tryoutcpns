@@ -394,7 +394,7 @@ export default function PackageCatalog({ showOnlyPurchased = false }) {
   return (
     <>
       <SEO title={showOnlyPurchased ? 'Paket Saya' : 'Katalog Paket'} />
-      <div className="max-w-6xl mx-auto space-y-6 pb-12 animate-fadeIn font-body-md text-on-surface">
+      <div className="max-w-full mx-auto space-y-6 pb-12 animate-fadeIn font-body-md text-on-surface">
         {/* Search Bar Input */}
         <div className="relative max-w-md">
           <div className="absolute inset-y-0 left-0 pl-3.5 flex items-center pointer-events-none text-slate-400">

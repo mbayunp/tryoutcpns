@@ -125,7 +125,7 @@ export default function DashboardAdmin() {
   ];
 
   return (
-    <div className="max-w-7xl mx-auto space-y-8 pb-12 font-sans animate-fadeIn">
+    <div className="max-w-full mx-auto space-y-8 pb-12 font-sans animate-fadeIn">
       {/* Header Title */}
       <div className="space-y-1">
         <h2 className="text-2xl font-extrabold tracking-tight text-slate-900">Dashboard Ringkasan Admin</h2>

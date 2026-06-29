@@ -139,7 +139,7 @@ export default function Analytics() {
     <>
       <SEO title="Keuangan & Analisis Admin" />
       
-      <div className="space-y-8 pb-12 font-body-md text-on-surface animate-fadeIn max-w-7xl mx-auto">
+      <div className="space-y-8 pb-12 font-body-md text-on-surface animate-fadeIn max-w-full mx-auto">
         {/* Title */}
         <div>
           <h1 className="text-2xl font-extrabold text-[#0B1C30] tracking-tight">Keuangan & Analisis</h1>

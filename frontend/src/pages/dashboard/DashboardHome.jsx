@@ -36,7 +36,7 @@ export default function DashboardHome() {
   return (
     <>
       <SEO title="Ruang Belajar" />
-      <div className="max-w-6xl mx-auto space-y-gutter pb-12 font-body-md text-on-surface animate-fadeIn">
+      <div className="max-w-full mx-auto space-y-gutter pb-12 font-body-md text-on-surface animate-fadeIn">
         
         {/* Welcome Banner */}
         <section className="relative overflow-hidden rounded-2xl bg-gradient-to-r from-[#0B1C30] via-[#102A43] to-[#1E3E66] p-8 md:p-12 text-white mb-gutter shadow-premium transition-all duration-300">
