@@ -160,22 +160,37 @@ export const useExamStore = create(
           const res = await API.get('/tryouts', { params });
           const data = res.data.data;
           const mapped = data.map((pkg) => {
-            const isPurchased = (get().transactions || []).some(
+            const hasSuccessTrx = (get().transactions || []).some(
               (t) => t.package === pkg.title && t.status === 'success' && t.email === get().user?.email
             );
+            const hasPendingTrx = (get().transactions || []).some(
+              (t) => t.package === pkg.title && t.status === 'pending' && t.email === get().user?.email
+            );
+
+            const isPurchased = hasSuccessTrx || pkg.price === 0;
+
+            let status = 'Terkunci';
+            if (isPurchased) {
+              status = 'Aktif';
+            } else if (hasPendingTrx) {
+              status = 'Terkunci';
+            }
+
             return {
               id: pkg.id,
               title: pkg.title,
               description: pkg.description || 'Simulasi lengkap TWK, TIU, dan TKP sesuai standar CAT BKN terbaru. Dilengkapi pembahasan lengkap.',
               duration: pkg.duration,
               totalQuestions: pkg.total_questions,
-              status: (pkg.status === 'active' || isPurchased) ? 'Aktif' : 'Terkunci',
+              status,
+              isPurchased,
               attempts: 0,
               category: pkg.category || 'Tryout',
               imageUrl: pkg.image_url,
               originalPrice: pkg.original_price || 0,
               discountPercentage: pkg.discount_percentage || 0,
               price: pkg.price || 0,
+              program_type: pkg.program_type || 'SKD',
               product_type: pkg.product_type || 'TRYOUT',
               wa_group_link: pkg.wa_group_link || null,
               ebook_file_path: pkg.ebook_file_path || null,
@@ -572,6 +587,7 @@ export const useExamStore = create(
           };
 
           const res = await API.post('/attempts', payload);
+          await get().fetchHistory();
           return res.data.data;
         } catch (error) {
           console.error('Failed to submit exam attempt:', error);
@@ -728,7 +744,10 @@ export const useExamStore = create(
             body.append('price', parseInt(pkgData.price) || 0);
             body.append('program_type', pkgData.program_type);
             body.append('product_type', pkgData.product_type || 'TRYOUT');
-            if (pkgData.wa_group_link) body.append('wa_group_link', pkgData.wa_group_link);
+            if (pkgData.wa_group_link) {
+              body.append('wa_group_link', pkgData.wa_group_link);
+              body.append('link_akses', pkgData.wa_group_link);
+            }
             body.append('ebook_file', pkgData.ebookFile);
             if (pkgData.benefits) body.append('benefits', JSON.stringify(pkgData.benefits));
             if (pkgData.shield_award) body.append('shield_award', JSON.stringify(pkgData.shield_award));
@@ -749,6 +768,7 @@ export const useExamStore = create(
               program_type: pkgData.program_type,
               product_type: pkgData.product_type || 'TRYOUT',
               wa_group_link: pkgData.wa_group_link || null,
+              link_akses: pkgData.wa_group_link || null,
               benefits: pkgData.benefits || null,
               shield_award: pkgData.shield_award || null,
               scoring_type: pkgData.scoring_type || 'BINARY'
@@ -756,7 +776,7 @@ export const useExamStore = create(
           }
 
           await API.post('/tryouts', body, { headers });
-          await get().fetchPackages();
+          await get().fetchPackages(get().adminActiveProgram || null);
         } catch (error) {
           console.error('Failed to create package:', error);
           if (error.response?.data) {
@@ -785,7 +805,10 @@ export const useExamStore = create(
             body.append('price', parseInt(updatedPkg.price) || 0);
             body.append('program_type', updatedPkg.program_type);
             body.append('product_type', updatedPkg.product_type || 'TRYOUT');
-            if (updatedPkg.wa_group_link) body.append('wa_group_link', updatedPkg.wa_group_link);
+            if (updatedPkg.wa_group_link) {
+              body.append('wa_group_link', updatedPkg.wa_group_link);
+              body.append('link_akses', updatedPkg.wa_group_link);
+            }
             body.append('ebook_file', updatedPkg.ebookFile);
             if (updatedPkg.benefits) body.append('benefits', JSON.stringify(updatedPkg.benefits));
             if (updatedPkg.shield_award) body.append('shield_award', JSON.stringify(updatedPkg.shield_award));
@@ -806,6 +829,7 @@ export const useExamStore = create(
               program_type: updatedPkg.program_type,
               product_type: updatedPkg.product_type || 'TRYOUT',
               wa_group_link: updatedPkg.wa_group_link || null,
+              link_akses: updatedPkg.wa_group_link || null,
               benefits: updatedPkg.benefits || null,
               shield_award: updatedPkg.shield_award || null,
               scoring_type: updatedPkg.scoring_type || 'BINARY'
@@ -813,7 +837,7 @@ export const useExamStore = create(
           }
 
           await API.put(`/tryouts/${updatedPkg.id}`, body, { headers });
-          await get().fetchPackages();
+          await get().fetchPackages(get().adminActiveProgram || null);
         } catch (error) {
           console.error('Failed to update package:', error);
           if (error.response?.data) {
@@ -860,6 +884,7 @@ export const useExamStore = create(
             proof_image: proofImage || null,
             referral_code: referralCode || null
           });
+          await get().fetchTransactions();
           await get().fetchPackages();
           return res.data.data;
         } catch (error) {

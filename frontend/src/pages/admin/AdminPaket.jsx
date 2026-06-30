@@ -1,10 +1,11 @@
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, useMemo } from 'react';
 import { useExamStore } from '../../store/useExamStore';
 import Swal from 'sweetalert2';
-import { Plus, X, FileText, Edit, Trash } from 'lucide-react';
+import { Plus, X, FileText, Edit, Trash, Filter } from 'lucide-react';
 import Card from '../../components/common/Card';
 import Button from '../../components/common/Button';
 import Badge from '../../components/common/Badge';
+import PackageForm from '../../components/admin/PackageForm';
 
 export default function AdminPaket() {
   const {
@@ -16,42 +17,34 @@ export default function AdminPaket() {
     questions,
     assignQuestionsToPackage,
     getQuestionsForPackage,
+    transactions,
+    fetchTransactions,
     adminActiveProgram
   } = useExamStore();
 
-  const [pkgProgramType, setPkgProgramType] = useState('SKD');
-
-  // CRUD state for Packages
   const [isEditingPkg, setIsEditingPkg] = useState(false);
   const [editingPkgId, setEditingPkgId] = useState(null);
-  const [pkgTitle, setPkgTitle] = useState('');
-  const [pkgDescription, setPkgDescription] = useState('');
-  const [pkgDuration, setPkgDuration] = useState(100);
-  const [pkgPrice, setPkgPrice] = useState(0);
-  const [pkgOriginalPrice, setPkgOriginalPrice] = useState(0);
-  const [pkgDiscountPercentage, setPkgDiscountPercentage] = useState(0);
-  const [pkgStatus, setPkgStatus] = useState('Aktif');
-  const [pkgCategory, setPkgCategory] = useState('Tryout');
-  const [pkgImageUrl, setPkgImageUrl] = useState('');
-  const [pkgProductType, setPkgProductType] = useState('TRYOUT');
-  const [pkgWaGroupLink, setPkgWaGroupLink] = useState('');
-  const [pkgEbookFile, setPkgEbookFile] = useState(null);
-  const [pkgBenefits, setPkgBenefits] = useState([
-    { title: 'Kurikulum SKD Terupdate', desc: 'Materi disusun sesuai kisi-kisi BKN 2026 terlengkap.' },
-    { title: 'Video Pembahasan Modul', desc: 'Penjelasan langkah-demi-langkah penyelesaian soal rumit.' },
-    { title: 'Simulasi Sistem CAT BKN', desc: 'Ujian dengan limit waktu dan layout persis CAT BKN.' },
-    { title: 'Analisis Hasil Instan', desc: 'Ketahui nilai kelulusan ambang batas passing grade secara langsung.' },
-  ]);
-  const [pkgShieldText, setPkgShieldText] = useState('Aman & Terpercaya');
-  const [pkgAwardText, setPkgAwardText] = useState('Jaminan Lulus Ambang Batas');
-
+  const [selectedPkgForEdit, setSelectedPkgForEdit] = useState(null);
   const [isLoading, setIsLoading] = useState(false);
+  const [showFormModal, setShowFormModal] = useState(false);
+
+  // Filter States
+  const [filterSort, setFilterSort] = useState('newest'); // 'newest', 'oldest'
+  const [filterProgram, setFilterProgram] = useState('ALL'); // 'ALL', 'SKD', 'PPPK', 'PPG'
+  const [filterProductType, setFilterProductType] = useState('ALL'); // 'ALL', 'TRYOUT', 'KELAS', 'EBOOK', 'BUNDLE'
+  const [filterPopularity, setFilterPopularity] = useState('ALL'); // 'ALL', 'POPULAR'
+
+  // Modal for question assignment mapping
+  const [showQuestionModal, setShowQuestionModal] = useState(false);
+  const [selectedPkg, setSelectedPkg] = useState(null);
+  const [selectedQuestionIds, setSelectedQuestionIds] = useState([]);
 
   useEffect(() => {
     const loadData = async () => {
       setIsLoading(true);
       try {
         await fetchPackages(adminActiveProgram);
+        await fetchTransactions(adminActiveProgram);
       } catch (err) {
         console.error(err);
       } finally {
@@ -59,178 +52,31 @@ export default function AdminPaket() {
       }
     };
     loadData();
-  }, [fetchPackages, adminActiveProgram]);
-
-  useEffect(() => {
-    if (!isEditingPkg) {
-      setPkgProgramType(adminActiveProgram || '');
-    }
-  }, [adminActiveProgram, isEditingPkg]);
-
-  useEffect(() => {
-    if (pkgProgramType === 'PPPK') {
-      setPkgDuration(130);
-    }
-  }, [pkgProgramType]);
-
-  // Modal for question assignment mapping
-  const [showQuestionModal, setShowQuestionModal] = useState(false);
-  const [selectedPkg, setSelectedPkg] = useState(null);
-  const [selectedQuestionIds, setSelectedQuestionIds] = useState([]);
-
-  // Calculate dynamic price based on Discount stacking
-  useEffect(() => {
-    const original = parseInt(pkgOriginalPrice) || 0;
-    const discount = parseInt(pkgDiscountPercentage) || 0;
-    if (original > 0) {
-      const finalPrice = Math.round(original - (original * discount) / 100);
-      setPkgPrice(finalPrice);
-    } else {
-      setPkgPrice(0);
-    }
-  }, [pkgOriginalPrice, pkgDiscountPercentage]);
+  }, [fetchPackages, fetchTransactions, adminActiveProgram]);
 
   const resetPkgForm = () => {
     setIsEditingPkg(false);
     setEditingPkgId(null);
-    setPkgTitle('');
-    setPkgDescription('');
-    setPkgDuration(100);
-    setPkgPrice(0);
-    setPkgOriginalPrice(0);
-    setPkgDiscountPercentage(0);
-    setPkgStatus('Aktif');
-    setPkgCategory('Tryout');
-    setPkgImageUrl('');
-    setPkgProgramType(adminActiveProgram || '');
-    setPkgProductType('TRYOUT');
-    setPkgWaGroupLink('');
-    setPkgEbookFile(null);
-    setPkgBenefits([
-      { title: 'Kurikulum SKD Terupdate', desc: 'Materi disusun sesuai kisi-kisi BKN 2026 terlengkap.' },
-      { title: 'Video Pembahasan Modul', desc: 'Penjelasan langkah-demi-langkah penyelesaian soal rumit.' },
-      { title: 'Simulasi Sistem CAT BKN', desc: 'Ujian dengan limit waktu dan layout persis CAT BKN.' },
-      { title: 'Analisis Hasil Instan', desc: 'Ketahui nilai kelulusan ambang batas passing grade secara langsung.' },
-    ]);
-    setPkgShieldText('Aman & Terpercaya');
-    setPkgAwardText('Jaminan Lulus Ambang Batas');
+    setSelectedPkgForEdit(null);
+    setShowFormModal(false);
   };
 
   const handleEditPkgClick = (pkg) => {
     setIsEditingPkg(true);
     setEditingPkgId(pkg.id);
-    setPkgTitle(pkg.title);
-    setPkgDescription(pkg.description);
-    setPkgDuration(pkg.duration);
-    setPkgPrice(pkg.price || 0);
-    setPkgOriginalPrice(pkg.originalPrice || 0);
-    setPkgDiscountPercentage(pkg.discountPercentage || 0);
-    setPkgStatus(pkg.status);
-    setPkgCategory(pkg.category || 'Tryout');
-    setPkgImageUrl(pkg.imageUrl || '');
-    setPkgProgramType(pkg.program_type || 'SKD');
-    setPkgProductType(pkg.product_type || 'TRYOUT');
-    setPkgWaGroupLink(pkg.wa_group_link || '');
-    setPkgEbookFile(null);
-    
-    const parsedBenefits = pkg.benefits ? (typeof pkg.benefits === 'string' ? JSON.parse(pkg.benefits) : pkg.benefits) : [
-      { title: 'Kurikulum SKD Terupdate', desc: 'Materi disusun sesuai kisi-kisi BKN 2026 terlengkap.' },
-      { title: 'Video Pembahasan Modul', desc: 'Penjelasan langkah-demi-langkah penyelesaian soal rumit.' },
-      { title: 'Simulasi Sistem CAT BKN', desc: 'Ujian dengan limit waktu dan layout persis CAT BKN.' },
-      { title: 'Analisis Hasil Instan', desc: 'Ketahui nilai kelulusan ambang batas passing grade secara langsung.' },
-    ];
-    setPkgBenefits(parsedBenefits);
-
-    const parsedShieldAward = pkg.shield_award ? (typeof pkg.shield_award === 'string' ? JSON.parse(pkg.shield_award) : pkg.shield_award) : {
-      shield: 'Aman & Terpercaya',
-      award: 'Jaminan Lulus Ambang Batas'
-    };
-    setPkgShieldText(parsedShieldAward.shield || 'Aman & Terpercaya');
-    setPkgAwardText(parsedShieldAward.award || 'Jaminan Lulus Ambang Batas');
+    setSelectedPkgForEdit(pkg);
+    setShowFormModal(true);
   };
 
-  const handlePkgImageChange = (e) => {
-    const file = e.target.files[0];
-    if (file) {
-      const reader = new FileReader();
-      reader.onloadend = () => {
-        setPkgImageUrl(reader.result);
-      };
-      reader.readAsDataURL(file);
-    }
-  };
-
-  const handlePkgSubmit = async (e) => {
-    e.preventDefault();
-    if (!pkgTitle || !pkgDescription) {
-      Swal.fire({
-        title: 'Peringatan',
-        text: 'Harap isi judul dan deskripsi paket!',
-        icon: 'warning',
-        confirmButtonText: 'OK',
-        confirmButtonColor: '#0B1C30'
-      });
-      return;
-    }
-
-    if (pkgProductType === 'TRYOUT' && !pkgDuration) {
-      Swal.fire({
-        title: 'Peringatan',
-        text: 'Durasi wajib diisi untuk tipe Tryout!',
-        icon: 'warning',
-        confirmButtonText: 'OK',
-        confirmButtonColor: '#0B1C30'
-      });
-      return;
-    }
-
-    if (pkgProductType === 'KELAS' && !pkgWaGroupLink) {
-      Swal.fire({
-        title: 'Peringatan',
-        text: 'Link grup WhatsApp wajib diisi untuk Kelas Online!',
-        icon: 'warning',
-        confirmButtonText: 'OK',
-        confirmButtonColor: '#0B1C30'
-      });
-      return;
-    }
-
-    if (pkgProductType === 'EBOOK' && !isEditingPkg && !pkgEbookFile) {
-      Swal.fire({
-        title: 'Peringatan',
-        text: 'Harap unggah berkas e-book (.pdf) terlebih dahulu!',
-        icon: 'warning',
-        confirmButtonText: 'OK',
-        confirmButtonColor: '#0B1C30'
-      });
-      return;
-    }
-
-    const pkgData = {
-      id: editingPkgId,
-      title: pkgTitle,
-      description: pkgDescription,
-      duration: pkgProductType === 'TRYOUT' ? parseInt(pkgDuration, 10) : 0,
-      status: pkgStatus,
-      category: pkgCategory,
-      imageUrl: pkgImageUrl,
-      originalPrice: parseInt(pkgOriginalPrice, 10) || 0,
-      discountPercentage: parseInt(pkgDiscountPercentage, 10) || 0,
-      price: parseInt(pkgPrice, 10) || 0,
-      program_type: pkgProgramType,
-      product_type: pkgProductType,
-      wa_group_link: pkgProductType === 'KELAS' ? pkgWaGroupLink : null,
-      ebookFile: pkgProductType === 'EBOOK' ? pkgEbookFile : null,
-      benefits: pkgBenefits,
-      shield_award: {
-        shield: pkgShieldText,
-        award: pkgAwardText
-      }
+  const handlePkgSubmit = async (pkgData) => {
+    const formattedData = {
+      ...pkgData,
+      id: editingPkgId
     };
 
     try {
       if (isEditingPkg) {
-        await updatePackage(pkgData);
+        await updatePackage(formattedData);
         Swal.fire({
           title: 'Berhasil!',
           text: 'Paket tryout berhasil diperbarui!',
@@ -239,7 +85,7 @@ export default function AdminPaket() {
           showConfirmButton: false
         });
       } else {
-        await createPackage(pkgData);
+        await createPackage(formattedData);
         Swal.fire({
           title: 'Berhasil!',
           text: 'Paket tryout baru berhasil ditambahkan!',
@@ -355,378 +201,203 @@ export default function AdminPaket() {
     return 'success';
   };
 
-  const selectClass = "w-full px-3.5 py-2.5 rounded-xl bg-slate-50 ring-1 ring-slate-200/60 text-sm font-medium text-slate-800 outline-none focus:ring-2 focus:ring-blue-500 focus:bg-white transition-all duration-200";
-  const textareaClass = "w-full px-3.5 py-2.5 rounded-xl bg-slate-50 ring-1 ring-slate-200/60 text-sm font-medium text-slate-800 placeholder:text-slate-300 outline-none focus:ring-2 focus:ring-blue-500 focus:bg-white transition-all duration-200";
+  // In-Memory Filter logic
+  const filteredPackages = useMemo(() => {
+    let result = [...(packages || [])];
+
+    // Filter by Program Type / Category
+    if (filterProgram !== 'ALL') {
+      result = result.filter(p => p.program_type === filterProgram);
+    } else if (adminActiveProgram) {
+      result = result.filter(p => p.program_type === adminActiveProgram);
+    }
+
+    // Filter by Product Type
+    if (filterProductType !== 'ALL') {
+      result = result.filter(p => p.product_type === filterProductType);
+    }
+
+    // Calculate transaction counts for popularity
+    const trxCounts = (transactions || []).reduce((acc, t) => {
+      if (t && t.tryout_id) {
+        acc[t.tryout_id] = (acc[t.tryout_id] || 0) + 1;
+      }
+      return acc;
+    }, {});
+
+    // Popularity filter/sorting
+    if (filterPopularity === 'POPULAR') {
+      result.sort((a, b) => (trxCounts[b.id] || 0) - (trxCounts[a.id] || 0));
+    } else {
+      // Sort: Terbaru/Terlama
+      if (filterSort === 'newest') {
+        result.sort((a, b) => b.id - a.id);
+      } else {
+        result.sort((a, b) => a.id - b.id);
+      }
+    }
+
+    return result;
+  }, [packages, filterProgram, adminActiveProgram, filterProductType, filterPopularity, filterSort, transactions]);
 
   return (
     <div className="max-w-full mx-auto space-y-6 pb-12 font-sans animate-fadeIn">
       {/* Header Title */}
-      <div className="space-y-1">
-        <h2 className="text-2xl font-extrabold tracking-tight text-slate-900">Manajemen Paket & Kategori</h2>
-        <p className="text-sm text-slate-500">Buat, perbarui, dan atur paket tryout beserta harga produk.</p>
+      <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-4">
+        <div className="space-y-1">
+          <h2 className="text-2xl font-extrabold tracking-tight text-slate-900">Manajemen Paket & Kategori</h2>
+          <p className="text-sm text-slate-500">Buat, perbarui, dan atur paket tryout beserta harga produk secara dinamis.</p>
+        </div>
+        <Button
+          variant="primary"
+          onClick={() => {
+            resetPkgForm();
+            setShowFormModal(true);
+          }}
+          className="bg-[#0B1C30] hover:bg-[#102A43] text-white flex items-center gap-1.5 px-4 py-2.5 rounded-xl font-bold text-xs shadow-md border-0 cursor-pointer"
+        >
+          <Plus className="h-4 w-4" />
+          <span>Tambah Paket Baru</span>
+        </Button>
       </div>
 
-      <div className="grid grid-cols-1 lg:grid-cols-12 gap-5 items-start">
-        {/* Form Paket */}
-        <Card className="lg:col-span-4 p-5 space-y-5 bg-white border border-slate-200/60 shadow-premium">
-          <div className="flex items-center justify-between">
-            <h3 className="text-sm font-bold text-slate-800">
-              {isEditingPkg ? 'Edit Paket Tryout' : 'Paket Tryout Baru'}
-            </h3>
-            {isEditingPkg && (
-              <button onClick={resetPkgForm} className="p-1 rounded-lg hover:bg-slate-100 text-slate-400 transition-colors">
-                <X className="h-4 w-4" />
-              </button>
-            )}
+      {/* Filter Bar Card */}
+      <Card className="p-4 bg-white border border-slate-200/60 shadow-premium flex flex-wrap gap-4 items-center justify-between">
+        <div className="flex items-center gap-2 text-slate-700 font-bold text-xs">
+          <Filter className="h-4 w-4 text-blue-600" />
+          <span>Filter & Pengurutan</span>
+        </div>
+        
+        <div className="grid grid-cols-1 sm:grid-cols-4 gap-3 w-full sm:w-auto sm:flex-grow max-w-4xl">
+          <div>
+            <select
+              value={filterSort}
+              onChange={(e) => setFilterSort(e.target.value)}
+              className="w-full px-3 py-2 bg-slate-50 border border-slate-200 rounded-xl text-xs font-semibold text-slate-700 outline-none focus:ring-1 focus:ring-blue-500"
+            >
+              <option value="newest">Terbaru (Paling Baru)</option>
+              <option value="oldest">Terlama (Paling Lama)</option>
+            </select>
           </div>
 
-          <form onSubmit={handlePkgSubmit} className="space-y-4">
-            <div>
-              <label className="block text-[10px] font-bold text-slate-400 uppercase tracking-wider mb-1.5">Nama / Judul Paket</label>
-              <input
-                type="text"
-                value={pkgTitle}
-                onChange={(e) => setPkgTitle(e.target.value)}
-                placeholder="Contoh: Tryout Akbar SKD CASN 2026"
-                className="w-full px-3.5 py-2.5 rounded-xl bg-slate-50 ring-1 ring-slate-200/60 text-sm font-medium text-slate-800 outline-none focus:ring-2 focus:ring-blue-500 focus:bg-white transition-all duration-200"
-                required
-              />
-            </div>
+          <div>
+            <select
+              value={filterProgram}
+              onChange={(e) => setFilterProgram(e.target.value)}
+              className="w-full px-3 py-2 bg-slate-50 border border-slate-200 rounded-xl text-xs font-semibold text-slate-700 outline-none focus:ring-1 focus:ring-blue-500"
+              disabled={!!adminActiveProgram}
+            >
+              <option value="ALL">Semua Program</option>
+              <option value="SKD">SKD CPNS</option>
+              <option value="PPPK">PPPK</option>
+              <option value="PPG">PPG</option>
+            </select>
+          </div>
 
-            <div>
-              <label className="block text-[10px] font-bold text-slate-400 uppercase tracking-wider mb-1.5">Deskripsi Paket</label>
-              <textarea
-                value={pkgDescription}
-                onChange={(e) => setPkgDescription(e.target.value)}
-                placeholder="Deskripsi materi ujian, jumlah soal, dan benefit peserta..."
-                rows="3"
-                className={textareaClass}
-                required
-              />
-            </div>
+          <div>
+            <select
+              value={filterProductType}
+              onChange={(e) => setFilterProductType(e.target.value)}
+              className="w-full px-3 py-2 bg-slate-50 border border-slate-200 rounded-xl text-xs font-semibold text-slate-700 outline-none focus:ring-1 focus:ring-blue-500"
+            >
+              <option value="ALL">Semua Tipe Produk</option>
+              <option value="TRYOUT">Try Out</option>
+              <option value="KELAS">Kelas Online</option>
+              <option value="EBOOK">E-Book</option>
+              <option value="BUNDLE">Bundling</option>
+            </select>
+          </div>
 
-            <div className="space-y-4">
-              <div>
-                <label className="block text-[10px] font-bold text-slate-400 uppercase tracking-wider mb-1.5">Tipe Produk</label>
-                <select
-                  value={pkgProductType}
-                  onChange={(e) => {
-                    const val = e.target.value;
-                    setPkgProductType(val);
-                    if (val === 'TRYOUT') setPkgCategory('Tryout');
-                    else if (val === 'KELAS') setPkgCategory('Kelas Online');
-                    else if (val === 'EBOOK') setPkgCategory('E-Book');
-                    else if (val === 'BUNDLE') setPkgCategory('Bundling');
-                  }}
-                  className={selectClass}
-                >
-                  <option value="TRYOUT">Try Out</option>
-                  <option value="KELAS">Kelas Online</option>
-                  <option value="EBOOK">E-Book</option>
-                  <option value="BUNDLE">Bundling</option>
-                </select>
-              </div>
+          <div>
+            <select
+              value={filterPopularity}
+              onChange={(e) => setFilterPopularity(e.target.value)}
+              className="w-full px-3 py-2 bg-slate-50 border border-slate-200 rounded-xl text-xs font-semibold text-slate-700 outline-none focus:ring-1 focus:ring-blue-500"
+            >
+              <option value="ALL">Urutan Normal</option>
+              <option value="POPULAR">Terpopuler (Paling Laku)</option>
+            </select>
+          </div>
+        </div>
+      </Card>
 
-              {pkgProductType === 'TRYOUT' && (
-                <div>
-                  <label className="block text-[10px] font-bold text-slate-400 uppercase tracking-wider mb-1.5">Durasi (Menit)</label>
-                  <input
-                    type="number"
-                    value={pkgDuration}
-                    onChange={(e) => setPkgDuration(e.target.value)}
-                    className="w-full px-3 py-2.5 rounded-xl bg-slate-50 ring-1 ring-slate-200/60 text-xs font-semibold text-slate-800 outline-none focus:ring-2 focus:ring-blue-500 focus:bg-white transition-all duration-200"
-                    required
-                  />
-                </div>
-              )}
+      {/* Tabel Paket Tryout - Full Width Overhaul */}
+      <Card className="w-full p-0 overflow-hidden bg-white border border-slate-200/60 shadow-premium">
+        <div className="p-5 border-b border-slate-100 flex justify-between items-center bg-slate-50/30">
+          <div>
+            <h3 className="text-sm font-extrabold text-slate-800">Daftar Paket / Produk</h3>
+            <p className="text-[10px] text-slate-400 mt-0.5 font-semibold">Menampilkan {filteredPackages.length} paket terdaftar</p>
+          </div>
+          {adminActiveProgram && (
+            <Badge variant="primary" className="font-bold border-0 px-3 py-1 text-xs">
+              {adminActiveProgram}
+            </Badge>
+          )}
+        </div>
 
-              {pkgProductType === 'KELAS' && (
-                <div>
-                  <label className="block text-[10px] font-bold text-slate-400 uppercase tracking-wider mb-1.5">Link Grup WhatsApp</label>
-                  <input
-                    type="url"
-                    value={pkgWaGroupLink}
-                    onChange={(e) => setPkgWaGroupLink(e.target.value)}
-                    placeholder="https://chat.whatsapp.com/..."
-                    className="w-full px-3.5 py-2.5 rounded-xl bg-slate-50 ring-1 ring-slate-200/60 text-xs font-medium text-slate-800 outline-none focus:ring-2 focus:ring-blue-500 focus:bg-white transition-all duration-200"
-                    required
-                  />
-                </div>
-              )}
-
-              {pkgProductType === 'EBOOK' && (
-                <div>
-                  <label className="block text-[10px] font-bold text-slate-400 uppercase tracking-wider mb-1.5">Upload File E-Book (PDF)</label>
-                  <input
-                    type="file"
-                    accept="application/pdf"
-                    onChange={(e) => setPkgEbookFile(e.target.files[0])}
-                    className="block w-full text-xs text-slate-500 file:mr-4 file:py-2 file:px-4 file:rounded-xl file:border-0 file:text-xs file:font-bold file:bg-slate-100 file:text-[#0B1C30] hover:file:bg-slate-200 cursor-pointer"
-                  />
-                  {pkgEbookFile && (
-                    <p className="text-[10px] text-emerald-600 font-semibold mt-1">✓ Berkas terpilih: {pkgEbookFile.name}</p>
-                  )}
-                </div>
-              )}
-            </div>
-
-            <div className="bg-slate-50 rounded-2xl p-4 border border-slate-200/60 space-y-3.5">
-              <p className="text-[10px] font-bold text-slate-450 uppercase tracking-widest border-b border-slate-200/80 pb-1.5">Skema Diskon Produk</p>
-              
-              <div className="grid grid-cols-3 gap-2">
-                <div className="col-span-1">
-                  <label className="block text-[9px] font-bold text-slate-400 uppercase tracking-wider mb-1">Normal (Rp)</label>
-                  <input
-                    type="number"
-                    value={pkgOriginalPrice}
-                    onChange={(e) => setPkgOriginalPrice(e.target.value)}
-                    placeholder="0"
-                    className="w-full px-2 py-2 rounded-lg bg-white ring-1 ring-slate-200 text-xs font-semibold text-slate-850 outline-none focus:ring-1 focus:ring-blue-500"
-                  />
-                </div>
-                <div className="col-span-1">
-                  <label className="block text-[9px] font-bold text-slate-400 uppercase tracking-wider mb-1">Diskon (%)</label>
-                  <input
-                    type="number"
-                    value={pkgDiscountPercentage}
-                    onChange={(e) => setPkgDiscountPercentage(e.target.value)}
-                    placeholder="0"
-                    max="100"
-                    className="w-full px-2 py-2 rounded-lg bg-white ring-1 ring-slate-200 text-xs font-semibold text-slate-850 outline-none focus:ring-1 focus:ring-blue-500"
-                  />
-                </div>
-                <div className="col-span-1">
-                  <label className="block text-[9px] font-bold text-slate-450 uppercase tracking-wider mb-1">Final (Rp)</label>
-                  <div className="w-full px-2 py-2 rounded-lg bg-slate-100 text-xs font-bold text-slate-650 truncate select-all">
-                    {pkgPrice.toLocaleString('id-ID')}
-                  </div>
-                </div>
-              </div>
-            </div>
-
-            <div>
-              <label className="block text-[10px] font-bold text-slate-400 uppercase tracking-wider mb-1.5">Gambar Cover Paket</label>
-              <div className="space-y-2">
-                {pkgImageUrl && (
-                  <div className="relative w-full aspect-video rounded-xl overflow-hidden border border-slate-200 bg-slate-50">
-                    <img src={pkgImageUrl} alt="Cover Preview" className="w-full h-full object-contain" />
-                    <button 
-                      type="button" 
-                      onClick={() => setPkgImageUrl('')}
-                      className="absolute top-2 right-2 p-1.5 bg-red-600 hover:bg-red-750 text-white rounded-full transition-colors border-0 cursor-pointer shadow-md flex items-center justify-center"
-                    >
-                      <X className="h-3.5 w-3.5" />
-                    </button>
-                  </div>
-                )}
-                <input
-                  type="file"
-                  accept="image/*"
-                  onChange={handlePkgImageChange}
-                  className="block w-full text-xs text-slate-500 file:mr-4 file:py-2 file:px-4 file:rounded-xl file:border-0 file:text-xs file:font-bold file:bg-slate-100 file:text-[#0B1C30] hover:file:bg-slate-200 cursor-pointer"
-                />
-              </div>
-            </div>
-
-            {/* Materi & Benefit yang Didapat */}
-            <div className="bg-slate-50/50 border border-slate-200/60 rounded-2xl p-4.5 space-y-4">
-              <div className="flex justify-between items-center border-b border-slate-200/80 pb-2">
-                <span className="text-[10px] font-bold text-slate-500 uppercase tracking-widest">Materi & Benefit ({pkgBenefits.length})</span>
-                <button
-                  type="button"
-                  onClick={() => setPkgBenefits([...pkgBenefits, { title: '', desc: '' }])}
-                  className="px-2.5 py-1 bg-[#0B1C30] hover:bg-[#1E3E66] text-white text-[9px] font-bold rounded-lg transition-colors border-0 cursor-pointer flex items-center gap-1 shadow-sm"
-                >
-                  <Plus className="h-3 w-3" /> Tambah Benefit
-                </button>
-              </div>
-
-              <div className="space-y-3 max-h-[300px] overflow-y-auto pr-1">
-                {pkgBenefits.length === 0 ? (
-                  <p className="text-xs text-slate-400 text-center py-4 font-medium">Belum ada benefit. Klik "+ Tambah Benefit" di atas.</p>
-                ) : (
-                  pkgBenefits.map((b, idx) => (
-                    <div key={idx} className="relative p-3.5 bg-white border border-slate-150 rounded-xl shadow-xs hover:shadow-sm transition-all space-y-2">
-                      <button
-                        type="button"
-                        onClick={() => setPkgBenefits(pkgBenefits.filter((_, i) => i !== idx))}
-                        className="absolute top-3.5 right-3 text-red-500 hover:text-red-750 bg-transparent border-0 cursor-pointer font-bold text-[10px] uppercase tracking-wider"
-                      >
-                        Hapus
-                      </button>
-                      <div className="space-y-2.5 pr-12">
-                        <div>
-                          <label className="block text-[8px] font-bold text-slate-400 uppercase mb-1">Judul Benefit</label>
-                          <input
-                            type="text"
-                            value={b.title}
-                            onChange={(e) => {
-                              const newB = [...pkgBenefits];
-                              newB[idx] = { ...newB[idx], title: e.target.value };
-                              setPkgBenefits(newB);
-                            }}
-                            placeholder="Contoh: Kurikulum SKD Terupdate"
-                            className="w-full px-2.5 py-1.5 text-xs font-semibold text-slate-800 border border-slate-200 rounded-lg outline-none focus:ring-1 focus:ring-blue-500 focus:bg-white"
-                            required
-                          />
-                        </div>
-                        <div>
-                          <label className="block text-[8px] font-bold text-slate-400 uppercase mb-1">Deskripsi Singkat</label>
-                          <textarea
-                            value={b.desc}
-                            onChange={(e) => {
-                              const newB = [...pkgBenefits];
-                              newB[idx] = { ...newB[idx], desc: e.target.value };
-                              setPkgBenefits(newB);
-                            }}
-                            placeholder="Contoh: Materi disusun sesuai kisi-kisi BKN 25."
-                            rows="2"
-                            className="w-full px-2.5 py-1.5 text-xs text-slate-650 border border-slate-200 rounded-lg outline-none focus:ring-1 focus:ring-blue-500 focus:bg-white"
-                            required
-                          />
-                        </div>
-                      </div>
+        <div className="overflow-x-auto">
+          <table className="w-full text-left">
+            <thead>
+              <tr className="bg-slate-100/50 text-[10px] font-extrabold uppercase text-slate-500 tracking-wider border-b border-slate-200/60">
+                <th className="px-6 py-4 w-12 text-center">#</th>
+                <th className="px-6 py-4">Nama / Detail Paket</th>
+                <th className="px-6 py-4 text-center w-24">Tipe Produk</th>
+                <th className="px-6 py-4 text-center w-24">Program</th>
+                <th className="px-6 py-4 text-center w-24">Durasi</th>
+                <th className="px-6 py-4 text-center w-32">Harga Final</th>
+                <th className="px-6 py-4 text-center w-28">Status</th>
+                <th className="px-6 py-4 text-center w-40">Aksi</th>
+              </tr>
+            </thead>
+            <tbody className="divide-y divide-slate-100 text-sm">
+              {isLoading ? (
+                <tr>
+                  <td colSpan="8" className="px-6 py-16 text-center text-xs font-bold text-slate-400">
+                    <div className="flex flex-col items-center justify-center gap-3">
+                      <div className="h-6 w-6 rounded-full border-2 border-slate-200 border-t-blue-500 animate-spin" />
+                      <span>Memuat data paket...</span>
                     </div>
-                  ))
-                )}
-              </div>
-            </div>
-
-            {/* Shield & Award Text Customization */}
-            <div className="bg-slate-50/50 border border-slate-200/60 rounded-2xl p-4.5 space-y-4">
-              <div className="border-b border-slate-200/80 pb-2">
-                <span className="text-[10px] font-bold text-slate-500 uppercase tracking-widest">Kustomisasi Teks Ikon</span>
-              </div>
-              <div className="grid grid-cols-2 gap-3">
-                <div>
-                  <label className="block text-[9px] font-bold text-slate-450 uppercase mb-1">Teks Shield (Aman)</label>
-                  <input
-                    type="text"
-                    value={pkgShieldText}
-                    onChange={(e) => setPkgShieldText(e.target.value)}
-                    placeholder="Aman & Terpercaya"
-                    className="w-full px-2.5 py-1.5 text-xs font-semibold text-slate-800 border border-slate-200 rounded-lg outline-none focus:ring-1 focus:ring-blue-500 focus:bg-white"
-                    required
-                  />
-                </div>
-                <div>
-                  <label className="block text-[9px] font-bold text-slate-450 uppercase mb-1">Teks Award (Lulus)</label>
-                  <input
-                    type="text"
-                    value={pkgAwardText}
-                    onChange={(e) => setPkgAwardText(e.target.value)}
-                    placeholder="Jaminan Lulus Ambang Batas"
-                    className="w-full px-2.5 py-1.5 text-xs font-semibold text-slate-800 border border-slate-200 rounded-lg outline-none focus:ring-1 focus:ring-blue-500 focus:bg-white"
-                    required
-                  />
-                </div>
-              </div>
-            </div>
-
-
-            <div>
-              <label className="block text-[10px] font-bold text-slate-400 uppercase tracking-wider mb-1.5">Status</label>
-              <select
-                value={pkgStatus}
-                onChange={(e) => setPkgStatus(e.target.value)}
-                className={selectClass}
-              >
-                <option value="Aktif">Aktif (Gratis)</option>
-                <option value="Terkunci">Terkunci (Premium)</option>
-              </select>
-            </div>
- 
-            <div>
-              <label className="block text-[10px] font-bold text-slate-400 uppercase tracking-wider mb-1.5">Target Program</label>
-              <select
-                value={pkgProgramType}
-                onChange={(e) => setPkgProgramType(e.target.value)}
-                className={selectClass}
-                disabled={!!adminActiveProgram}
-                required
-              >
-                {!adminActiveProgram && <option value="">-- Pilih Program --</option>}
-                <option value="SKD">SKD CPNS</option>
-                <option value="PPPK">PPPK</option>
-                <option value="PPG">PPG</option>
-              </select>
-              {!!adminActiveProgram && (
-                <p className="text-[10px] text-slate-450 mt-1 font-semibold">
-                  Terkunci ke program filter aktif.
-                </p>
-              )}
-            </div>
-
-            <div className="flex gap-2.5 pt-1">
-              {isEditingPkg && (
-                <Button variant="outline" className="flex-1" onClick={resetPkgForm}>Batal</Button>
-              )}
-              <Button type="submit" variant="primary" className="flex-grow bg-[#0B1C30] hover:bg-[#102A43] text-white">
-                {isEditingPkg ? (
-                  <>Simpan Perubahan</>
-                ) : (
-                  <><Plus className="h-3.5 w-3.5 mr-1" />Tambah Paket</>
-                )}
-              </Button>
-            </div>
-          </form>
-        </Card>
-
-        {/* Tabel Paket Tryout */}
-        <Card className="lg:col-span-8 p-0 overflow-hidden bg-white border border-slate-200/60 shadow-premium">
-          <div className="p-5 border-b border-slate-100 flex justify-between items-center">
-            <div>
-              <h3 className="text-sm font-bold text-slate-800">Daftar Paket Tryout</h3>
-              <p className="text-[10px] text-slate-400 mt-0.5 font-semibold">{packages.length} paket terdaftar</p>
-            </div>
-            <Badge variant="primary">CPNS SKD</Badge>
-          </div>
-
-          <div className="overflow-x-auto">
-            <table className="w-full text-left">
-              <thead>
-                <tr className="bg-slate-50/80 text-[10px] font-bold uppercase text-slate-400 tracking-wider border-b border-slate-100">
-                  <th className="px-5 py-3 w-10 text-center">ID</th>
-                  <th className="px-5 py-3">Nama Paket</th>
-                  <th className="px-5 py-3">Deskripsi</th>
-                  <th className="px-5 py-3 text-center w-20">Durasi</th>
-                  <th className="px-5 py-3 text-center w-24">Harga</th>
-                  <th className="px-5 py-3 text-center w-24">Status</th>
-                  <th className="px-5 py-3 text-center w-20">Aksi</th>
+                  </td>
                 </tr>
-              </thead>
-              <tbody className="divide-y divide-slate-100/80 text-sm">
-                {isLoading ? (
-                  <tr>
-                    <td colSpan="7" className="px-5 py-12 text-center text-xs font-bold text-slate-400">
-                      <div className="flex flex-col items-center justify-center gap-3">
-                        <div className="h-6 w-6 rounded-full border-2 border-slate-200 border-t-blue-500 animate-spin" />
-                        <span>Memuat data paket...</span>
+              ) : filteredPackages.length === 0 ? (
+                <tr>
+                  <td colSpan="8" className="px-6 py-16 text-center text-xs font-bold text-slate-400">
+                    Belum ada paket yang cocok atau terdaftar.
+                  </td>
+                </tr>
+              ) : (
+                filteredPackages.map((pkg, index) => (
+                  <tr key={pkg.id} className="hover:bg-slate-50/50 transition-colors duration-150">
+                    <td className="px-6 py-4 text-center text-xs font-bold text-slate-400 bg-slate-50/30">{index + 1}</td>
+                    <td className="px-6 py-4">
+                      <div className="flex flex-col">
+                        <span className="font-bold text-slate-800 text-sm hover:text-blue-600 transition-colors cursor-default">{pkg.title}</span>
+                        <p className="line-clamp-2 text-xs font-medium text-slate-400 mt-1 max-w-xl leading-relaxed">{pkg.description}</p>
                       </div>
                     </td>
-                  </tr>
-                ) : packages.length === 0 ? (
-                  <tr>
-                    <td colSpan="7" className="px-5 py-12 text-center text-xs font-bold text-slate-400">
-                      Belum ada paket terdaftar.
+                    <td className="px-6 py-4 text-center">
+                      <Badge variant={pkg.product_type === 'TRYOUT' ? 'primary' : pkg.product_type === 'KELAS' ? 'warning' : 'success'} className="font-bold border-0">
+                        {pkg.product_type}
+                      </Badge>
                     </td>
-                  </tr>
-                ) :
-                  packages.map((pkg) => (
-                    <tr key={pkg.id} className="hover:bg-slate-50/50 transition-colors duration-150">
-                      <td className="px-5 py-3 text-center text-[10px] font-bold text-slate-400">{pkg.id}</td>
-                      <td className="px-5 py-3 font-bold text-slate-800">{pkg.title}</td>
-                      <td className="px-5 py-3">
-                        <p className="line-clamp-2 text-xs font-medium text-slate-500 leading-relaxed">{pkg.description}</p>
-                      </td>
-                      <td className="px-5 py-3 text-center font-semibold text-slate-700">{pkg.duration} Min</td>
-                      <td className="px-5 py-3 text-center font-bold text-slate-700">{formatRupiah(pkg.price)}</td>
-                    <td className="px-5 py-3 text-center">
-                      <Badge variant={pkg.status === 'Aktif' ? 'success' : 'neutral'}>
+                    <td className="px-6 py-4 text-center font-bold text-slate-650 text-xs">
+                      {pkg.program_type}
+                    </td>
+                    <td className="px-6 py-4 text-center font-semibold text-slate-700 text-xs">
+                      {pkg.product_type === 'TRYOUT' ? `${pkg.duration} Min` : '-'}
+                    </td>
+                    <td className="px-6 py-4 text-center font-bold text-slate-800 text-sm">
+                      {formatRupiah(pkg.price)}
+                      {pkg.discountPercentage > 0 && (
+                        <div className="text-[10px] text-red-500 font-bold line-through mt-0.5">{formatRupiah(pkg.originalPrice)}</div>
+                      )}
+                    </td>
+                    <td className="px-6 py-4 text-center">
+                      <Badge variant={pkg.status === 'Aktif' ? 'success' : 'neutral'} className="font-bold border-0">
                         {pkg.status}
                       </Badge>
                     </td>
-                    <td className="px-5 py-3 text-center">
+                    <td className="px-6 py-4 text-center">
                       <div className="flex justify-center items-center gap-1.5">
                         <button
                           onClick={() => handleManageQuestionsClick(pkg)}
@@ -738,27 +409,59 @@ export default function AdminPaket() {
                         </button>
                         <button
                           onClick={() => handleEditPkgClick(pkg)}
-                          className="p-1.5 text-blue-600 hover:bg-blue-50 border border-slate-200/40 rounded-xl transition-colors cursor-pointer"
+                          className="p-2 text-blue-600 hover:bg-blue-50 border border-slate-200/40 rounded-xl transition-colors cursor-pointer"
                           title="Edit"
                         >
-                          <Edit className="h-3.5 w-3.5" />
+                          <Edit className="h-4 w-4" />
                         </button>
                         <button
                           onClick={() => handlePkgDelete(pkg.id)}
-                          className="p-1.5 text-red-500 hover:bg-red-50 border border-slate-200/40 rounded-xl transition-colors cursor-pointer"
+                          className="p-2 text-red-500 hover:bg-red-50 border border-slate-200/40 rounded-xl transition-colors cursor-pointer"
                           title="Hapus"
                         >
-                          <Trash className="h-3.5 w-3.5" />
+                          <Trash className="h-4 w-4" />
                         </button>
                       </div>
                     </td>
                   </tr>
-                ))}
-              </tbody>
-            </table>
+                ))
+              )}
+            </tbody>
+          </table>
+        </div>
+      </Card>
+
+      {/* ─── DYNAMIC FORM MODAL (ADD & EDIT PACKAGE) ─── */}
+      {showFormModal && (
+        <div className="fixed inset-0 z-50 flex items-center justify-center px-4">
+          <div
+            className="fixed inset-0 bg-slate-950/60 backdrop-blur-sm"
+            onClick={resetPkgForm}
+          />
+
+          <div className="relative z-10 bg-white rounded-3xl border border-slate-200/80 shadow-premium-lg max-w-2xl w-full p-6 sm:p-8 space-y-5 animate-scaleUp max-h-[90vh] overflow-y-auto">
+            <div className="flex items-center justify-between border-b border-slate-100 pb-3">
+              <h3 className="text-base font-extrabold text-slate-900">
+                {isEditingPkg ? 'Edit Detail Paket / Produk' : 'Buat Paket / Produk Baru'}
+              </h3>
+              <button
+                onClick={resetPkgForm}
+                className="p-2 rounded-xl hover:bg-slate-100 text-slate-400 hover:text-slate-655 transition-colors border-0 bg-transparent cursor-pointer"
+              >
+                <X className="h-5 w-5" />
+              </button>
+            </div>
+
+            <PackageForm
+              initialData={selectedPkgForEdit}
+              isEditing={isEditingPkg}
+              onSubmit={handlePkgSubmit}
+              onCancel={resetPkgForm}
+              adminActiveProgram={adminActiveProgram}
+            />
           </div>
-        </Card>
-      </div>
+        </div>
+      )}
 
       {/* ─── MODAL PILIH SOAL (MANY-TO-MANY MAPPING) ─── */}
       {showQuestionModal && (
@@ -778,7 +481,7 @@ export default function AdminPaket() {
               </div>
               <button
                 onClick={() => { setShowQuestionModal(false); setSelectedPkg(null); }}
-                className="p-2 rounded-xl hover:bg-slate-100 text-slate-400 hover:text-slate-650 transition-colors"
+                className="p-2 rounded-xl hover:bg-slate-100 text-slate-400 hover:text-slate-655 transition-colors border-0 bg-transparent cursor-pointer"
               >
                 <X className="h-5 w-5" />
               </button>
@@ -837,7 +540,7 @@ export default function AdminPaket() {
                 <Button
                   variant="primary"
                   onClick={handleSaveQuestionsAssignment}
-                  className="bg-blue-600 hover:bg-blue-700 text-white"
+                  className="bg-blue-600 hover:bg-blue-700 text-white border-0 cursor-pointer"
                 >
                   Simpan Mapping
                 </Button>

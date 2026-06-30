@@ -46,14 +46,16 @@ const createTransaction = async (userId, tryoutId, amount, proofImage, referralC
   const randNum = Math.floor(10 + Math.random() * 90);
   const transactionId = `TRX-${Date.now().toString().slice(-4)}${randNum}`;
 
+  const isFree = finalAmount <= 0;
+
   const transaction = await Transaction.create({
     id: transactionId,
     user_id: userId,
     tryout_id: tryoutId,
     amount: finalAmountStr,
-    status: 'pending',
-    payment_method: 'Manual Bank Transfer',
-    proof_image: proofImage || null,
+    status: isFree ? 'success' : 'pending',
+    payment_method: isFree ? 'FREE' : 'Manual Bank Transfer',
+    proof_image: isFree ? null : (proofImage || null),
     referral_code: appliedCode
   });
 

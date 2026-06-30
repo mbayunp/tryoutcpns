@@ -117,6 +117,18 @@ const startServer = async () => {
       // Ignore
     }
 
+    // Alter columns to LONGTEXT to support base64 images and large description payloads
+    try {
+      await sequelize.query("ALTER TABLE `tryouts` MODIFY COLUMN `image_url` LONGTEXT;");
+      await sequelize.query("ALTER TABLE `tryouts` MODIFY COLUMN `description` LONGTEXT;");
+      await sequelize.query("ALTER TABLE `tryouts` MODIFY COLUMN `benefits` LONGTEXT;");
+      await sequelize.query("ALTER TABLE `tryouts` MODIFY COLUMN `shield_award` LONGTEXT;");
+      await sequelize.query("ALTER TABLE `transactions` MODIFY COLUMN `proof_image` LONGTEXT;");
+      console.log('Altered package and transaction columns to LONGTEXT successfully.');
+    } catch (err) {
+      console.error('Failed to alter columns to LONGTEXT:', err.message);
+    }
+
     // Sync database schema
     const syncOptions = {
       alter: false,

@@ -316,16 +316,19 @@ export default function AdminSoal() {
 
   // Metrics
   const totalQuestions = questions ? questions.length : 0;
-  const categoryCounts = categories.reduce((acc, cat) => {
-    acc[cat.name.toUpperCase()] = questions ? questions.filter(q => q.category === cat.name.toUpperCase()).length : 0;
+  const categoryCounts = (categories || []).reduce((acc, cat) => {
+    if (cat && cat.name) {
+      acc[cat.name.toUpperCase()] = questions ? questions.filter(q => q && q.category === cat.name.toUpperCase()).length : 0;
+    }
     return acc;
   }, {});
   const totalPackages = packages ? packages.length : 0;
-  const pendingVerifications = transactions ? transactions.filter(t => t.status === 'pending').length : 0;
-  const activeBanners = announcements ? announcements.filter(a => a.is_active).length : 0;
+  const pendingVerifications = transactions ? transactions.filter(t => t && t.status === 'pending').length : 0;
+  const activeBanners = announcements ? announcements.filter(a => a && a.is_active).length : 0;
 
   // Filtered questions
-  const filteredQuestions = questions.filter(q => {
+  const filteredQuestions = (questions || []).filter(q => {
+    if (!q || !q.question) return false;
     const matchesSearch = q.question.toLowerCase().includes(searchQuery.toLowerCase()) ||
       String(q.id).includes(searchQuery);
     const matchesCategory = filterCategory === 'ALL' || q.category === filterCategory;
@@ -363,7 +366,7 @@ export default function AdminSoal() {
               <p className="text-xs font-bold text-slate-400 uppercase tracking-wider">Total Bank Soal</p>
               <h3 className="text-2xl font-extrabold text-[#0B1C30]">{totalQuestions} <span className="text-xs font-medium text-slate-500">Soal</span></h3>
               <div className="flex flex-wrap gap-2 text-[10px] font-bold text-slate-400">
-                {categories.map((cat, idx) => {
+                {(categories || []).map((cat, idx) => {
                   const name = cat.name.toUpperCase();
                   const colors = ['text-red-650', 'text-indigo-650', 'text-emerald-600', 'text-amber-600', 'text-purple-650', 'text-pink-650'];
                   const colorClass = colors[idx % colors.length];
@@ -510,10 +513,10 @@ export default function AdminSoal() {
                 </div>
 
                 <div className="flex flex-wrap gap-1.5 w-full sm:w-auto">
-                  {[
-                    { key: 'ALL', label: 'SEMUA' },
-                    ...categories.map(c => ({ key: c.name.toUpperCase(), label: c.name.toUpperCase() }))
-                  ].map(tab => (
+                   {[
+                     { key: 'ALL', label: 'SEMUA' },
+                     ...(categories || []).map(c => ({ key: c.name?.toUpperCase(), label: c.name?.toUpperCase() }))
+                   ].map(tab => (
                     <button
                       key={tab.key}
                       type="button"

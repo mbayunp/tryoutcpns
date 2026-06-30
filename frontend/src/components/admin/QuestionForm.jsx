@@ -67,7 +67,7 @@ export default function QuestionForm({
     } else {
       const defaultTryoutId = packages && packages.length > 0 ? packages[0].id : 1;
       setTryoutId(defaultTryoutId);
-      const activePkg = packages.find(p => p.id === parseInt(defaultTryoutId));
+      const activePkg = (packages || []).find(p => p.id === parseInt(defaultTryoutId));
       setScoringMethod(activePkg ? (activePkg.scoring_type || 'BINARY') : 'BINARY');
       setCategory('TWK');
       setQuestionText('');
@@ -231,7 +231,7 @@ export default function QuestionForm({
                 onChange={(e) => {
                   const selectedId = e.target.value;
                   setTryoutId(selectedId);
-                  const targetPkg = packages.find(p => p.id === parseInt(selectedId));
+                  const targetPkg = (packages || []).find(p => p.id === parseInt(selectedId));
                   if (targetPkg) {
                     setProgramType(targetPkg.program_type || 'SKD');
                   }
@@ -239,7 +239,7 @@ export default function QuestionForm({
                 className={selectClass}
                 required
               >
-                {packages.map(pkg => (
+                {(packages || []).map(pkg => (
                   <option key={pkg.id} value={pkg.id}>
                     {pkg.title}
                   </option>
@@ -257,7 +257,7 @@ export default function QuestionForm({
                 }}
                 className={selectClass}
               >
-                {categories.map(cat => (
+                {(categories || []).map(cat => (
                   <option key={cat.id} value={cat.name.toUpperCase()}>
                     {cat.name.toUpperCase()}
                   </option>

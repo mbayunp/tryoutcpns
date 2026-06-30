@@ -77,6 +77,25 @@ export default function PackageCatalog({ showOnlyPurchased = false }) {
       setSelectedLockedPackage(pkg);
       return;
     }
+
+    if (pkg.product_type === 'KELAS' || (pkg.wa_group_link && (!pkg.totalQuestions || pkg.totalQuestions === 0))) {
+      if (pkg.wa_group_link) {
+        window.open(pkg.wa_group_link, '_blank', 'noopener,noreferrer');
+      } else {
+        Swal.fire({
+          title: 'Info',
+          text: 'Link akses belum tersedia. Silakan hubungi admin.',
+          icon: 'info',
+          confirmButtonColor: '#0B1C30'
+        });
+      }
+      return;
+    }
+
+    if (pkg.product_type === 'EBOOK') {
+      handleDownloadEbook(pkg.id, pkg.title);
+      return;
+    }
     
     Swal.fire({
       title: 'Mulai Ujian?',
@@ -243,10 +262,7 @@ export default function PackageCatalog({ showOnlyPurchased = false }) {
 
     // "Paket Saya" tab - show only purchased packages
     if (showOnlyPurchased) {
-      const isPurchased = (transactions || []).some(
-        (t) => t.package === pkg.title && t.status === 'success' && t.email === user?.email
-      );
-      return isPurchased;
+      return pkg.isPurchased;
     }
 
     // Category filtering

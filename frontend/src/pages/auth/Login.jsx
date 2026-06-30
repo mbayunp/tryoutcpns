@@ -152,17 +152,20 @@ export default function Login() {
     } catch (err) {
       const backendMessage = err.response?.data?.message || err.response?.data?.error || 'Email atau password salah!';
 
-      Swal.fire({
-        icon: 'error',
-        title: 'Login Gagal',
-        text: backendMessage,
-        showConfirmButton: true,
-        confirmButtonText: 'Tutup',
-        confirmButtonColor: '#ef4444',
-        allowOutsideClick: false
-      });
-    } finally {
+      // 1. Matikan loading DULU
       setIsLoading(false);
+
+      setTimeout(() => {
+        Swal.fire({
+          icon: 'error',
+          title: 'Login Gagal',
+          text: backendMessage,
+          showConfirmButton: true,
+          confirmButtonText: 'Tutup',
+          confirmButtonColor: '#ef4444',
+          allowOutsideClick: false // Mencegah Swal tertutup tidak sengaja
+        });
+      }, 100);
     }
   };
 

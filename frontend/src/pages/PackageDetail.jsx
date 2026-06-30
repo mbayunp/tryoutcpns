@@ -13,7 +13,7 @@ const formatRupiah = (num) => {
 export default function PackageDetail() {
   const { id } = useParams();
   const navigate = useNavigate();
-  const { packages, user, fetchPackages, validateReferralCode, createPendingTransaction } = useExamStore();
+  const { packages, user, fetchPackages, validateReferralCode, createPendingTransaction, downloadPackageEbook } = useExamStore();
 
   React.useEffect(() => {
     if (packages.length === 0) {
@@ -34,12 +34,56 @@ export default function PackageDetail() {
 
   const handleBuyNow = async () => {
     if (pkg.status === 'Aktif') {
-      Swal.fire({
-        title: 'Paket Sudah Aktif',
-        text: 'Paket ini sudah aktif dan dapat Anda akses langsung dari Dashboard.',
-        icon: 'success',
-        confirmButtonColor: '#0B1C30'
-      });
+      if (pkg.product_type === 'KELAS' || (pkg.wa_group_link && (!pkg.totalQuestions || pkg.totalQuestions === 0))) {
+        if (pkg.wa_group_link) {
+          window.open(pkg.wa_group_link, '_blank', 'noopener,noreferrer');
+        } else {
+          Swal.fire({
+            title: 'Info',
+            text: 'Link akses belum tersedia. Silakan hubungi admin.',
+            icon: 'info',
+            confirmButtonColor: '#0B1C30'
+          });
+        }
+      } else if (pkg.product_type === 'EBOOK') {
+        Swal.fire({
+          title: 'Mengunduh E-Book...',
+          text: 'Harap tunggu sebentar.',
+          allowOutsideClick: false,
+          didOpen: () => {
+            Swal.showLoading();
+          }
+        });
+        try {
+          await downloadPackageEbook(pkg.id, pkg.title);
+          Swal.close();
+        } catch (err) {
+          Swal.fire({
+            title: 'Gagal Mengunduh',
+            text: err.message || 'Gagal mengunduh file e-book.',
+            icon: 'error',
+            confirmButtonColor: '#EF4444'
+          });
+        }
+      } else {
+        Swal.fire({
+          title: 'Mulai Ujian?',
+          text: 'Apakah Anda yakin ingin memulai ujian sekarang? Waktu akan mulai berjalan.',
+          icon: 'question',
+          showCancelButton: true,
+          confirmButtonText: 'Mulai Ujian',
+          cancelButtonText: 'Batal',
+          confirmButtonColor: '#0B1C30',
+          cancelButtonColor: '#6B7280',
+          customClass: {
+            popup: 'rounded-2xl font-body-md'
+          }
+        }).then((result) => {
+          if (result.isConfirmed) {
+            navigate('/exam', { state: { packageId: pkg.id } });
+          }
+        });
+      }
       return;
     }
 
@@ -101,7 +145,7 @@ export default function PackageDetail() {
           icon: 'success',
           confirmButtonColor: '#0B1C30'
         });
-        navigate('/dashboard/pembayaran');
+        navigate('/dashboard/paket');
       } catch (err) {
         Swal.fire({
           title: 'Gagal',

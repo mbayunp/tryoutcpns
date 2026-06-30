@@ -12,7 +12,7 @@ const Tryout = sequelize.define('Tryout', {
     allowNull: false,
   },
   description: {
-    type: DataTypes.TEXT,
+    type: DataTypes.TEXT('long'),
     allowNull: true,
   },
   duration: {
