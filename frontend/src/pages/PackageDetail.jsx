@@ -119,9 +119,9 @@ export default function PackageDetail() {
         <div class="text-left space-y-3 font-body-md text-slate-700">
           <p>Silakan lakukan transfer pembayaran untuk membuka akses paket belajar Anda:</p>
           <div class="bg-slate-50 p-4 rounded-xl border border-slate-100 space-y-2">
-            <p class="font-bold text-slate-800 text-sm">BANK MANDIRI</p>
-            <p class="font-mono text-lg text-[#0B1C30] font-bold">137-00-213964-2</p>
-            <p class="text-xs text-slate-400 font-bold">a.n. WILDAN CASN</p>
+            <p class="font-bold text-slate-800 text-sm">BANK BRI</p>
+            <p class="font-mono text-lg text-[#0B1C30] font-bold">636101008018506</p>
+            <p class="text-xs text-slate-400 font-bold">a.n. Rosyidatul Khusna</p>
             <p class="font-bold text-slate-850 mt-2 text-sm">Jumlah Transfer: <span class="text-[#0B1C30]">${formatRupiah(finalPrice)}</span></p>
           </div>
           <p class="text-[11px] text-slate-400 leading-relaxed">Setelah melakukan transfer, silakan konfirmasi pembayaran ke WhatsApp Admin dengan melampirkan bukti transfer untuk aktivasi instan.</p>
@@ -143,11 +143,11 @@ export default function PackageDetail() {
             null,
             appliedCode
           );
-          
+
           const referralMsg = appliedCode ? `%0AKode Referal: ${appliedCode}` : '';
           const message = `Halo Admin, saya ingin konfirmasi pembayaran.%0A%0ANama: ${user?.name || 'User'}%0AEmail: ${user?.email || 'email'}%0APaket: ${pkg.title}${referralMsg}%0A%0ASaya telah melakukan transfer sebesar ${formatRupiah(finalPrice)}. Berikut bukti transfernya:`;
           window.open(`https://wa.me/6281297298862?text=${message}`, '_blank');
-          
+
           navigate('/dashboard/pembayaran');
         } catch (err) {
           Swal.fire({
@@ -245,7 +245,7 @@ export default function PackageDetail() {
           <div className="sticky top-24 space-y-6">
             <div className="bg-white p-6 rounded-2xl border border-slate-200/60 shadow-lg space-y-6">
               <h3 className="text-sm font-bold text-slate-800 tracking-tight uppercase">Ringkasan Harga</h3>
-              
+
               <div className="space-y-2">
                 <div className="flex items-center justify-between">
                   <span className="text-xs font-bold text-slate-400">Harga Normal</span>
