@@ -20,6 +20,10 @@ const referralRoutes = require('./routes/referralRoutes');
 
 const app = express();
 
+// Konfigurasi agar Express mempercayai IP yang diteruskan oleh Nginx
+// Ini akan menghilangkan error 'ERR_ERL_UNEXPECTED_X_FORWARDED_FOR' pada express-rate-limit
+app.set('trust proxy', 1);
+
 // Global Middlewares
 app.use(cors(corsConfig));
 app.use(express.json({ limit: '10mb' }));
