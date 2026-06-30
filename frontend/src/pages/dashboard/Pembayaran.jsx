@@ -11,7 +11,7 @@ export default function Pembayaran() {
   const navigate = useNavigate();
   const { transactions, fetchTransactions, uploadTransactionProof } = useExamStore();
   const [loading, setLoading] = useState(false);
-  
+
   // Local state for uploading proof
   const [submittingId, setSubmittingId] = useState(null);
   const [selectedFile, setSelectedFile] = useState(null);
@@ -157,9 +157,9 @@ export default function Pembayaran() {
               Silakan lakukan transfer sesuai nominal tagihan transaksi Anda ke rekening resmi kami berikut:
             </p>
             <div className="bg-slate-50 p-4 rounded-xl border border-slate-100/80 space-y-1.5 w-fit">
-              <p className="font-bold text-slate-800 text-xs tracking-wide">BANK MANDIRI</p>
-              <p className="font-mono text-base text-[#0B1C30] font-black tracking-wider">137-00-213964-2</p>
-              <p className="text-[10px] text-slate-400 font-bold">a.n. WILDAN CASN</p>
+              <p className="font-bold text-slate-800 text-xs tracking-wide">BANK BRI</p>
+              <p className="font-mono text-base text-[#0B1C30] font-black tracking-wider">636101008018506</p>
+              <p className="text-[10px] text-slate-400 font-bold">a.n. Rosyidatul Khusna</p>
             </div>
           </div>
           <div className="bg-blue-50/50 border border-blue-100 rounded-2xl p-4.5 text-xs text-blue-700 font-semibold leading-relaxed max-w-xs space-y-1.5">

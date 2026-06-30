@@ -50,11 +50,13 @@ app.use('/api/announcements', announcementRoutes);
 app.use('/api/admin/analytics', analyticsRoutes);
 app.use('/api/user', userRoutes);
 
-// Catch 404 Route Not Found
+// Catch 404 Route Not Found (Anti-Crash untuk Bot Scanner)
 app.use((req, res, next) => {
-  const error = new Error(`Endpoint not found - ${req.originalUrl}`);
-  error.statusCode = 404;
-  next(error);
+  // Langsung kembalikan response JSON tanpa membuat objek Error yang memberatkan server
+  res.status(404).json({
+    success: false,
+    message: `Endpoint tidak ditemukan: ${req.originalUrl}`
+  });
 });
 
 // Global Error Handler Middleware
