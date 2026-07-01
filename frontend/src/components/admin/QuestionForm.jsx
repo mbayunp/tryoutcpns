@@ -34,9 +34,11 @@ export default function QuestionForm({
   const [scoreE, setScoreE] = useState(1);
 
   useEffect(() => {
+    const defaultCategory = categories && categories.length > 0 ? categories[0].name.toUpperCase() : 'TWK';
+
     if (selectedQuestion) {
       setTryoutId(selectedQuestion.tryout_id || 1);
-      setCategory(selectedQuestion.category || 'TWK');
+      setCategory(selectedQuestion.category || defaultCategory);
       setQuestionText(selectedQuestion.question);
       setOptA(selectedQuestion.options?.find(o => o.key === 'A')?.text || selectedQuestion.option_a || '');
       setOptB(selectedQuestion.options?.find(o => o.key === 'B')?.text || selectedQuestion.option_b || '');
@@ -69,7 +71,7 @@ export default function QuestionForm({
       setTryoutId(defaultTryoutId);
       const activePkg = (packages || []).find(p => p.id === parseInt(defaultTryoutId));
       setScoringMethod(activePkg ? (activePkg.scoring_type || 'BINARY') : 'BINARY');
-      setCategory('TWK');
+      setCategory(defaultCategory);
       setQuestionText('');
       setOptA('');
       setOptB('');
@@ -86,7 +88,7 @@ export default function QuestionForm({
       setScoreD(2);
       setScoreE(1);
     }
-  }, [selectedQuestion, isOpen, adminActiveProgram, packages]);
+  }, [selectedQuestion, isOpen, adminActiveProgram, packages, categories]);
 
   if (!isOpen) return null;
 
@@ -148,42 +150,48 @@ export default function QuestionForm({
   const handleFormSubmit = (e) => {
     e.preventDefault();
     
-    const options = [
-      { key: 'A', text: optA || "-" },
-      { key: 'B', text: optB || "-" },
-      { key: 'C', text: optC || "-" },
-      { key: 'D', text: optD || "-" },
-      { key: 'E', text: optE || "-" }
-    ];
-
-    const optionsWeights = {
-      A: parseInt(scoreA) || 0,
-      B: parseInt(scoreB) || 0,
-      C: parseInt(scoreC) || 0,
-      D: parseInt(scoreD) || 0,
-      E: parseInt(scoreE) || 0
-    };
-
-    const questionData = {
-      tryout_id: parseInt(tryoutId),
-      category,
-      question: questionText,
+    const payload = {
+      tryout_id: tryoutId,
+      category: category, // Ensure this reads from the updated state
+      sub_category: subCategory || '-',
       program_type: programType,
-      sub_category: isPPPK ? subCategory : null,
-      options,
-      explanation,
-      correctAnswer: programType === 'PPPK' ? null : (correctAnswer ? correctAnswer.toLowerCase() : 'a'),
-      correct_answer: programType === 'PPPK' ? null : (correctAnswer ? correctAnswer.toLowerCase() : 'a'),
-      option_a: optA || "-",
-      option_b: optB || "-",
-      option_c: optC || "-",
-      option_d: optD || "-",
-      option_e: optE || "-",
-      options_weights: isWeighted ? optionsWeights : null,
-      scores: isWeighted ? optionsWeights : null,
-      scoring_type: scoringMethod
+      question: questionText,
+      // 1. Force options to have at least a dash if empty
+      option_a: optA || '-',
+      option_b: optB || '-',
+      option_c: optC || '-',
+      option_d: optD || '-',
+      option_e: optE || '-',
+      // 2. Force correct_answer to lowercase
+      correct_answer: correctAnswer.toLowerCase(),
+      explanation: explanation || '-',
+      scoring_type: scoringMethod,
+      // 3. Ensure options_weights is explicitly formatted as a JSON object
+      options_weights: {
+        a: Number(scoreA) || 0,
+        b: Number(scoreB) || 0,
+        c: Number(scoreC) || 0,
+        d: Number(scoreD) || 0,
+        e: Number(scoreE) || 0
+      },
+      // Backward compatibility fields for useExamStore
+      options: [
+        { key: 'A', text: optA || '-' },
+        { key: 'B', text: optB || '-' },
+        { key: 'C', text: optC || '-' },
+        { key: 'D', text: optD || '-' },
+        { key: 'E', text: optE || '-' }
+      ],
+      correctAnswer: correctAnswer.toLowerCase(),
+      scores: {
+        A: Number(scoreA) || 0,
+        B: Number(scoreB) || 0,
+        C: Number(scoreC) || 0,
+        D: Number(scoreD) || 0,
+        E: Number(scoreE) || 0
+      }
     };
-    onSubmit(questionData);
+    onSubmit(payload);
   };
 
   return (
