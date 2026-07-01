@@ -149,24 +149,20 @@ export default function QuestionForm({
     e.preventDefault();
     
     const options = [
-      { key: 'A', text: optA },
-      { key: 'B', text: optB },
-      { key: 'C', text: optC },
-      { key: 'D', text: optD }
+      { key: 'A', text: optA || "-" },
+      { key: 'B', text: optB || "-" },
+      { key: 'C', text: optC || "-" },
+      { key: 'D', text: optD || "-" },
+      { key: 'E', text: optE || "-" }
     ];
-    if (showE) {
-      options.push({ key: 'E', text: optE });
-    }
 
     const optionsWeights = {
       A: parseInt(scoreA) || 0,
       B: parseInt(scoreB) || 0,
       C: parseInt(scoreC) || 0,
-      D: parseInt(scoreD) || 0
+      D: parseInt(scoreD) || 0,
+      E: parseInt(scoreE) || 0
     };
-    if (showE) {
-      optionsWeights.E = parseInt(scoreE) || 0;
-    }
 
     const questionData = {
       tryout_id: parseInt(tryoutId),
@@ -176,7 +172,13 @@ export default function QuestionForm({
       sub_category: isPPPK ? subCategory : null,
       options,
       explanation,
-      correctAnswer: isWeighted ? null : correctAnswer,
+      correctAnswer: programType === 'PPPK' ? null : (correctAnswer ? correctAnswer.toLowerCase() : 'a'),
+      correct_answer: programType === 'PPPK' ? null : (correctAnswer ? correctAnswer.toLowerCase() : 'a'),
+      option_a: optA || "-",
+      option_b: optB || "-",
+      option_c: optC || "-",
+      option_d: optD || "-",
+      option_e: optE || "-",
       options_weights: isWeighted ? optionsWeights : null,
       scores: isWeighted ? optionsWeights : null,
       scoring_type: scoringMethod
