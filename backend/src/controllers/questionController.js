@@ -27,6 +27,7 @@ const getAllQuestions = async (req, res, next) => {
 
 const createQuestion = async (req, res, next) => {
   try {
+    console.log("Payload diterima backend (create):", req.body);
     const {
       tryout_id,
       category_id,
@@ -84,6 +85,7 @@ const createQuestion = async (req, res, next) => {
 
 const updateQuestion = async (req, res, next) => {
   try {
+    console.log("Payload diterima backend (update):", req.body);
     const { id } = req.params;
     const {
       tryout_id,

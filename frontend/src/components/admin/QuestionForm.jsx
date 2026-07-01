@@ -197,6 +197,7 @@ export default function QuestionForm({
         E: Number(scoreE) || 0
       }
     };
+    console.log("Submitting payload with correctAnswer:", correctAnswer.toLowerCase(), "and scoring_type:", scoringMethod);
     onSubmit(payload);
   };
 
