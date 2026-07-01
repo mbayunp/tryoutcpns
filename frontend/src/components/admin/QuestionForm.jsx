@@ -1,6 +1,7 @@
 import React, { useState, useEffect } from 'react';
 import { X } from 'lucide-react';
 import Button from '../common/Button';
+import Swal from 'sweetalert2';
 
 import { useExamStore } from '../../store/useExamStore';
  
@@ -37,7 +38,7 @@ export default function QuestionForm({
     const defaultCategory = categories && categories.length > 0 ? categories[0].name.toUpperCase() : 'TWK';
 
     if (selectedQuestion) {
-      setTryoutId(selectedQuestion.tryout_id || 1);
+      setTryoutId(selectedQuestion.tryout_id);
       setCategory(selectedQuestion.category || defaultCategory);
       setQuestionText(selectedQuestion.question);
       setOptA(selectedQuestion.options?.find(o => o.key === 'A')?.text || selectedQuestion.option_a || '');
@@ -150,6 +151,11 @@ export default function QuestionForm({
   const handleFormSubmit = (e) => {
     e.preventDefault();
     
+    if (!tryoutId) {
+      Swal.fire('Error', 'Tryout ID tidak ditemukan. Pastikan paket soal terpilih.', 'error');
+      return;
+    }
+
     const payload = {
       tryout_id: tryoutId,
       category: category, // Ensure this reads from the updated state

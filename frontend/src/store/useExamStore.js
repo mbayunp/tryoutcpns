@@ -440,8 +440,9 @@ export const useExamStore = create(
             // Generate an explanation dynamically if not in database
             const generatedExplanation = `Pembahasan untuk soal ini: Kunci jawaban adalah opsi ${q.correct_answer ? q.correct_answer.toUpperCase() : 'A'}. Pahami materi tentang sub-topik ${q.category ? q.category.name : 'Tes Wawasan'} untuk memperdalam pemahaman Anda.`;
 
-            return {
+             return {
               id: q.id,
+              tryout_id: data.id || tryoutId,
               category: q.category ? q.category.name.toUpperCase() : 'TWK',
               question: q.question,
               options,
