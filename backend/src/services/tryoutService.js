@@ -39,8 +39,8 @@ const getTryoutById = async (id, userId, isAdmin = false) => {
 
   // If loading questions, exclude correct_answer and option_weights for users to prevent cheating
   const attributes = isAdmin 
-    ? ['id', 'question', 'option_a', 'option_b', 'option_c', 'option_d', 'option_e', 'correct_answer', 'option_weights', 'options_weights', 'sub_category']
-    : ['id', 'question', 'option_a', 'option_b', 'option_c', 'option_d', 'option_e', 'sub_category'];
+    ? ['id', 'question', 'option_a', 'option_b', 'option_c', 'option_d', 'option_e', 'correct_answer', 'option_weights', 'options_weights', 'sub_category', 'scoring_type', 'program_type']
+    : ['id', 'question', 'option_a', 'option_b', 'option_c', 'option_d', 'option_e', 'sub_category', 'scoring_type', 'program_type'];
 
   let questions = await Question.findAll({
     attributes,

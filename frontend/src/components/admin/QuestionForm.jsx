@@ -38,6 +38,7 @@ export default function QuestionForm({
     const defaultCategory = categories && categories.length > 0 ? categories[0].name.toUpperCase() : 'TWK';
 
     if (selectedQuestion) {
+      console.log("Data Edit Soal:", selectedQuestion);
       setTryoutId(selectedQuestion.tryout_id);
       setCategory(selectedQuestion.category || defaultCategory);
       setQuestionText(selectedQuestion.question);
@@ -51,7 +52,7 @@ export default function QuestionForm({
       setProgramType(selectedQuestion.program_type || 'SKD');
       setSubCategory(selectedQuestion.sub_category || 'Teknis');
 
-      setScoringMethod(selectedQuestion.scoring_type || 'BINARY');
+      setScoringMethod(selectedQuestion.scoring_type ? selectedQuestion.scoring_type.toUpperCase() : 'BINARY');
 
       const weights = selectedQuestion.options_weights || selectedQuestion.option_weights || selectedQuestion.scores;
       if (weights) {

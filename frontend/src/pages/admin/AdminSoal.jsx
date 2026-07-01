@@ -345,6 +345,39 @@ export default function AdminSoal() {
     return 'success';
   };
 
+  const getCorrectAnswerDisplay = (q) => {
+    // Jika tipe soal mengandung kata 'WEIGHTED' dan memiliki data bobot
+    const targetWeights = q.option_weights || q.options_weights || q.scores;
+    if (q.scoring_type && q.scoring_type.includes('WEIGHTED') && targetWeights) {
+      try {
+        const weights = typeof targetWeights === 'string' 
+          ? JSON.parse(targetWeights) 
+          : targetWeights;
+
+        let maxKey = '-';
+        let maxVal = -Infinity;
+
+        for (const [key, val] of Object.entries(weights)) {
+          if (Number(val) > maxVal) {
+            maxVal = Number(val);
+            maxKey = key;
+          }
+        }
+        return maxKey.toUpperCase();
+      } catch (error) {
+        console.error("Error parsing option_weights:", error);
+        return q.correctAnswer || (q.correct_answer ? q.correct_answer.toUpperCase() : '-');
+      }
+    }
+
+    if (q.category === 'TKP') {
+      return '1-5';
+    }
+
+    // Default fallback untuk tipe soal BINARY
+    return q.correctAnswer || (q.correct_answer ? q.correct_answer.toUpperCase() : '-');
+  };
+
   const selectClass = "w-full px-3.5 py-2.5 rounded-xl bg-slate-50 ring-1 ring-slate-200/60 text-sm font-medium text-slate-800 outline-none focus:ring-2 focus:ring-blue-500 focus:bg-white transition-all duration-200";
 
   return (
@@ -536,8 +569,8 @@ export default function AdminSoal() {
                 <table className="w-full text-left hidden md:table">
                   <thead>
                     <tr className="bg-slate-50/80 text-[10px] font-bold uppercase text-slate-400 tracking-wider border-b border-slate-100">
-                      <th className="px-5 py-3 w-10 text-center">#</th>
-                      <th className="px-5 py-3 w-20">Kat</th>
+                      <th className="px-5 py-3 w-10 text-center">No.</th>
+                      <th className="px-5 py-3 w-20">Kategori</th>
                       <th className="px-5 py-3">Pertanyaan</th>
                       <th className="px-5 py-3 text-center w-24">Kunci</th>
                       <th className="px-5 py-3 text-center w-20">Aksi</th>
@@ -545,9 +578,9 @@ export default function AdminSoal() {
                   </thead>
                   <tbody className="divide-y divide-slate-100/80 text-sm">
                     {filteredQuestions.length > 0 ? (
-                      filteredQuestions.map((q) => (
+                      filteredQuestions.map((q, index) => (
                         <tr key={q.id} className="hover:bg-slate-50/50 transition-colors duration-150">
-                          <td className="px-5 py-3 text-center text-[10px] font-bold text-slate-400">{q.id}</td>
+                          <td className="px-5 py-3 text-center text-[10px] font-bold text-slate-400">{index + 1}</td>
                           <td className="px-5 py-3">
                             <Badge variant={getCategoryBadgeVariant(q.category)}>
                               {q.category}
@@ -556,11 +589,11 @@ export default function AdminSoal() {
                           <td className="px-5 py-3">
                             <p className="line-clamp-2 text-xs font-medium text-slate-700 leading-relaxed">{q.question}</p>
                           </td>
-                          <td className="px-5 py-3 text-center">
-                            {q.category === 'TKP' ? (
+                          <td className="px-5 py-3 text-center font-bold text-slate-800">
+                            {getCorrectAnswerDisplay(q) === '1-5' ? (
                               <span className="text-[10px] font-bold text-amber-600 bg-amber-50 px-2 py-0.5 rounded ring-1 ring-amber-100">1-5</span>
                             ) : (
-                              <span className="text-[10px] font-bold text-blue-600 bg-blue-50 px-2 py-0.5 rounded ring-1 ring-blue-100">{q.correctAnswer}</span>
+                              <span className="text-[10px] font-bold text-blue-600 bg-blue-50 px-2 py-0.5 rounded ring-1 ring-blue-100">{getCorrectAnswerDisplay(q)}</span>
                             )}
                           </td>
                           <td className="px-5 py-3 text-center">
@@ -610,10 +643,10 @@ export default function AdminSoal() {
                       </p>
                       <div className="flex justify-between items-center pt-2 border-t border-slate-50">
                         <div className="text-[10px] font-bold text-slate-500">
-                          Kunci: {q.category === 'TKP' ? (
+                          Kunci: {getCorrectAnswerDisplay(q) === '1-5' ? (
                             <span className="text-amber-600 bg-amber-50 px-1.5 py-0.5 rounded ring-1 ring-amber-100">1-5</span>
                           ) : (
-                            <span className="text-blue-600 bg-blue-50 px-1.5 py-0.5 rounded ring-1 ring-blue-100">{q.correctAnswer}</span>
+                            <span className="text-blue-600 bg-blue-50 px-1.5 py-0.5 rounded ring-1 ring-blue-100">{getCorrectAnswerDisplay(q)}</span>
                           )}
                         </div>
                         <div className="flex gap-1.5">
