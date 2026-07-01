@@ -47,10 +47,6 @@ const Question = sequelize.define('Question', {
     type: DataTypes.JSON, // e.g. { "a": 5, "b": 4, "c": 3, "d": 2, "e": 1 }
     allowNull: true,
   },
-  options_weights: {
-    type: DataTypes.JSON, // e.g. { "A": 5, "B": 4, "C": 3, "D": 2, "E": 1 }
-    allowNull: true,
-  },
   sub_category: {
     type: DataTypes.STRING(100),
     allowNull: true,

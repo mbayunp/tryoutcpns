@@ -27,7 +27,7 @@ const getAllQuestions = async (req, res, next) => {
 
 const createQuestion = async (req, res, next) => {
   try {
-    console.log("Payload diterima backend (create):", req.body);
+    console.log("=== Received Payload ===", req.body);
     const {
       tryout_id,
       category_id,
@@ -85,7 +85,7 @@ const createQuestion = async (req, res, next) => {
 
 const updateQuestion = async (req, res, next) => {
   try {
-    console.log("Payload diterima backend (update):", req.body);
+    console.log("=== Received Payload ===", req.body);
     const { id } = req.params;
     const {
       tryout_id,
@@ -116,7 +116,6 @@ const updateQuestion = async (req, res, next) => {
       if (!tryout) {
         return response.error(res, 'Tryout package not found', 400);
       }
-      q.tryout_id = tryout_id;
     }
 
     if (category_id !== undefined) {
@@ -124,23 +123,25 @@ const updateQuestion = async (req, res, next) => {
       if (!category) {
         return response.error(res, 'Category not found', 400);
       }
-      q.category_id = category_id;
     }
 
-    if (question !== undefined) q.question = question;
-    if (option_a !== undefined) q.option_a = option_a;
-    if (option_b !== undefined) q.option_b = option_b;
-    if (option_c !== undefined) q.option_c = option_c;
-    if (option_d !== undefined) q.option_d = option_d;
-    if (option_e !== undefined) q.option_e = option_e;
-    if (correct_answer !== undefined) q.correct_answer = correct_answer ? correct_answer.toLowerCase() : null;
-    if (option_weights !== undefined) q.option_weights = option_weights;
-    if (options_weights !== undefined) q.options_weights = options_weights;
-    if (sub_category !== undefined) q.sub_category = sub_category;
-    if (program_type !== undefined) q.program_type = program_type;
-    if (scoring_type !== undefined) q.scoring_type = scoring_type;
+    const updateData = {};
+    if (tryout_id !== undefined) updateData.tryout_id = tryout_id;
+    if (category_id !== undefined) updateData.category_id = category_id;
+    if (question !== undefined) updateData.question = question;
+    if (option_a !== undefined) updateData.option_a = option_a;
+    if (option_b !== undefined) updateData.option_b = option_b;
+    if (option_c !== undefined) updateData.option_c = option_c;
+    if (option_d !== undefined) updateData.option_d = option_d;
+    if (option_e !== undefined) updateData.option_e = option_e;
+    if (correct_answer !== undefined) updateData.correct_answer = correct_answer ? correct_answer.toLowerCase() : null;
+    if (option_weights !== undefined) updateData.option_weights = option_weights;
+    if (options_weights !== undefined) updateData.options_weights = options_weights;
+    if (sub_category !== undefined) updateData.sub_category = sub_category;
+    if (program_type !== undefined) updateData.program_type = program_type;
+    if (scoring_type !== undefined) updateData.scoring_type = scoring_type;
 
-    await q.save();
+    await q.update(updateData);
 
     // Recalculate total_questions for both tryouts if it was modified
     if (tryout_id !== undefined && tryout_id !== oldTryoutId) {

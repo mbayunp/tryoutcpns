@@ -171,7 +171,7 @@ export default function QuestionForm({
       // 2. Force correct_answer to lowercase
       correct_answer: correctAnswer.toLowerCase(),
       explanation: explanation || '-',
-      scoring_type: scoringMethod,
+      scoring_type: scoringMethod.toUpperCase(),
       // 3. Ensure options_weights is explicitly formatted as a JSON object
       options_weights: {
         a: Number(scoreA) || 0,
@@ -197,7 +197,7 @@ export default function QuestionForm({
         E: Number(scoreE) || 0
       }
     };
-    console.log("Submitting payload with correctAnswer:", correctAnswer.toLowerCase(), "and scoring_type:", scoringMethod);
+    console.log("=== Payload to Backend ===", payload);
     onSubmit(payload);
   };
 

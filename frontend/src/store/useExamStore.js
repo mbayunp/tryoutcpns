@@ -625,6 +625,7 @@ export const useExamStore = create(
             scoring_type: newQuestion.scoring_type || 'BINARY'
           };
 
+          console.log("=== Payload to Backend ===", formatted);
           await API.post('/questions', formatted);
           // Refresh question list
           await get().fetchQuestions(newQuestion.tryout_id || 1);
@@ -717,6 +718,7 @@ export const useExamStore = create(
             scoring_type: updatedQuestion.scoring_type || 'BINARY'
           };
 
+          console.log("=== Payload to Backend ===", formatted);
           await API.put(`/questions/${updatedQuestion.id}`, formatted);
           // Refresh question list
           await get().fetchQuestions(tryoutId);
